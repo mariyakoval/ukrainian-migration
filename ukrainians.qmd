@@ -1,0 +1,58 @@
+---
+title: "ukrainians"
+format: html
+---
+
+```{r setup, include=FALSE}
+# set code chunk option defaults
+knitr::opts_chunk$set(
+  # display code as types
+  tidy = FALSE, 
+  # slightly smaller code font
+  size = "small",
+  # do not display messages in PDF
+  message = FALSE,
+  # set default figure width and height
+  fig.width = 5, fig.height = 3) 
+```
+
+```{r, include=FALSE}
+
+# Load necessary packages
+if (!require('pacman')) install.packages('pacman'); library('pacman')
+pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, 
+              gridExtra, grid, Hmisc, FSA, dunn.test)
+# Load data
+data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+
+```
+
+```{r}
+data_clean <- data_ee |>
+  select(demographics_educ_level, introduction_resp_age, introduction_date_departure, introduction_date_arrival, 
+         demographics_resp_gender, demographics_nationality,  
+         demographics_language_other, demographics_language_other_other3, 
+         demographics_disability, demographics_resp_activity, 
+         demographics_hh_size, family_separation_separation_y_n, 
+         family_separation_reason_1_seperation,
+         family_separation_reason_2_separation, family_separation_family_reunite,
+         family_separation_access_seperated, family_separation_not_reunited,
+         family_separation_reason_no_reunit, other_spn_separated_children, other_spn_medical_condition, documentation_lack_documentation, documentation_missing_documentation, documentation_missing_documentation_biometric_passport, documentation_legal_status, documentation_temp_protection, documentation_temp_protection_difficulty, documentation_temp_protection_difficulty_what, documentation_temp_protection_reasons, host_country_reasons_coa, host_country_reasons_coa_closest, host_country_reasons_coa_close_to_home, host_country_reasons_coa_relatives, host_country_reasons_coa_cultural, 
+         host_country_reasons_coa_language, host_country_reasons_coa_accomm_opp, 
+         host_country_reasons_coa_work_opp, host_country_reasons_coa_edu_opp, host_country_reasons_coa_health_needs,             host_country_reasons_coa_benefits, 
+         host_country_reasons_coa_temp_prot, host_country_reasons_coa_other,
+         host_country_reasons_coa_1, host_country_accomm_coa_other, 
+         shl07_sm_liv_cond, shl07_sm_liv_cond_no_issues, shl07_sm_liv_cond_unable_to_cook_store_food, shl07_sm_liv_cond_lack_of_showers_toilets, shl07_sm_liv_cond_insufficient_privacy,
+         
+         )
+
+```
+
+```{r}
+
+data1 <- data[colSums(is.na(data))/nrow(data) < .85]
+
+names(data1)
+
+```
