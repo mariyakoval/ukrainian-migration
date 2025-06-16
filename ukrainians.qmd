@@ -21,38 +21,122 @@ knitr::opts_chunk$set(
 # Load necessary packages
 if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
-              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, 
-              gridExtra, grid, Hmisc, FSA, dunn.test)
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo,
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+#Convert the year to the date format
+data_ee$introduction_date_departure <- as.Date(
+  as.yearmon(data_ee$introduction_date_departure, format = "%Y-%m")) 
+data_ee$introduction_date_arrival <- as.Date(
+  as.yearmon(data_ee$introduction_date_arrival , format = "%Y-%m")) 
+```
 
+**Introduction**
+
+**Data and methods**
+
+**Ukrainian Refugees in Estonia**
+**EDA**
+**Demographics**
+
+```{r, fig.width=7, fig.height=7, warning=FALSE}
+# Common theme for plots
+gg <- theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(size = 10, face = "bold"),
+    axis.title = element_text(size = 8),
+    axis.text = element_text(size = 7)
+  )
+
+# EDA plots
+e1 <- ggplot(data_ee, aes(x = introduction_resp_age, fill = introduction_resp_age)) +
+  geom_bar(stat = "count") + gg + xlab("Age") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e2 <- ggplot(data_ee, aes(x = introduction_date_departure, fill = as.factor(introduction_date_departure))) +
+  geom_bar(stat = "count") +
+  scale_fill_brewer(palette = "Paired") +
+  xlab("Date of departure") +
+  ylab("Count") +
+  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) + gg
+
+e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, fill = as.factor(introduction_date_arrival ))) +
+  geom_bar(stat = "count") +
+  scale_fill_brewer(palette = "Paired") +
+  xlab("Date of departure") +
+  ylab("Count")+
+  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg
+
+e4 <- ggplot(data_ee, aes(x = demographics_educ_level , fill = demographics_educ_level  )) +
+  geom_bar(stat = "count") + gg + xlab("Education") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e5 <- ggplot(data_ee, aes(x = demographics_resp_activity, fill = demographics_resp_activity)) +
+  geom_bar(stat = "count") + gg + 
+  xlab("Activity status") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e6 <- ggplot(data_ee, aes(x = Family_Separation_separation_y_n, fill = Family_Separation_separation_y_n)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Family Separation (Yes/No)") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e7 <- ggplot(data_ee, aes(x = Family_Separation_access_seperated, fill = Family_Separation_access_seperated)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Access to separated family") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e8 <- ggplot(data_ee, aes(x = Family_Separation_difficulty_temporary_residency, fill = Family_Separation_difficulty_temporary_residency)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Difficulty in temporary residency") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e9 <- ggplot(data_ee, aes(x = Family_Separation_reason_no_reunit, fill = Family_Separation_reason_no_reunit)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Reason for no family reunification") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e10 <- ggplot(data_ee, aes(x = documentation_legal_status, fill = documentation_legal_status)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Legal status") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e11 <- ggplot(data_ee, aes(x = documentation_temp_protection, fill = documentation_temp_protection)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Temporary protection") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e12 <- ggplot(data_ee, aes(x = documentation_temp_protection_difficulty, fill = documentation_temp_protection_difficulty)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Difficulty with temporary protection") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e13 <- ggplot(data_ee, aes(x = documentation_temp_protection_difficulty_what, fill = documentation_temp_protection_difficulty_what)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Type of difficulty (temp protection)") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+e14 <- ggplot(data_ee, aes(x = host_country_reasons_coa, fill = host_country_reasons_coa)) +
+  geom_bar(stat = "count") + gg +
+  xlab("Reasons for country of asylum choice") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+
+
+# Arrange all plots
+grid.arrange(grobs = list(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14),
+             ncol = 3, nrow = 5,
+             top = "Bar Plots of Key Variables in Refugee Dataset")
 ```
 
 ```{r}
-data_clean <- data_ee |>
-  select(demographics_educ_level, introduction_resp_age, introduction_date_departure, introduction_date_arrival, 
-         demographics_resp_gender, demographics_nationality,  
-         demographics_language_other, demographics_language_other_other3, 
-         demographics_disability, demographics_resp_activity, 
-         demographics_hh_size, family_separation_separation_y_n, 
-         family_separation_reason_1_seperation,
-         family_separation_reason_2_separation, family_separation_family_reunite,
-         family_separation_access_seperated, family_separation_not_reunited,
-         family_separation_reason_no_reunit, other_spn_separated_children, other_spn_medical_condition, documentation_lack_documentation, documentation_missing_documentation, documentation_missing_documentation_biometric_passport, documentation_legal_status, documentation_temp_protection, documentation_temp_protection_difficulty, documentation_temp_protection_difficulty_what, documentation_temp_protection_reasons, host_country_reasons_coa, host_country_reasons_coa_closest, host_country_reasons_coa_close_to_home, host_country_reasons_coa_relatives, host_country_reasons_coa_cultural, 
-         host_country_reasons_coa_language, host_country_reasons_coa_accomm_opp, 
-         host_country_reasons_coa_work_opp, host_country_reasons_coa_edu_opp, host_country_reasons_coa_health_needs,             host_country_reasons_coa_benefits, 
-         host_country_reasons_coa_temp_prot, host_country_reasons_coa_other,
-         host_country_reasons_coa_1, host_country_accomm_coa_other, 
-         shl07_sm_liv_cond, shl07_sm_liv_cond_no_issues, shl07_sm_liv_cond_unable_to_cook_store_food, shl07_sm_liv_cond_lack_of_showers_toilets, shl07_sm_liv_cond_insufficient_privacy,
-         
-         )
+
+data_ee <- data_ee[, colSums(is.na(data_ee)) / nrow(data_ee) < 0.85]
+names(data_ee)
 
 ```
 
-```{r}
+**Discussion**
 
-data1 <- data[colSums(is.na(data))/nrow(data) < .85]
-
-names(data1)
-
-```
+**Conclusion**
