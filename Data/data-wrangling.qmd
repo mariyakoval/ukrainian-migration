@@ -28,7 +28,25 @@ data_ee <- data_ee |>
          documentation_temp_protection_difficulty_what, host_country_accomm_reason,
          host_country_childcare_services, host_country_healthcare_access, 
          host_country_work_coa, economic_capicity_L13_SS_AFF_GOODS, 
-         
+         economic_capicity_L13_1_SM_MORE_GOODS,
+         economic_capicity_L13_1_SM_LESS_GOODS,
+         social_cohesion_SC3_SS_EXP_HOSTILE,
+social_cohesion_SC4_SM_HOSTILE_TYP,
+aap_AAP_0_SS_SATISFIED_AID,
+urgent_needs_urgent_needs_first,
+urgent_needs_urgent_needs_second,
+urgent_needs_urgent_needs_third,
+info_needs_info_receive,
+Travel_Ukraine_temp_return,
+Travel_Ukraine_temp_return_reason,
+Travel_Ukraine_no_return_plans, 
+Travel_Ukraine_no_return_move_country,
+Travel_Ukraine_no_return_move_reasons,
+host_country_reasons_coa,
+SHL07_SM_LIV_COND,
+host_country_healthcare_difficulties,
+host_country_SE2_11_SS_INC_SOR,
+host_country_diff_work
          )
 ```
 

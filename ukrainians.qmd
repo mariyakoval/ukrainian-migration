@@ -179,7 +179,7 @@ print(percent_table_legal_diff)
 ```
 
 + School
-NA values were removed from columns related to childcare services, assuming that people who did not answer don't have children. Among those who participated in this section, almost everyone had access to childcare services. The situation was different with healthcare service. 30% of people experienced some problems with healthcare services, among which two thirds reported long waiting times. 15% claimed having obstacles due to medical language, 12% due to absence of medical professionals, and 11% due to refusal. 
+NA values were removed from columns related to childcare services, assuming that people who did not answer don't have children. Among those who participated in this section, almost everyone had access to childcare services. The situation was different with healthcare service. 30% of people experienced some problems with healthcare services, among which 49.5% reported long waiting times.
 
 ```{r}
 
@@ -212,7 +212,7 @@ med_issues_df |>
 
 **Economic capacity**
 
-
+The main source of income for Ukrainian refugees is employment in host country, as reported by 50% of respondents. Around a third of people rely on social protection benefits provided by the host country. 10% of people reported having no income, other sources or social benefits from Ukrainian government. 31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
 
 ```{r}
 income_sources_df |>
@@ -220,40 +220,41 @@ income_sources_df |>
   select(Percent) |>
   arrange(desc(Percent))
 
-work_summary <- make_prop_table(data_ee$host_country_work_coa)
-work_summary
+make_prop_table(data_ee$host_country_work_coa)
 
-work_issues_summary <- work_df |>
+work_df |>
   mutate(Percent = Total_Proportion * 100) |>
   select(Percent) |>
   arrange(desc(Percent))
-work_issues_summary
-
-ggplot(data_ee, aes(x = economic_capicity_L13_SS_AFF_GOODS, fill = economic_capicity_L13_SS_AFF_GOODS)) +
-  geom_bar(stat = "count") + gg + xlab("Can ypu afford more or less goods?") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
 ```
-ECONOMIC_CAPICITY_L13_1_SM_MORE_GOODS
-ECONOMIC_CAPICITY_L13_1_SM_LESS_GOODS
+
+```{r}
+
+make_prop_table(data_ee$economic_capicity_L13_SS_AFF_GOODS)
+make_prop_table(data_ee$economic_capicity_L13_1_SM_MORE_GOODS)
+make_prop_table(data_ee$economic_capicity_L13_1_SM_LESS_GOODS)
+```
+
 
 **Safety**
-SOCIAL_COHESION_SC3_SS_EXP_HOSTILE
-SOCIAL_COHESION_SC4_SM_HOSTILE_TYP
+social_cohesion_SC3_SS_EXP_HOSTILE
+social_cohesion_SC4_SM_HOSTILE_TYP
 
 **Aid**
-AAP_AAP_0_SS_SATISFIED_AID
-URGENT_NEEDS_URGENT_NEEDS_FIRST
-URGENT_NEEDS_URGENT_NEEDS_SECOND
-URGENT_NEEDS_URGENT_NEEDS_THIRD
-INFO_NEEDS_INFO_RECEIVE
+aap_AAP_0_SS_SATISFIED_AID
+urgent_needs_urgent_needs_first
+urgent_needs_urgent_needs_second
+urgent_needs_urgent_needs_third
+info_needs_info_receive 
 
 **Traveling back**
-TRAVEL_UKRAINE_TEMP_RETURN
-TRAVEL_UKRAINE_TEMP_RETURN_REASON
 Reasons of going permanently to Ukraine
-TRAVEL_UKRAINE_NO_RETURN_PLANS
-TRAVEL_UKRAINE_NO_RETURN_MOVE_COUNTRY
-TRAVEL_UKRAINE_NO_RETURN_MOVE_REASONS
+
+Travel_Ukraine_temp_return 
+Travel_Ukraine_temp_return_reason
+Travel_Ukraine_no_return_plans 
+Travel_Ukraine_no_return_move_country 
+Travel_Ukraine_no_return_move_reasons 
 
 **Discussion**
 
