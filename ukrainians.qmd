@@ -25,11 +25,136 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+```
+
+**Data wrangling**
+
+```{r}
 #Convert the year to the date format
 data_ee$introduction_date_departure <- as.Date(
   as.yearmon(data_ee$introduction_date_departure, format = "%Y-%m")) 
 data_ee$introduction_date_arrival <- as.Date(
   as.yearmon(data_ee$introduction_date_arrival , format = "%Y-%m")) 
+
+#Legal Status proportions
+freq_table_legal_diff <- table(data_ee$host_country_reasons_coa, useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+print(percent_table_legal_diff)
+
+#Create a vector with proportions of reasons that explain reasons for arrival
+category_props <- c(
+  "accomm_opp relatives" = 0.18,
+  "accomm_opp temp_prot" = 0.18,
+  "accomm_opp work_opp" = 0.18,
+  "close_to_home" = 0.54,
+  "close_to_home other" = 0.18,
+  "close_to_home relatives work_opp" = 0.18,
+  "closest" = 7.19,
+  "closest close_to_home" = 0.54,
+  "closest close_to_home language" = 0.18,
+  "closest cultural language" = 0.18,
+  "closest language" = 1.08,
+  "closest language temp_prot" = 0.18,
+  "closest language work_opp" = 0.36,
+  "closest other" = 0.36,
+  "closest relatives" = 2.34,
+  "closest relatives benefits" = 0.18,
+  "closest relatives language" = 0.54,
+  "closest relatives temp_prot" = 0.36,
+  "closest temp_prot" = 0.36,
+  "closest work_opp" = 0.18,
+  "cultural" = 0.54,
+  "cultural benefits" = 0.18,
+  "cultural benefits temp_prot" = 0.36,
+  "cultural edu_opp" = 0.18,
+  "cultural language" = 2.70,
+  "cultural language edu_opp" = 0.18,
+  "cultural language work_opp" = 0.36,
+  "cultural relatives" = 0.18,
+  "cultural relatives work_opp" = 0.18,
+  "cultural temp_prot" = 0.18,
+  "cultural work_opp" = 0.36,
+  "cultural work_opp benefits" = 0.18,
+  "cultural work_opp language" = 0.18,
+  "edu_opp" = 2.70,
+  "edu_opp cultural" = 0.54,
+  "edu_opp cultural work_opp" = 0.18,
+  "edu_opp relatives" = 0.18,
+  "health_needs" = 0.36,
+  "language" = 2.34,
+  "language benefits" = 0.18,
+  "language benefits temp_prot" = 0.18,
+  "language closest" = 0.36,
+  "language closest close_to_home" = 0.18,
+  "language cultural" = 0.54,
+  "language cultural temp_prot" = 0.18,
+  "language relatives" = 0.36,
+  "language temp_prot" = 0.18,
+  "language temp_prot benefits" = 0.36,
+  "language work_opp" = 0.36,
+  "language work_opp benefits" = 0.18,
+  "language work_opp close_to_home" = 0.18,
+  "language work_opp temp_prot" = 0.18,
+  "other" = 6.65,
+  "prefer_no_answer" = 0.36,
+  "relatives" = 43.53,
+  "relatives accomm_opp" = 0.18,
+  "relatives accomm_opp temp_prot" = 0.18,
+  "relatives accomm_opp work_opp" = 0.36,
+  "relatives benefits" = 0.54,
+  "relatives benefits temp_prot" = 0.36,
+  "relatives closest" = 1.26,
+  "relatives cultural benefits" = 0.36,
+  "relatives cultural language" = 0.90,
+  "relatives cultural work_opp" = 0.18,
+  "relatives edu_opp" = 0.18,
+  "relatives language" = 1.80,
+  "relatives language benefits" = 0.36,
+  "relatives language cultural" = 0.54,
+  "relatives language temp_prot" = 0.54,
+  "relatives other" = 1.80,
+  "relatives temp_prot" = 0.72,
+  "relatives work_opp" = 2.70,
+  "relatives work_opp benefits" = 0.18,
+  "relatives work_opp language" = 0.36,
+  "temp_prot" = 0.54,
+  "work_opp" = 1.98,
+  "work_opp accomm_opp" = 0.18,
+  "work_opp accomm_opp cultural" = 0.18,
+  "work_opp edu_opp" = 0.18,
+  "work_opp language" = 0.54,
+  "work_opp language edu_opp" = 0.18,
+  "work_opp other" = 0.36,
+  "work_opp other relatives" = 0.18,
+  "work_opp relatives" = 0.36,
+  "work_opp relatives cultural" = 0.18,
+  "work_opp relatives language" = 0.36
+)
+
+# Create an empty list to store component contributions
+component_list <- list()
+
+# Loop through each compound label and distribute its proportion
+for (name in names(category_props)) {
+  components <- unlist(strsplit(name, " "))
+  prop <- category_props[[name]]
+  
+  for (comp in components) {
+    if (!is.null(component_list[[comp]])) {
+      component_list[[comp]] <- component_list[[comp]] + prop
+    } else {
+      component_list[[comp]] <- prop
+    }
+  }
+}
+
+# Convert to a data frame
+reasons_country_ee <- data.frame(
+  Component = names(component_list),
+  Total_Proportion = unlist(component_list)
+)
+
 ```
 
 **Introduction**
@@ -40,7 +165,9 @@ data_ee$introduction_date_arrival <- as.Date(
 **EDA**
 **Demographics**
 
-```{r, fig.width=7, fig.height=7, warning=FALSE}
+
+
+```{r, fig.width=8, fig.height=10, warning=FALSE}
 # Common theme for plots
 gg <- theme_minimal() +
   theme(
@@ -83,51 +210,37 @@ e6 <- ggplot(data_ee, aes(x = Family_Separation_separation_y_n, fill = Family_Se
   xlab("Family Separation (Yes/No)") + ylab("Count") +
   scale_fill_brewer(palette = "Paired")
 
-e7 <- ggplot(data_ee, aes(x = Family_Separation_access_seperated, fill = Family_Separation_access_seperated)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Access to separated family") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e8 <- ggplot(data_ee, aes(x = Family_Separation_difficulty_temporary_residency, fill = Family_Separation_difficulty_temporary_residency)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Difficulty in temporary residency") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e9 <- ggplot(data_ee, aes(x = Family_Separation_reason_no_reunit, fill = Family_Separation_reason_no_reunit)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Reason for no family reunification") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e10 <- ggplot(data_ee, aes(x = documentation_legal_status, fill = documentation_legal_status)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Legal status") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e11 <- ggplot(data_ee, aes(x = documentation_temp_protection, fill = documentation_temp_protection)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Temporary protection") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e12 <- ggplot(data_ee, aes(x = documentation_temp_protection_difficulty, fill = documentation_temp_protection_difficulty)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Difficulty with temporary protection") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e13 <- ggplot(data_ee, aes(x = documentation_temp_protection_difficulty_what, fill = documentation_temp_protection_difficulty_what)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Type of difficulty (temp protection)") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e14 <- ggplot(data_ee, aes(x = host_country_reasons_coa, fill = host_country_reasons_coa)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Reasons for country of asylum choice") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
+e7 <- ggplot(reasons_country_ee, aes(x = reorder(Component, Total_Proportion), y = Total_Proportion, fill = Total_Proportion)) +
+  geom_bar(stat = "identity") + gg +
+  xlab("What motivated you to come to this country?") + ylab("Count") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue")
 
 
 # Arrange all plots
-grid.arrange(grobs = list(e1, e2, e3, e4, e5, e6, e7, e8, e9, e10, e11, e12, e13, e14),
-             ncol = 3, nrow = 5,
-             top = "Bar Plots of Key Variables in Refugee Dataset")
+grid.arrange(grobs = list(e1, e2, e3, e4, e5, e6, e7),
+             ncol = 2, nrow = 5,
+             top = "Bar Plots of Key Demographic Variables in Estonia Dataset")
+```
+
+```{r}
+#Legal Status proportions
+freq_table <- table(data_ee$documentation_legal_status, useNA = "ifany")
+prop_table <- prop.table(freq_table)
+percent_table <- round(100 * prop_table, 2)
+print(percent_table)
+
+#Legal Status proportions
+freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty, useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+print(percent_table_legal_diff)
+
+#Legal Status proportions
+freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty_what, useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+print(percent_table_legal_diff)
+
 ```
 
 ```{r}
