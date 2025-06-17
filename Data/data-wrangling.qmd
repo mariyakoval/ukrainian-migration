@@ -30,370 +30,361 @@ data_ee <- data_ee |>
          host_country_work_coa, economic_capicity_L13_SS_AFF_GOODS, 
          
          )
+```
+
+```{r}
+
+#function to split combined categories of choices by proportion
+split_category_proportions <- function(category_props) {
+
+  component_list <- list()
+  for (name in names(category_props)) {
+    components <- unlist(strsplit(name, " "))
+    prop_per_component <- category_props[[name]] / length(components)
+    
+    for (comp in components) {
+      if (!is.null(component_list[[comp]])) {
+        component_list[[comp]] <- component_list[[comp]] + prop_per_component
+      } else {
+        component_list[[comp]] <- prop_per_component
+      }
+    }
+  }
+  
+  # Convert to a sorted data frame
+  result_df <- data.frame(
+    Component = names(component_list),
+    Total_Proportion = unlist(component_list)
+  )
+  
+  result_df <- result_df[order(-result_df$Total_Proportion), ]
+  
+  return(result_df)
+}
 
 ```
 
 ```{r}
 
-#Legal Status proportions
-freq_table_legal_diff <- table(data_ee$host_country_diff_work, useNA = "ifany")
+# Choosing the country proportions 
+freq_table_legal_diff <- table(data_ee$host_country_reasons_coa, useNA = "ifany")
 prop_table_legal_diff <- prop.table(freq_table_legal_diff)
-percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
-print(percent_table_legal_diff)
+print(prop_table_legal_diff)
 
-#Create a vector with proportions of reasons that explain reasons for arrival
+# Create a vector with proportions of reasons that explain reasons for arrival
+# host_country_reasons_coa variable
 category_props <- c(
-  "accomm_opp relatives" = 0.18,
-  "accomm_opp temp_prot" = 0.18,
-  "accomm_opp work_opp" = 0.18,
-  "close_to_home" = 0.54,
-  "close_to_home other" = 0.18,
-  "close_to_home relatives work_opp" = 0.18,
-  "closest" = 7.19,
-  "closest close_to_home" = 0.54,
-  "closest close_to_home language" = 0.18,
-  "closest cultural language" = 0.18,
-  "closest language" = 1.08,
-  "closest language temp_prot" = 0.18,
-  "closest language work_opp" = 0.36,
-  "closest other" = 0.36,
-  "closest relatives" = 2.34,
-  "closest relatives benefits" = 0.18,
-  "closest relatives language" = 0.54,
-  "closest relatives temp_prot" = 0.36,
-  "closest temp_prot" = 0.36,
-  "closest work_opp" = 0.18,
-  "cultural" = 0.54,
-  "cultural benefits" = 0.18,
-  "cultural benefits temp_prot" = 0.36,
-  "cultural edu_opp" = 0.18,
-  "cultural language" = 2.70,
-  "cultural language edu_opp" = 0.18,
-  "cultural language work_opp" = 0.36,
-  "cultural relatives" = 0.18,
-  "cultural relatives work_opp" = 0.18,
-  "cultural temp_prot" = 0.18,
-  "cultural work_opp" = 0.36,
-  "cultural work_opp benefits" = 0.18,
-  "cultural work_opp language" = 0.18,
-  "edu_opp" = 2.70,
-  "edu_opp cultural" = 0.54,
-  "edu_opp cultural work_opp" = 0.18,
-  "edu_opp relatives" = 0.18,
-  "health_needs" = 0.36,
-  "language" = 2.34,
-  "language benefits" = 0.18,
-  "language benefits temp_prot" = 0.18,
-  "language closest" = 0.36,
-  "language closest close_to_home" = 0.18,
-  "language cultural" = 0.54,
-  "language cultural temp_prot" = 0.18,
-  "language relatives" = 0.36,
-  "language temp_prot" = 0.18,
-  "language temp_prot benefits" = 0.36,
-  "language work_opp" = 0.36,
-  "language work_opp benefits" = 0.18,
-  "language work_opp close_to_home" = 0.18,
-  "language work_opp temp_prot" = 0.18,
-  "other" = 6.65,
-  "prefer_no_answer" = 0.36,
-  "relatives" = 43.53,
-  "relatives accomm_opp" = 0.18,
-  "relatives accomm_opp temp_prot" = 0.18,
-  "relatives accomm_opp work_opp" = 0.36,
-  "relatives benefits" = 0.54,
-  "relatives benefits temp_prot" = 0.36,
-  "relatives closest" = 1.26,
-  "relatives cultural benefits" = 0.36,
-  "relatives cultural language" = 0.90,
-  "relatives cultural work_opp" = 0.18,
-  "relatives edu_opp" = 0.18,
-  "relatives language" = 1.80,
-  "relatives language benefits" = 0.36,
-  "relatives language cultural" = 0.54,
-  "relatives language temp_prot" = 0.54,
-  "relatives other" = 1.80,
-  "relatives temp_prot" = 0.72,
-  "relatives work_opp" = 2.70,
-  "relatives work_opp benefits" = 0.18,
-  "relatives work_opp language" = 0.36,
-  "temp_prot" = 0.54,
-  "work_opp" = 1.98,
-  "work_opp accomm_opp" = 0.18,
-  "work_opp accomm_opp cultural" = 0.18,
-  "work_opp edu_opp" = 0.18,
-  "work_opp language" = 0.54,
-  "work_opp language edu_opp" = 0.18,
-  "work_opp other" = 0.36,
-  "work_opp other relatives" = 0.18,
-  "work_opp relatives" = 0.36,
-  "work_opp relatives cultural" = 0.18,
-  "work_opp relatives language" = 0.36
+  "accomm_opp relatives" = 0.001798561,
+  "accomm_opp temp_prot" = 0.001798561,
+  "accomm_opp work_opp" = 0.001798561,
+  "close_to_home" = 0.005395683,
+  "close_to_home other" = 0.001798561,
+  "close_to_home relatives work_opp" = 0.001798561,
+  "closest" = 0.071942446,
+  "closest close_to_home" = 0.005395683,
+  "closest close_to_home language" = 0.001798561,
+  "closest cultural language" = 0.001798561,
+  "closest language" = 0.010791367,
+  "closest language temp_prot" = 0.001798561,
+  "closest language work_opp" = 0.003597122,
+  "closest other" = 0.003597122,
+  "closest relatives" = 0.023381295,
+  "closest relatives benefits" = 0.001798561,
+  "closest relatives language" = 0.001798561,
+  "closest relatives temp_prot" = 0.005395683,
+  "closest temp_prot" = 0.003597122,
+  "closest work_opp" = 0.001798561,
+  "cultural" = 0.005395683,
+  "cultural benefits" = 0.001798561,
+  "cultural benefits temp_prot" = 0.003597122,
+  "cultural edu_opp" = 0.001798561,
+  "cultural language" = 0.026978417,
+  "cultural language edu_opp" = 0.001798561,
+  "cultural language work_opp" = 0.003597122,
+  "cultural relatives" = 0.001798561,
+  "cultural relatives work_opp" = 0.001798561,
+  "cultural temp_prot" = 0.001798561,
+  "cultural work_opp" = 0.003597122,
+  "cultural work_opp benefits" = 0.001798561,
+  "cultural work_opp language" = 0.001798561,
+  "edu_opp" = 0.026978417,
+  "edu_opp cultural" = 0.005395683,
+  "edu_opp cultural work_opp" = 0.001798561,
+  "edu_opp relatives" = 0.001798561,
+  "health_needs" = 0.003597122,
+  "language" = 0.023381295,
+  "language benefits" = 0.001798561,
+  "language benefits temp_prot" = 0.001798561,
+  "language closest" = 0.003597122,
+  "language closest close_to_home" = 0.001798561,
+  "language cultural" = 0.005395683,
+  "language cultural temp_prot" = 0.001798561,
+  "language relatives" = 0.003597122,
+  "language temp_prot" = 0.001798561,
+  "language temp_prot benefits" = 0.003597122,
+  "language work_opp" = 0.003597122,
+  "language work_opp benefits" = 0.001798561,
+  "language work_opp close_to_home" = 0.001798561,
+  "language work_opp temp_prot" = 0.001798561,
+  "other" = 0.066546763,
+  "prefer_no_answer" = 0.003597122,
+  "relatives" = 0.435251799,
+  "relatives accomm_opp" = 0.001798561,
+  "relatives accomm_opp temp_prot" = 0.001798561,
+  "relatives accomm_opp work_opp" = 0.003597122,
+  "relatives benefits" = 0.005395683,
+  "relatives benefits temp_prot" = 0.003597122,
+  "relatives closest" = 0.012589928,
+  "relatives cultural benefits" = 0.003597122,
+  "relatives cultural language" = 0.008992806,
+  "relatives cultural work_opp" = 0.001798561,
+  "relatives edu_opp" = 0.001798561,
+  "relatives language" = 0.017985612,
+  "relatives language benefits" = 0.003597122,
+  "relatives language cultural" = 0.005395683,
+  "relatives language temp_prot" = 0.005395683,
+  "relatives other" = 0.017985612,
+  "relatives temp_prot" = 0.007194245,
+  "relatives work_opp" = 0.026978417,
+  "relatives work_opp benefits" = 0.001798561,
+  "relatives work_opp language" = 0.003597122,
+  "temp_prot" = 0.005395683,
+  "work_opp" = 0.019784173,
+  "work_opp accomm_opp" = 0.001798561,
+  "work_opp accomm_opp cultural" = 0.001798561,
+  "work_opp edu_opp" = 0.001798561,
+  "work_opp language" = 0.005395683,
+  "work_opp language edu_opp" = 0.001798561,
+  "work_opp other" = 0.003597122,
+  "work_opp other relatives" = 0.001798561,
+  "work_opp relatives" = 0.003597122,
+  "work_opp relatives cultural" = 0.001798561,
+  "work_opp relatives language" = 0.003597122
 )
-
-# Create an empty list to store component contributions
-component_list <- list()
-
-# Loop through each compound label and distribute its proportion
-for (name in names(category_props)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list[[comp]])) {
-      component_list[[comp]] <- component_list[[comp]] + prop
-    } else {
-      component_list[[comp]] <- prop
-    }
-  }
-}
 
 # Convert to a data frame
-reasons_country_ee <- data.frame(
-  Component = names(component_list),
-  Total_Proportion = unlist(component_list)
-)
+reasons_country_ee <- split_category_proportions(category_props)
+```
 
+```{r}
+
+#Accommodations issues proportions
+freq_table_legal_diff <- table(data_ee$SHL07_SM_LIV_COND, useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
+
+# variable SHL07_SM_LIV_COND
 housing_issues_props <- c(
-  "do_not_feel_protected" = 0.18,
-  "do_not_feel_protected insufficient_privacy insufficient_sleeping_materials" = 0.18,
-  "dont_know" = 2.34,
-  "inaccessible_by_transportation" = 0.54,
-  "inaccessible_by_transportation insufficient_privacy unable_to_cook_store_food" = 0.18,
-  "inaccessible_to_disabled" = 0.36,
-  "insufficient_privacy" = 1.44,
-  "insufficient_privacy insufficient_sleeping_materials" = 0.18,
-  "insufficient_privacy lack_of_showers_toilets" = 0.18,
-  "insufficient_privacy rent_too_high" = 1.08,
-  "insufficient_privacy unable_to_cook_store_food" = 0.18,
-  "insufficient_privacy unclean_space rent_too_high" = 0.18,
-  "insufficient_sleeping_materials" = 0.36,
-  "insufficient_sleeping_materials insufficient_privacy" = 0.18,
-  "insufficient_sleeping_materials rent_too_high" = 0.90,
-  "lack_of_showers_toilets" = 2.88,
-  "lack_of_showers_toilets insufficient_privacy" = 1.08,
-  "lack_of_showers_toilets unable_to_cook_store_food" = 0.18,
-  "no_issues" = 67.27,
-  "prefer_not_to_say" = 1.08,
-  "rent_too_high" = 16.73,
-  "rent_too_high do_not_feel_protected" = 0.18,
-  "rent_too_high insufficient_privacy" = 0.36,
-  "rent_too_high insufficient_sleeping_materials" = 0.18,
-  "unable_to_cook_store_food" = 0.90,
-  "unable_to_cook_store_food lack_of_showers_toilets insufficient_privacy" = 0.18,
-  "unable_to_cook_store_food lack_of_showers_toilets rent_too_high" = 0.18,
-  "unable_to_cook_store_food unclean_space rent_too_high" = 0.18,
-  "unclean_space rent_too_high" = 0.18
+  do_not_feel_protected = 0.001798561,
+  "do_not_feel_protected insufficient_privacy insufficient_sleeping_materials" = 0.001798561,
+  dont_know = 0.023381295,
+  inaccessible_by_transportation = 0.005395683,
+  "inaccessible_by_transportation insufficient_privacy unable_to_cook_store_food" = 0.001798561,
+  inaccessible_to_disabled = 0.003597122,
+  insufficient_privacy = 0.014388489,
+  "insufficient_privacy insufficient_sleeping_materials" = 0.001798561,
+  "insufficient_privacy lack_of_showers_toilets" = 0.001798561,
+  "insufficient_privacy rent_too_high" = 0.010791367,
+  "insufficient_privacy unable_to_cook_store_food" = 0.001798561,
+  "insufficient_privacy unclean_space rent_too_high" = 0.001798561,
+  insufficient_sleeping_materials = 0.003597122,
+  "insufficient_sleeping_materials insufficient_privacy" = 0.001798561,
+  "insufficient_sleeping_materials rent_too_high" = 0.008992806,
+  lack_of_showers_toilets = 0.028776978,
+  "lack_of_showers_toilets insufficient_privacy" = 0.010791367,
+  "lack_of_showers_toilets unable_to_cook_store_food" = 0.001798561,
+  no_issues = 0.672661871,
+  prefer_not_to_say = 0.010791367,
+  rent_too_high = 0.167266187,
+  "rent_too_high do_not_feel_protected" = 0.001798561,
+  "rent_too_high insufficient_privacy" = 0.003597122,
+  "rent_too_high insufficient_sleeping_materials" = 0.001798561,
+  unable_to_cook_store_food = 0.008992806,
+  "unable_to_cook_store_food lack_of_showers_toilets insufficient_privacy" = 0.001798561,
+  "unable_to_cook_store_food lack_of_showers_toilets rent_too_high" = 0.001798561,
+  "unable_to_cook_store_food unclean_space rent_too_high" = 0.001798561,
+  "unclean_space rent_too_high" = 0.001798561
 )
 
-component_list_house <- list()
+housing_issues_df <- split_category_proportions(housing_issues_props)
+```
 
-for (name in names(housing_issues_props)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- housing_issues_props[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_house[[comp]])) {
-      component_list_house[[comp]] <- component_list_house[[comp]] + prop
-    } else {
-      component_list_house[[comp]] <- prop
-    }
-  }
-}
+```{r}
+# Healthcare issues proportions, host_country_healthcare_difficulties var
+freq_table_legal_diff <- table(data_ee$host_country_healthcare_difficulties, 
+                               useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
 
-housing_issues_df <- data.frame(
-  Total_Proportion = unlist(component_list_house)
+med_issue_props <- c(
+ med_discrimination = 0.001798561,
+  "med_discrimination med_language" = 0.001798561,
+  "med_discrimination other" = 0.001798561,
+  med_fees = 0.005395683,
+  "med_fees med_documentation med_lack_info" = 0.001798561,
+  "med_fees med_long_wait" = 0.001798561,
+  "med_fees other" = 0.001798561,
+  med_lack_info = 0.003597122,
+  "med_lack_info other" = 0.001798561,
+  med_language = 0.008992806,
+  "med_language med_long_wait" = 0.005395683,
+  med_long_wait = 0.104316547,
+  "med_long_wait med_documentation" = 0.001798561,
+  "med_long_wait med_fees" = 0.007194245,
+  "med_long_wait med_fees med_language med_long_wait med_lack_info med_language med_discrimination" = 0.001798561,
+  "med_long_wait med_language" = 0.021582734,
+  "med_long_wait med_language med_discrimination" = 0.001798561,
+  "med_long_wait med_not_available" = 0.001798561,
+  "med_long_wait med_refused" = 0.003597122,
+  "med_long_wait med_refused other" = 0.001798561,
+  "med_long_wait other" = 0.014388489,
+  med_not_available = 0.007194245,
+  "med_not_available med_fees med_documentation" = 0.001798561,
+  "med_not_available med_fees other" = 0.001798561,
+  "med_not_available med_long_wait" = 0.010791367,
+  "med_not_available med_long_wait other" = 0.003597122,
+  "med_not_available med_refused" = 0.003597122,
+  "med_not_available med_refused med_fees med_lack_info" = 0.001798561,
+  "med_not_available med_refused med_long_wait" = 0.001798561,
+  "med_not_available other" = 0.001798561,
+  "med_refused med_long_wait" = 0.007194245,
+  "med_refused med_long_wait med_language" = 0.003597122,
+  "med_refused med_long_wait other" = 0.003597122,
+  "med_refused other" = 0.003597122,
+  other = 0.048561151,
+  "other med_long_wait" = 0.003597122,
+  "other med_refused" = 0.001798561,
+  "<NA>" = 0.696043165
 )
 
-category_props_med <- c(
-  "med_discrimination" = 0.18,
-  "med_discrimination med_language" = 0.18,
-  "med_discrimination other" = 0.18,
-  "med_fees" = 0.54,
-  "med_fees med_documentation med_lack_info" = 0.18,
-  "med_fees med_long_wait" = 0.18,
-  "med_fees other" = 0.18,
-  "med_lack_info" = 0.36,
-  "med_lack_info other" = 0.18,
-  "med_language" = 0.90,
-  "med_language med_long_wait" = 0.54,
-  "med_long_wait" = 10.43,
-  "med_long_wait med_documentation" = 0.18,
-  "med_long_wait med_fees" = 0.72,
-  "med_long_wait med_fees med_language med_long_wait med_lack_info med_language med_discrimination" = 0.18,
-  "med_long_wait med_language" = 2.16,
-  "med_long_wait med_language med_discrimination" = 0.18,
-  "med_long_wait med_not_available" = 0.18,
-  "med_long_wait med_refused" = 0.36,
-  "med_long_wait med_refused other" = 0.18,
-  "med_long_wait other" = 1.44,
-  "med_not_available" = 0.72,
-  "med_not_available med_fees med_documentation" = 0.18,
-  "med_not_available med_fees other" = 0.18,
-  "med_not_available med_long_wait" = 1.08,
-  "med_not_available med_long_wait other" = 0.36,
-  "med_not_available med_refused" = 0.36,
-  "med_not_available med_refused med_fees med_lack_info" = 0.18,
-  "med_not_available med_refused med_long_wait" = 0.18,
-  "med_not_available other" = 0.18,
-  "med_refused med_long_wait" = 0.72,
-  "med_refused med_long_wait med_language" = 0.36,
-  "med_refused med_long_wait other" = 0.36,
-  "med_refused other" = 0.36,
-  "other" = 4.86,
-  "other med_long_wait" = 0.36,
-  "other med_refused" = 0.18,
-  "NA" = 69.60
-)
-category_props_med_clean <- category_props_med[names(category_props_med) != "NA" & names(category_props_med) != "<NA>"]
-component_list_med <- list()
+# Remove NA value column to find the actual weight of each issue among people
+#who ran into it
+na_value <- med_issue_props["<NA>"]
+med_issue_props <- med_issue_props[!names(med_issue_props) %in% "<NA>"]
+total_non_na <- sum(med_issue_props)
+med_issue_props <- med_issue_props + (med_issue_props / total_non_na) * as.numeric(na_value)
+sum(med_issue_props)
 
-for (name in names(category_props_med_clean)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props_med_clean[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_med[[comp]])) {
-      component_list_med[[comp]] <- component_list_med[[comp]] + prop
-    } else {
-      component_list_med[[comp]] <- prop
-    }
-  }
-}
-med_issues_df <- data.frame(
-  Proportion = unlist(component_list_med) / sum(category_props_med_clean)
-)
+med_issues_df <- split_category_proportions(med_issue_props)
+
+```
+
+```{r}
+
+# Sources of household income proportions, host_country_SE2_11_SS_INC_SOR var
+freq_table_legal_diff <- table(data_ee$host_country_SE2_11_SS_INC_SOR, 
+                               useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
 
 category_props_income <- c(
-  "dont_know" = 1.08,
-  "employment_host_country" = 37.95,
-  "employment_host_country employment_remote social_protection_host_govt" = 0.18,
-  "employment_host_country employment_remote social_protection_host_govt other_sources" = 0.18,
-  "employment_host_country other_sources" = 0.18,
-  "employment_host_country social_protection_host_govt" = 19.24,
-  "employment_host_country social_protection_host_govt other_sources" = 0.36,
-  "employment_host_country social_protection_host_govt social_protection_ukr_govt" = 0.72,
-  "employment_host_country social_protection_ukr_govt" = 0.18,
-  "employment_remote" = 0.90,
-  "employment_remote other_sources" = 0.18,
-  "employment_remote social_protection_host_govt" = 0.54,
-  "no_income" = 5.94,
-  "other_sources" = 1.62,
-  "other_sources social_protection_host_govt" = 0.72,
-  "prefer_not_to_answer" = 0.90,
-  "social_protection_host_govt" = 19.78,
-  "social_protection_host_govt employment_host_country" = 3.78,
-  "social_protection_host_govt employment_host_country other_sources" = 0.18,
-  "social_protection_host_govt employment_host_country social_protection_ukr_govt" = 0.18,
-  "social_protection_host_govt employment_remote" = 0.18,
-  "social_protection_host_govt other_sources" = 1.44,
-  "social_protection_host_govt social_protection_ukr_govt" = 2.70,
-  "social_protection_ukr_govt" = 0.36,
-  "social_protection_ukr_govt social_protection_host_govt" = 0.36,
-  "social_protection_ukr_govt social_protection_host_govt employment_host_country" = 0.18
+  "dont_know" = 0.010791367,
+  "employment_host_country" = 0.379496403,
+  "employment_host_country employment_remote social_protection_host_govt" = 0.001798561,
+  "employment_host_country employment_remote social_protection_host_govt other_sources" = 0.001798561,
+  "employment_host_country other_sources" = 0.001798561,
+  "employment_host_country social_protection_host_govt" = 0.192446043,
+  "employment_host_country social_protection_host_govt other_sources" = 0.003597122,
+  "employment_host_country social_protection_host_govt social_protection_ukr_govt" = 0.007194245,
+  "employment_host_country social_protection_ukr_govt" = 0.001798561,
+  "employment_remote" = 0.008992806,
+  "employment_remote other_sources" = 0.001798561,
+  "employment_remote social_protection_host_govt" = 0.005395683,
+  "no_income" = 0.059352518,
+  "other_sources" = 0.01618705,
+  "other_sources social_protection_host_govt" = 0.007194245,
+  "prefer_not_to_answer" = 0.008992806,
+  "social_protection_host_govt" = 0.197841727,
+  "social_protection_host_govt employment_host_country" = 0.037769784,
+  "social_protection_host_govt employment_host_country other_sources" = 0.001798561,
+  "social_protection_host_govt employment_host_country social_protection_ukr_govt" = 0.001798561,
+  "social_protection_host_govt employment_remote" = 0.001798561,
+  "social_protection_host_govt other_sources" = 0.014388489,
+  "social_protection_host_govt social_protection_ukr_govt" = 0.026978417,
+  "social_protection_ukr_govt" = 0.003597122,
+  "social_protection_ukr_govt social_protection_host_govt" = 0.003597122,
+  "social_protection_ukr_govt social_protection_host_govt employment_host_country" = 0.001798561
 )
-component_list_income <- list()
 
-for (name in names(category_props_income)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props_income[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_income[[comp]])) {
-      component_list_income[[comp]] <- component_list_income[[comp]] + prop
-    } else {
-      component_list_income[[comp]] <- prop
-    }
-  }
-}
-income_sources_df <- data.frame(
-  Proportion = unlist(component_list_income) / sum(category_props_income)
-)
+income_sources_df <- split_category_proportions(category_props_income)
+
+```
+
+```{r}
+# Difficulties in finding a job, host_country_diff_work var
+freq_table_legal_diff <- table(data_ee$host_country_diff_work, 
+                               useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
 
 category_props_work <- c(
-  "discrim" = 0.36,
-  "discrim other" = 0.18,
-  "lack_address" = 0.18,
-  "lack_childcare" = 1.08,
-  "lack_childcare lack_lang lack_recog" = 0.18,
-  "lack_docum lack_lang" = 0.18,
-  "lack_docum lack_opp lack_lang" = 0.18,
-  "lack_docum lack_recog" = 0.18,
-  "lack_info" = 0.18,
-  "lack_lang" = 22.12,
-  "lack_lang discrim" = 0.36,
-  "lack_lang lack_address" = 0.54,
-  "lack_lang lack_address discrim" = 0.18,
-  "lack_lang lack_childcare" = 0.36,
-  "lack_lang lack_childcare other" = 0.18,
-  "lack_lang lack_info" = 0.18,
-  "lack_lang lack_opp" = 1.98,
-  "lack_lang lack_opp discrim" = 0.18,
-  "lack_lang lack_opp lack_childcare" = 0.18,
-  "lack_lang lack_opp lack_recog" = 0.90,
-  "lack_lang lack_recog" = 5.22,
-  "lack_lang lack_recog lack_info" = 0.18,
-  "lack_lang lack_recog lack_opp" = 0.36,
-  "lack_lang lack_recog loss_benefits" = 0.18,
-  "lack_lang loss_benefits" = 0.54,
-  "lack_lang not_staying" = 0.72,
-  "lack_lang other" = 1.44,
-  "lack_opp" = 1.80,
-  "lack_opp discrim other" = 0.18,
-  "lack_opp lack_childcare" = 0.18,
-  "lack_opp lack_info" = 0.18,
-  "lack_opp lack_info discrim" = 0.18,
-  "lack_opp lack_lang" = 8.63,
-  "lack_opp lack_lang discrim" = 0.18,
-  "lack_opp lack_lang lack_recog" = 1.62,
-  "lack_opp lack_lang lack_recog discrim" = 0.18,
-  "lack_opp lack_lang lack_recog loss_benefits" = 0.54,
-  "lack_opp lack_lang lack_recog loss_benefits discrim" = 0.18,
-  "lack_opp lack_lang loss_benefits" = 0.36,
-  "lack_opp lack_lang loss_benefits not_staying" = 0.18,
-  "lack_opp lack_lang not_staying" = 0.36,
-  "lack_opp lack_lang other" = 1.44,
-  "lack_opp lack_recog" = 0.90,
-  "lack_opp lack_recog lack_lang" = 0.36,
-  "lack_permit" = 0.18,
-  "lack_permit lack_docum" = 0.18,
-  "lack_permit lack_docum lack_lang" = 0.18,
-  "lack_permit lack_docum lack_lang lack_childcare" = 0.18,
-  "lack_permit lack_docum lack_opp lack_lang discrim" = 0.18,
-  "lack_permit lack_lang" = 0.54,
-  "lack_permit lack_lang lack_recog" = 0.18,
-  "lack_permit lack_opp" = 0.18,
-  "lack_permit lack_opp lack_lang" = 0.18,
-  "lack_recog" = 1.26,
-  "lack_recog lack_lang" = 0.90,
-  "lack_recog lack_lang lack_opp" = 0.54,
-  "lack_recog lack_lang loss_benefits" = 0.18,
-  "loss_benefits" = 0.18,
-  "loss_benefits lack_recog" = 0.18,
-  "none" = 31.65,
-  "not_staying" = 1.26,
-  "other" = 3.42,
-  "other discrim" = 0.18,
-  "prefer_no_answer" = 0.90
+  "discrim" = 0.003597122,
+  "discrim other" = 0.001798561,
+  "lack_address" = 0.001798561,
+  "lack_childcare" = 0.010791367,
+  "lack_childcare lack_lang lack_recog" = 0.001798561,
+  "lack_docum lack_lang" = 0.001798561,
+  "lack_docum lack_opp lack_lang" = 0.001798561,
+  "lack_docum lack_recog" = 0.001798561,
+  "lack_info" = 0.001798561,
+  "lack_lang" = 0.221223022,
+  "lack_lang discrim" = 0.003597122,
+  "lack_lang lack_address" = 0.005395683,
+  "lack_lang lack_address discrim" = 0.001798561,
+  "lack_lang lack_childcare" = 0.003597122,
+  "lack_lang lack_childcare other" = 0.001798561,
+  "lack_lang lack_info" = 0.001798561,
+  "lack_lang lack_opp" = 0.019784173,
+  "lack_lang lack_opp discrim" = 0.001798561,
+  "lack_lang lack_opp lack_childcare" = 0.001798561,
+  "lack_lang lack_opp lack_recog" = 0.008992806,
+  "lack_lang lack_recog" = 0.052158273,
+  "lack_lang lack_recog lack_info" = 0.001798561,
+  "lack_lang lack_recog lack_opp" = 0.003597122,
+  "lack_lang lack_recog loss_benefits" = 0.001798561,
+  "lack_lang loss_benefits" = 0.005395683,
+  "lack_lang not_staying" = 0.007194245,
+  "lack_lang other" = 0.014388489,
+  "lack_opp" = 0.017985612,
+  "lack_opp discrim other" = 0.001798561,
+  "lack_opp lack_childcare" = 0.001798561,
+  "lack_opp lack_info" = 0.001798561,
+  "lack_opp lack_info discrim" = 0.001798561,
+  "lack_opp lack_lang" = 0.086330935,
+  "lack_opp lack_lang discrim" = 0.001798561,
+  "lack_opp lack_lang lack_recog" = 0.01618705,
+  "lack_opp lack_lang lack_recog discrim" = 0.001798561,
+  "lack_opp lack_lang lack_recog loss_benefits" = 0.005395683,
+  "lack_opp lack_lang lack_recog loss_benefits discrim" = 0.001798561,
+  "lack_opp lack_lang loss_benefits" = 0.003597122,
+  "lack_opp lack_lang loss_benefits not_staying" = 0.001798561,
+  "lack_opp lack_lang not_staying" = 0.003597122,
+  "lack_opp lack_lang other" = 0.014388489,
+  "lack_opp lack_recog" = 0.008992806,
+  "lack_opp lack_recog lack_lang" = 0.003597122,
+  "lack_permit" = 0.001798561,
+  "lack_permit lack_docum" = 0.001798561,
+  "lack_permit lack_docum lack_lang" = 0.001798561,
+  "lack_permit lack_docum lack_lang lack_childcare" = 0.001798561,
+  "lack_permit lack_docum lack_opp lack_lang discrim" = 0.001798561,
+  "lack_permit lack_lang" = 0.005395683,
+  "lack_permit lack_lang lack_recog" = 0.001798561,
+  "lack_permit lack_opp" = 0.001798561,
+  "lack_permit lack_opp lack_lang" = 0.01618705,
+  "lack_recog" = 0.012589928,
+  "lack_recog lack_lang" = 0.008992806,
+  "lack_recog lack_lang lack_opp" = 0.005395683,
+  "lack_recog lack_lang loss_benefits" = 0.001798561,
+  "loss_benefits" = 0.001798561,
+  "loss_benefits lack_recog" = 0.001798561,
+  "none" = 0.316546763,
+  "not_staying" = 0.012589928,
+  "other" = 0.034172662,
+  "other discrim" = 0.001798561,
+  "prefer_no_answer" = 0.008992806
 )
 
-component_list_work <- list()
-
-for (name in names(category_props_work)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props_work[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_work[[comp]])) {
-      component_list_work[[comp]] <- component_list_work[[comp]] + prop
-    } else {
-      component_list_work[[comp]] <- prop
-    }
-  }
-}
-work_df <- data.frame(
-  Proportion = unlist(component_list_work) / sum(category_props_work)
-)
+work_df <- split_category_proportions(category_props_work)
 
 ```
 

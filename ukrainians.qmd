@@ -168,6 +168,14 @@ ggplot(top5, aes(x = reorder(Issue, Total_Proportion),
 
 make_prop_table(data_ee$host_country_accomm_reason)
 
+
+
+#Legal Status proportions
+freq_table_legal_diff <- table(data_ee$host_country_SE2_11_SS_INC_SOR , useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+print(percent_table_legal_diff)
+
 ```
 
 + School
@@ -196,27 +204,27 @@ ggplot(data_ee_filtered, aes(x = host_country_healthcare_access,
   scale_fill_brewer(palette = "Paired") + gg
 
 med_issues_df |>
-  mutate(Percent = round(Proportion * 100, 2)) |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
   select(Percent) |>
   arrange(desc(Percent))
 
 ```
 
-**Income**
+**Economic capacity**
+
+
 
 ```{r}
-income_summary <- income_sources_df |>
-  mutate(Percent = round(Proportion * 100, 2)) |>
+income_sources_df |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
   select(Percent) |>
   arrange(desc(Percent))
-income_summary
-
 
 work_summary <- make_prop_table(data_ee$host_country_work_coa)
 work_summary
 
 work_issues_summary <- work_df |>
-  mutate(Percent = round(Proportion * 100, 2)) |>
+  mutate(Percent = Total_Proportion * 100) |>
   select(Percent) |>
   arrange(desc(Percent))
 work_issues_summary
