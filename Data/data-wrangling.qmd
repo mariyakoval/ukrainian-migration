@@ -21,6 +21,15 @@ data_ee$introduction_date_departure <- as.Date(
 data_ee$introduction_date_arrival <- as.Date(
   as.yearmon(data_ee$introduction_date_arrival , format = "%Y-%m")) 
 
+data_ee <- data_ee |>
+  select(introduction_resp_age, introduction_date_arrival, demographics_educ_level,
+         demographics_resp_activity, Family_Separation_separation_y_n, reasons_country_ee,
+         )
+
+```
+
+```{r}
+
 #Legal Status proportions
 freq_table_legal_diff <- table(data_ee$host_country_diff_work, useNA = "ifany")
 prop_table_legal_diff <- prop.table(freq_table_legal_diff)
