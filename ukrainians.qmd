@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 # Load necessary packages
 if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
-              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo,
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- readRDS("Data/data_ee")
@@ -40,7 +40,9 @@ reasons_country_ee <- readRDS("Data/reasons_country_ee")
 
 **Demographics**
 
-```{r, fig.width=8, fig.height=10, warning=FALSE}
+Key demographcic indicators of Ukrainian refugees in Estonia reveal that the majority of refugees are between 35 and 59 years old, closely followed by the 18-34 age group. Refugees aged 60 and older represent a minority of arrivals, indicating a younger to middle-aged demographic predominance. The largest wave of arrivals to Estonia occurred between March and April of 2022, with 45.68% of all arrivals within the period falling in this range. There are mild arrival peaks in May and July of 2022. 49.46% of arrivals hold a vocational and specialization education, followed by around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping. 
+
+```{r, fig.width=6, fig.height=4, warning=FALSE}
 # Common theme for plots
 gg <- theme_minimal() +
   theme(
@@ -51,66 +53,62 @@ gg <- theme_minimal() +
   )
 
 # EDA plots
-e1 <- ggplot(data_ee, aes(x = introduction_resp_age, fill = introduction_resp_age)) +
+e1 <- ggplot(data_ee, aes(x = introduction_resp_age, 
+                          fill = introduction_resp_age)) +
   geom_bar(stat = "count") + gg + xlab("Age") + ylab("Count") +
   scale_fill_brewer(palette = "Paired")
 
-e2 <- ggplot(data_ee, aes(x = introduction_date_departure, fill = as.factor(introduction_date_departure))) +
+e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, 
+                          fill = as.factor(introduction_date_arrival ))) +
   geom_bar(stat = "count") +
   scale_fill_brewer(palette = "Paired") +
-  xlab("Date of departure") +
-  ylab("Count") +
-  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) + gg
-
-e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, fill = as.factor(introduction_date_arrival ))) +
-  geom_bar(stat = "count") +
-  scale_fill_brewer(palette = "Paired") +
-  xlab("Date of departure") +
+  xlab("Date of arrival") +
   ylab("Count")+
-  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg
+  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-e4 <- ggplot(data_ee, aes(x = demographics_educ_level , fill = demographics_educ_level  )) +
+e4 <- ggplot(data_ee, aes(x = fct_infreq(demographics_educ_level), 
+                          fill = demographics_educ_level  )) +
   geom_bar(stat = "count") + gg + xlab("Education") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
+  scale_fill_brewer(palette = "Paired")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-e5 <- ggplot(data_ee, aes(x = demographics_resp_activity, fill = demographics_resp_activity)) +
+e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity), 
+                          fill = demographics_resp_activity)) +
   geom_bar(stat = "count") + gg + 
   xlab("Activity status") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e6 <- ggplot(data_ee, aes(x = Family_Separation_separation_y_n, fill = Family_Separation_separation_y_n)) +
-  geom_bar(stat = "count") + gg +
-  xlab("Family Separation (Yes/No)") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
-
-e7 <- ggplot(reasons_country_ee, aes(x = reorder(Component, Total_Proportion), y = Total_Proportion, fill = Total_Proportion)) +
-  geom_bar(stat = "identity") + gg +
-  xlab("What motivated you to come to this country?") + ylab("Count") +
-  scale_fill_gradient(low = "lightblue", high = "darkblue")
-
+  scale_fill_brewer(palette = "Paired")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Arrange all plots
-grid.arrange(grobs = list(e1, e2, e3, e4, e5, e6, e7),
-             ncol = 2, nrow = 5,
+grid.arrange(grobs = list(e1, e3, e4, e5),
+             ncol = 2, nrow = 2,
              top = "Bar Plots of Key Demographic Variables in Estonia Dataset")
 ```
 
+**Legal status and choice of country**
+
+While 55.76% of respondents experienced family separation, reunification with relatives was among the primary motivations for coming to Estonia. The remaining important reasons for choosing Estonia are language, its proximity, work opportunities, and cultural reasons.
+
 ```{r}
-#Legal Status proportions
-freq_table <- table(data_ee$documentation_legal_status, useNA = "ifany")
-prop_table <- prop.table(freq_table)
-percent_table <- round(100 * prop_table, 2)
 
-#Difficulty in getting temp protection
-freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty, useNA = "ifany")
-prop_table_legal_diff <- prop.table(freq_table_legal_diff)
-percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+# Choose top-5 reasons for choosing Estonia
+top6 <- reasons_country_ee |>
+  dplyr::arrange(desc(Total_Proportion)) |>
+  dplyr::slice_head(n = 5)
 
-# Types of difficulties 
-freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty_what, useNA = "ifany")
-prop_table_legal_diff <- prop.table(freq_table_legal_diff)
-percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
+# Reason for choosing Estonia graph
+ggplot(top6, aes(x = reorder(Component, -Total_Proportion), 
+                 y = Total_Proportion, fill = Total_Proportion)) +
+  geom_bar(stat = "identity") + gg +
+  xlab("What motivated you to come to this country?") + ylab("Count") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 
+Temporary protection is the predominant legal status covering around 50% of respondents. However, almost half of those who have taken the surey did not provide an answer, indicating possible administrative gaps or hesitation. The vast majority, over 92%, did not report having difficulties in accessing temporary protection, while only 3.24% faced obstacles. 
+
+```{r}
 # Function to create a clean proportion table
 make_prop_table <- function(variable) {
   tibble(
@@ -121,9 +119,17 @@ make_prop_table <- function(variable) {
 }
 
 # Apply to each variable
-legal_status_table <- make_prop_table(data_ee$documentation_legal_status)
-legal_diff_table <- make_prop_table(data_ee$documentation_temp_protection_difficulty)
-legal_diff_what_table <- make_prop_table(data_ee$documentation_temp_protection_difficulty_what)
+#Legal Status proportions
+legal_status_table <- make_prop_table(
+  data_ee$documentation_legal_status)
+
+#Difficulty in getting temp protection
+legal_diff_table <- make_prop_table(
+  data_ee$documentation_temp_protection_difficulty) 
+
+# Types of difficulties 
+legal_diff_what_table <- make_prop_table(
+  data_ee$documentation_temp_protection_difficulty_what)
 
 # View tables
 legal_status_table
@@ -131,22 +137,29 @@ legal_diff_table
 legal_diff_what_table
 
 ```
-**Accommodation**
+**Accommodation and Services**
+
+Over two thirds of refugees did not report having issues with accommodation. High rent appeared to be the main concern with one fifth of respondents experiencing the issue. Other problems include insufficient privacy and poor hygiene infrastructure, such as showers and toilets, but these options were chosen by less than 6% of respondents each.
 
 ```{r}
 
 # Function to create a clean proportion table
-make_prop_table <- function(variable) {
-  tibble(
-    Category = names(table(variable, useNA = "ifany")),
-    Count = as.numeric(table(variable, useNA = "ifany")),
-    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
-  )
-}
 
-housing_issues_summary <- housing_issues_df |>
-  rename(Percent = Total_Proportion) |>
-  arrange(desc(Percent))
+
+# Choose top-5 reasons for accommodation issues
+top5 <- housing_issues_df |>
+  dplyr::arrange(desc(Total_Proportion)) |>
+  dplyr::slice_head(n = 5)
+top5$Issue <- rownames(top5)
+
+# Graph
+ggplot(top5, aes(x = reorder(Issue, Total_Proportion), 
+                 y = Total_Proportion, fill = Total_Proportion)) +
+  geom_bar(stat = "identity") + gg +
+  xlab("Proportion (%)") + ylab("Accommodation issues") +
+  scale_fill_gradient(low = "lightblue", high = "darkblue")+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
 leave_accomm_reason <- make_prop_table(data_ee$host_country_accomm_reason)
 
 # View tables
@@ -154,7 +167,6 @@ housing_issues_summary
 leave_accomm_reason
 
 ```
-**Services**
 
 + School
 

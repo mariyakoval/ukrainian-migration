@@ -23,7 +23,9 @@ data_ee$introduction_date_arrival <- as.Date(
 
 data_ee <- data_ee |>
   select(introduction_resp_age, introduction_date_arrival, demographics_educ_level,
-         demographics_resp_activity, Family_Separation_separation_y_n, reasons_country_ee,
+         demographics_resp_activity, Family_Separation_separation_y_n, 
+         documentation_legal_status, documentation_temp_protection_difficulty,
+         documentation_temp_protection_difficulty_what
          )
 
 ```
