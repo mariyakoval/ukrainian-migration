@@ -227,19 +227,35 @@ grid.arrange(grobs = list(e1, e2, e3, e4, e5, e6, e7),
 freq_table <- table(data_ee$documentation_legal_status, useNA = "ifany")
 prop_table <- prop.table(freq_table)
 percent_table <- round(100 * prop_table, 2)
-print(percent_table)
 
-#Legal Status proportions
+#Difficulty in getting temp protection
 freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty, useNA = "ifany")
 prop_table_legal_diff <- prop.table(freq_table_legal_diff)
 percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
-print(percent_table_legal_diff)
 
-#Legal Status proportions
+# Types of difficulties 
 freq_table_legal_diff <- table(data_ee$documentation_temp_protection_difficulty_what, useNA = "ifany")
 prop_table_legal_diff <- prop.table(freq_table_legal_diff)
 percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
-print(percent_table_legal_diff)
+
+# Function to create a clean proportion table
+make_prop_table <- function(variable) {
+  tibble(
+    Category = names(table(variable, useNA = "ifany")),
+    Count = as.numeric(table(variable, useNA = "ifany")),
+    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
+  )
+}
+
+# Apply to each variable
+legal_status_table <- make_prop_table(data_ee$documentation_legal_status)
+legal_diff_table <- make_prop_table(data_ee$documentation_temp_protection_difficulty)
+legal_diff_what_table <- make_prop_table(data_ee$documentation_temp_protection_difficulty_what)
+
+# View tables
+legal_status_table
+legal_diff_table
+legal_diff_what_table
 
 ```
 
