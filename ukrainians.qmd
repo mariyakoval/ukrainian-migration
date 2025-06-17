@@ -24,293 +24,11 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
-data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
-```
-
-**Data wrangling**
-
-```{r}
-#Convert the year to the date format
-data_ee$introduction_date_departure <- as.Date(
-  as.yearmon(data_ee$introduction_date_departure, format = "%Y-%m")) 
-data_ee$introduction_date_arrival <- as.Date(
-  as.yearmon(data_ee$introduction_date_arrival , format = "%Y-%m")) 
-
-#Legal Status proportions
-freq_table_legal_diff <- table(data_ee$host_country_SE2_11_SS_INC_SOR, useNA = "ifany")
-prop_table_legal_diff <- prop.table(freq_table_legal_diff)
-percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
-print(percent_table_legal_diff)
-
-#Create a vector with proportions of reasons that explain reasons for arrival
-category_props <- c(
-  "accomm_opp relatives" = 0.18,
-  "accomm_opp temp_prot" = 0.18,
-  "accomm_opp work_opp" = 0.18,
-  "close_to_home" = 0.54,
-  "close_to_home other" = 0.18,
-  "close_to_home relatives work_opp" = 0.18,
-  "closest" = 7.19,
-  "closest close_to_home" = 0.54,
-  "closest close_to_home language" = 0.18,
-  "closest cultural language" = 0.18,
-  "closest language" = 1.08,
-  "closest language temp_prot" = 0.18,
-  "closest language work_opp" = 0.36,
-  "closest other" = 0.36,
-  "closest relatives" = 2.34,
-  "closest relatives benefits" = 0.18,
-  "closest relatives language" = 0.54,
-  "closest relatives temp_prot" = 0.36,
-  "closest temp_prot" = 0.36,
-  "closest work_opp" = 0.18,
-  "cultural" = 0.54,
-  "cultural benefits" = 0.18,
-  "cultural benefits temp_prot" = 0.36,
-  "cultural edu_opp" = 0.18,
-  "cultural language" = 2.70,
-  "cultural language edu_opp" = 0.18,
-  "cultural language work_opp" = 0.36,
-  "cultural relatives" = 0.18,
-  "cultural relatives work_opp" = 0.18,
-  "cultural temp_prot" = 0.18,
-  "cultural work_opp" = 0.36,
-  "cultural work_opp benefits" = 0.18,
-  "cultural work_opp language" = 0.18,
-  "edu_opp" = 2.70,
-  "edu_opp cultural" = 0.54,
-  "edu_opp cultural work_opp" = 0.18,
-  "edu_opp relatives" = 0.18,
-  "health_needs" = 0.36,
-  "language" = 2.34,
-  "language benefits" = 0.18,
-  "language benefits temp_prot" = 0.18,
-  "language closest" = 0.36,
-  "language closest close_to_home" = 0.18,
-  "language cultural" = 0.54,
-  "language cultural temp_prot" = 0.18,
-  "language relatives" = 0.36,
-  "language temp_prot" = 0.18,
-  "language temp_prot benefits" = 0.36,
-  "language work_opp" = 0.36,
-  "language work_opp benefits" = 0.18,
-  "language work_opp close_to_home" = 0.18,
-  "language work_opp temp_prot" = 0.18,
-  "other" = 6.65,
-  "prefer_no_answer" = 0.36,
-  "relatives" = 43.53,
-  "relatives accomm_opp" = 0.18,
-  "relatives accomm_opp temp_prot" = 0.18,
-  "relatives accomm_opp work_opp" = 0.36,
-  "relatives benefits" = 0.54,
-  "relatives benefits temp_prot" = 0.36,
-  "relatives closest" = 1.26,
-  "relatives cultural benefits" = 0.36,
-  "relatives cultural language" = 0.90,
-  "relatives cultural work_opp" = 0.18,
-  "relatives edu_opp" = 0.18,
-  "relatives language" = 1.80,
-  "relatives language benefits" = 0.36,
-  "relatives language cultural" = 0.54,
-  "relatives language temp_prot" = 0.54,
-  "relatives other" = 1.80,
-  "relatives temp_prot" = 0.72,
-  "relatives work_opp" = 2.70,
-  "relatives work_opp benefits" = 0.18,
-  "relatives work_opp language" = 0.36,
-  "temp_prot" = 0.54,
-  "work_opp" = 1.98,
-  "work_opp accomm_opp" = 0.18,
-  "work_opp accomm_opp cultural" = 0.18,
-  "work_opp edu_opp" = 0.18,
-  "work_opp language" = 0.54,
-  "work_opp language edu_opp" = 0.18,
-  "work_opp other" = 0.36,
-  "work_opp other relatives" = 0.18,
-  "work_opp relatives" = 0.36,
-  "work_opp relatives cultural" = 0.18,
-  "work_opp relatives language" = 0.36
-)
-
-# Create an empty list to store component contributions
-component_list <- list()
-
-# Loop through each compound label and distribute its proportion
-for (name in names(category_props)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list[[comp]])) {
-      component_list[[comp]] <- component_list[[comp]] + prop
-    } else {
-      component_list[[comp]] <- prop
-    }
-  }
-}
-
-# Convert to a data frame
-reasons_country_ee <- data.frame(
-  Component = names(component_list),
-  Total_Proportion = unlist(component_list)
-)
-
-housing_issues_props <- c(
-  "do_not_feel_protected" = 0.18,
-  "do_not_feel_protected insufficient_privacy insufficient_sleeping_materials" = 0.18,
-  "dont_know" = 2.34,
-  "inaccessible_by_transportation" = 0.54,
-  "inaccessible_by_transportation insufficient_privacy unable_to_cook_store_food" = 0.18,
-  "inaccessible_to_disabled" = 0.36,
-  "insufficient_privacy" = 1.44,
-  "insufficient_privacy insufficient_sleeping_materials" = 0.18,
-  "insufficient_privacy lack_of_showers_toilets" = 0.18,
-  "insufficient_privacy rent_too_high" = 1.08,
-  "insufficient_privacy unable_to_cook_store_food" = 0.18,
-  "insufficient_privacy unclean_space rent_too_high" = 0.18,
-  "insufficient_sleeping_materials" = 0.36,
-  "insufficient_sleeping_materials insufficient_privacy" = 0.18,
-  "insufficient_sleeping_materials rent_too_high" = 0.90,
-  "lack_of_showers_toilets" = 2.88,
-  "lack_of_showers_toilets insufficient_privacy" = 1.08,
-  "lack_of_showers_toilets unable_to_cook_store_food" = 0.18,
-  "no_issues" = 67.27,
-  "prefer_not_to_say" = 1.08,
-  "rent_too_high" = 16.73,
-  "rent_too_high do_not_feel_protected" = 0.18,
-  "rent_too_high insufficient_privacy" = 0.36,
-  "rent_too_high insufficient_sleeping_materials" = 0.18,
-  "unable_to_cook_store_food" = 0.90,
-  "unable_to_cook_store_food lack_of_showers_toilets insufficient_privacy" = 0.18,
-  "unable_to_cook_store_food lack_of_showers_toilets rent_too_high" = 0.18,
-  "unable_to_cook_store_food unclean_space rent_too_high" = 0.18,
-  "unclean_space rent_too_high" = 0.18
-)
-
-component_list_house <- list()
-
-for (name in names(housing_issues_props)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- housing_issues_props[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_house[[comp]])) {
-      component_list_house[[comp]] <- component_list_house[[comp]] + prop
-    } else {
-      component_list_house[[comp]] <- prop
-    }
-  }
-}
-
-housing_issues_df <- data.frame(
-  Total_Proportion = unlist(component_list_house)
-)
-
-category_props_med <- c(
-  "med_discrimination" = 0.18,
-  "med_discrimination med_language" = 0.18,
-  "med_discrimination other" = 0.18,
-  "med_fees" = 0.54,
-  "med_fees med_documentation med_lack_info" = 0.18,
-  "med_fees med_long_wait" = 0.18,
-  "med_fees other" = 0.18,
-  "med_lack_info" = 0.36,
-  "med_lack_info other" = 0.18,
-  "med_language" = 0.90,
-  "med_language med_long_wait" = 0.54,
-  "med_long_wait" = 10.43,
-  "med_long_wait med_documentation" = 0.18,
-  "med_long_wait med_fees" = 0.72,
-  "med_long_wait med_fees med_language med_long_wait med_lack_info med_language med_discrimination" = 0.18,
-  "med_long_wait med_language" = 2.16,
-  "med_long_wait med_language med_discrimination" = 0.18,
-  "med_long_wait med_not_available" = 0.18,
-  "med_long_wait med_refused" = 0.36,
-  "med_long_wait med_refused other" = 0.18,
-  "med_long_wait other" = 1.44,
-  "med_not_available" = 0.72,
-  "med_not_available med_fees med_documentation" = 0.18,
-  "med_not_available med_fees other" = 0.18,
-  "med_not_available med_long_wait" = 1.08,
-  "med_not_available med_long_wait other" = 0.36,
-  "med_not_available med_refused" = 0.36,
-  "med_not_available med_refused med_fees med_lack_info" = 0.18,
-  "med_not_available med_refused med_long_wait" = 0.18,
-  "med_not_available other" = 0.18,
-  "med_refused med_long_wait" = 0.72,
-  "med_refused med_long_wait med_language" = 0.36,
-  "med_refused med_long_wait other" = 0.36,
-  "med_refused other" = 0.36,
-  "other" = 4.86,
-  "other med_long_wait" = 0.36,
-  "other med_refused" = 0.18,
-  "NA" = 69.60
-)
-category_props_med_clean <- category_props_med[names(category_props_med) != "NA" & names(category_props_med) != "<NA>"]
-component_list_med <- list()
-
-for (name in names(category_props_med_clean)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props_med_clean[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_med[[comp]])) {
-      component_list_med[[comp]] <- component_list_med[[comp]] + prop
-    } else {
-      component_list_med[[comp]] <- prop
-    }
-  }
-}
-med_issues_df <- data.frame(
-  Proportion = unlist(component_list_med) / sum(category_props_med_clean)
-)
-
-category_props_income <- c(
-  "dont_know" = 1.08,
-  "employment_host_country" = 37.95,
-  "employment_host_country employment_remote social_protection_host_govt" = 0.18,
-  "employment_host_country employment_remote social_protection_host_govt other_sources" = 0.18,
-  "employment_host_country other_sources" = 0.18,
-  "employment_host_country social_protection_host_govt" = 19.24,
-  "employment_host_country social_protection_host_govt other_sources" = 0.36,
-  "employment_host_country social_protection_host_govt social_protection_ukr_govt" = 0.72,
-  "employment_host_country social_protection_ukr_govt" = 0.18,
-  "employment_remote" = 0.90,
-  "employment_remote other_sources" = 0.18,
-  "employment_remote social_protection_host_govt" = 0.54,
-  "no_income" = 5.94,
-  "other_sources" = 1.62,
-  "other_sources social_protection_host_govt" = 0.72,
-  "prefer_not_to_answer" = 0.90,
-  "social_protection_host_govt" = 19.78,
-  "social_protection_host_govt employment_host_country" = 3.78,
-  "social_protection_host_govt employment_host_country other_sources" = 0.18,
-  "social_protection_host_govt employment_host_country social_protection_ukr_govt" = 0.18,
-  "social_protection_host_govt employment_remote" = 0.18,
-  "social_protection_host_govt other_sources" = 1.44,
-  "social_protection_host_govt social_protection_ukr_govt" = 2.70,
-  "social_protection_ukr_govt" = 0.36,
-  "social_protection_ukr_govt social_protection_host_govt" = 0.36,
-  "social_protection_ukr_govt social_protection_host_govt employment_host_country" = 0.18
-)
-component_list_income <- list()
-
-for (name in names(category_props_income)) {
-  components <- unlist(strsplit(name, " "))
-  prop <- category_props_income[[name]]
-  
-  for (comp in components) {
-    if (!is.null(component_list_income[[comp]])) {
-      component_list_income[[comp]] <- component_list_income[[comp]] + prop
-    } else {
-      component_list_income[[comp]] <- prop
-    }
-  }
-}
-income_sources_df <- data.frame(
-  Proportion = unlist(component_list_income) / sum(category_props_income)
-)
-
+data_ee <- readRDS("Data/data_ee")
+work_df <- readRDS("Data/work_df")
+income_sources_df <- readRDS("Data/income_sources_df")
+med_issues_df <- readRDS("Data/med_issues_df")
+reasons_country_ee <- readRDS("Data/reasons_country_ee")
 ```
 
 **Introduction**
@@ -438,6 +156,8 @@ leave_accomm_reason
 ```
 **Services**
 
++ School
+
 ```{r}
 
 data_ee_filtered <- data_ee |>
@@ -472,11 +192,43 @@ income_summary <- income_sources_df |>
   mutate(Percent = round(Proportion * 100, 2)) |>
   select(Percent) |>
   arrange(desc(Percent))
-
 income_summary
 
-```
 
+work_summary <- make_prop_table(data_ee$host_country_work_coa)
+work_summary
+
+work_issues_summary <- work_df |>
+  mutate(Percent = round(Proportion * 100, 2)) |>
+  select(Percent) |>
+  arrange(desc(Percent))
+work_issues_summary
+
+ggplot(data_ee, aes(x = economic_capicity_L13_SS_AFF_GOODS, fill = economic_capicity_L13_SS_AFF_GOODS)) +
+  geom_bar(stat = "count") + gg + xlab("Can ypu afford more or less goods?") + ylab("Count") +
+  scale_fill_brewer(palette = "Paired")
+```
+ECONOMIC_CAPICITY_L13_1_SM_MORE_GOODS
+ECONOMIC_CAPICITY_L13_1_SM_LESS_GOODS
+
+**Safety**
+SOCIAL_COHESION_SC3_SS_EXP_HOSTILE
+SOCIAL_COHESION_SC4_SM_HOSTILE_TYP
+
+**Aid**
+AAP_AAP_0_SS_SATISFIED_AID
+URGENT_NEEDS_URGENT_NEEDS_FIRST
+URGENT_NEEDS_URGENT_NEEDS_SECOND
+URGENT_NEEDS_URGENT_NEEDS_THIRD
+INFO_NEEDS_INFO_RECEIVE
+
+**Travelign back**
+TRAVEL_UKRAINE_TEMP_RETURN
+TRAVEL_UKRAINE_TEMP_RETURN_REASON
+Reasons of going permanently to Ukraine
+TRAVEL_UKRAINE_NO_RETURN_PLANS
+TRAVEL_UKRAINE_NO_RETURN_MOVE_COUNTRY
+TRAVEL_UKRAINE_NO_RETURN_MOVE_REASONS
 
 **Discussion**
 
