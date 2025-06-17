@@ -25,7 +25,10 @@ data_ee <- data_ee |>
   select(introduction_resp_age, introduction_date_arrival, demographics_educ_level,
          demographics_resp_activity, Family_Separation_separation_y_n, 
          documentation_legal_status, documentation_temp_protection_difficulty,
-         documentation_temp_protection_difficulty_what
+         documentation_temp_protection_difficulty_what, host_country_accomm_reason,
+         host_country_childcare_services, host_country_healthcare_access, 
+         host_country_work_coa, economic_capicity_L13_SS_AFF_GOODS, 
+         
          )
 
 ```
@@ -399,6 +402,6 @@ saveRDS(data_ee, "data_ee")
 saveRDS(work_df, "work_df")
 saveRDS(income_sources_df, "income_sources_df")
 saveRDS(med_issues_df, "med_issues_df")
-saveRDS(income_sources_df, "income_sources_df")
+saveRDS(housing_issues_df, "housing_issues_df")
 saveRDS(reasons_country_ee, "reasons_country_ee")
 ```

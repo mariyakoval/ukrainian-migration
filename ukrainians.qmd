@@ -29,14 +29,20 @@ work_df <- readRDS("Data/work_df")
 income_sources_df <- readRDS("Data/income_sources_df")
 med_issues_df <- readRDS("Data/med_issues_df")
 reasons_country_ee <- readRDS("Data/reasons_country_ee")
+housing_issues_df <- readRDS("Data/housing_issues_df")
 ```
 
 **Introduction**
 
+Potential research questions: 
+- Which factors are associated with economic self-sufficiency? (affording more goods)
+- What influences the decision to return (temporarily or permanently) to Ukraine?
+- Does perceived hostility or social cohesion affect intent to stay?
+
 **Data and methods**
 
-**Ukrainian Refugees in Estonia**
-**EDA**
+*Ukrainian Refugees in Estonia*
+*EDA*
 
 **Demographics**
 
@@ -160,40 +166,39 @@ ggplot(top5, aes(x = reorder(Issue, Total_Proportion),
   scale_fill_gradient(low = "lightblue", high = "darkblue")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-leave_accomm_reason <- make_prop_table(data_ee$host_country_accomm_reason)
-
-# View tables
-housing_issues_summary
-leave_accomm_reason
+make_prop_table(data_ee$host_country_accomm_reason)
 
 ```
 
 + School
+NA values were removed from columns related to childcare services, assuming that people who did not answer don't have children. Among those who participated in this section, almost everyone had access to childcare services. The situation was different with healthcare service. 30% of people experienced some problems with healthcare services, among which two thirds reported long waiting times. 15% claimed having obstacles due to medical language, 12% due to absence of medical professionals, and 11% due to refusal. 
 
 ```{r}
 
+# Remove NA values from childcare variable, assuming that NA respondents don't
+# have children
 data_ee_filtered <- data_ee |>
   filter(!is.na(host_country_childcare_services))
 
 # Create the bar chart
-ggplot(data_ee_filtered, aes(x = host_country_childcare_services, fill = host_country_childcare_services)) +
+ggplot(data_ee_filtered, aes(x = host_country_childcare_services, 
+                             fill = host_country_childcare_services)) +
   geom_bar(stat = "count") +
   xlab("Childcare Services") +
   ylab("Count") +
   scale_fill_brewer(palette = "Paired") + gg
 
-ggplot(data_ee_filtered, aes(x = host_country_healthcare_access, fill = host_country_healthcare_access)) +
+ggplot(data_ee_filtered, aes(x = host_country_healthcare_access, 
+                             fill = host_country_healthcare_access)) +
   geom_bar(stat = "count") +
   xlab("Problems accessing Healthcare Services") +
   ylab("Count") +
   scale_fill_brewer(palette = "Paired") + gg
 
-med_issues_summary <- med_issues_df |>
+med_issues_df |>
   mutate(Percent = round(Proportion * 100, 2)) |>
   select(Percent) |>
   arrange(desc(Percent))
-
-med_issues_summary
 
 ```
 
@@ -234,7 +239,7 @@ URGENT_NEEDS_URGENT_NEEDS_SECOND
 URGENT_NEEDS_URGENT_NEEDS_THIRD
 INFO_NEEDS_INFO_RECEIVE
 
-**Travelign back**
+**Traveling back**
 TRAVEL_UKRAINE_TEMP_RETURN
 TRAVEL_UKRAINE_TEMP_RETURN_REASON
 Reasons of going permanently to Ukraine
