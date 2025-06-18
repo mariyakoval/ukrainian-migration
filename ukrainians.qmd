@@ -1,6 +1,9 @@
 ---
 title: "ukrainians"
 format: html
+editor: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -22,31 +25,40 @@ knitr::opts_chunk$set(
 if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
-              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
+              patchwork)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
-
+data_eu <- read_csv("Data/data_eu")
 ```
 
 **Introduction**
 
-Potential research questions: 
-- Which factors are associated with economic self-sufficiency? (affording more goods)
-- What influences the decision to return (temporarily or permanently) to Ukraine?
-- Does perceived hostility or social cohesion affect intent to stay?
+Potential research questions: - Which factors are associated with
+economic self-sufficiency? (affording more goods) - What influences the
+decision to return (temporarily or permanently) to Ukraine? - Does
+perceived hostility or social cohesion affect intent to stay?
 
 **Data and methods**
 
-*Ukrainian Refugees in Estonia*
-*EDA*
+**Ukrainian Refugees in Estonia EDA**
 
 **Demographics**
 
-Key demographcic indicators of Ukrainian refugees in Estonia reveal that the majority of refugees are between 35 and 59 years old, closely followed by the 18-34 age group. Refugees aged 60 and older represent a minority of arrivals, indicating a younger to middle-aged demographic predominance. The largest wave of arrivals to Estonia occurred between March and April of 2022, with 45.68% of all arrivals within the period falling in this range. There are mild arrival peaks in May and July of 2022. 49.46% of arrivals hold a vocational and specialization education, followed by around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping. 
+The bar chart displays the distribution of survey respondents by age
+group (18–34, 35–59, 60+) across six Central and Eastern European
+countries: Czechia, Estonia, Moldova, Poland, Romania, and Slovakia.
+Across all countries, the 35–59 age group consistently has the highest
+number of respondents, followed by the 18–34 group, with the 60+ group
+being the least represented. Romania stands out with a particularly high
+concentration of respondents in the 35–59 group compared to the other
+age categories. Estonia shows a more balanced distribution between the
+younger and middle-aged groups, though the same pattern persists. In
+contrast, the data for Poland appears to be missing or not displayed in
+the chart.
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE}
-# Common theme for plots
 gg <- theme_minimal() +
   theme(
     legend.position = "none",
@@ -55,20 +67,51 @@ gg <- theme_minimal() +
     axis.text = element_text(size = 7)
   )
 
-# EDA plots
-e1 <- ggplot(data_ee, aes(x = introduction_resp_age, 
-                          fill = introduction_resp_age)) +
-  geom_bar(stat = "count") + gg + xlab("Age") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")
+data_ee_clean <- data_ee %>%
+  rename(DR7_3_NUM_RESP_AGE = introduction_resp_age) %>%
+  mutate(country = "Estonia")
 
-e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, 
-                          fill = as.factor(introduction_date_arrival ))) +
+combined_data <- data_eu %>%
+  filter(!country %in% c("Hungary","Bulgaria")) %>%
+  bind_rows(data_ee_clean)
+
+# Create faceted plot
+ggplot(combined_data,
+       aes(x = DR7_3_NUM_RESP_AGE, fill = DR7_3_NUM_RESP_AGE)) +
   geom_bar(stat = "count") +
+  facet_wrap(~country) +
+  xlab("Age") + 
+  ylab("Count") +
   scale_fill_brewer(palette = "Paired") +
-  xlab("Date of arrival") +
-  ylab("Count")+
-  xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(fill = "Age of respondents") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
+  ylim(c(0, 800))
+
+```
+
+The largest wave of arrivals to Estonia occurred between March and April
+of 2022, with 45.68% of all arrivals within the period falling in this
+range. There are mild arrival peaks in May and July of 2022. 49.46% of
+arrivals hold a vocational and specialization education, followed by
+around 38% of refugees with Master or Bachelor degrees. People with
+secondary education are moderately represented, but there are very few
+people with PhD education. The largest group is employed, indicating
+that many refugees were active in the workforce before displacement.
+Other categories include students, self-employed, and those in
+housekeeping.
+
+```{r, fig.width=7, fig.height=2, warning=FALSE}
+
+# e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, 
+#                           fill = as.factor(introduction_date_arrival ))) +
+#   geom_bar(stat = "count") +
+#   scale_fill_brewer(palette = "Paired") +
+#   xlab("Date of arrival") +
+#   ylab("Count")+
+#   xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 e4 <- ggplot(data_ee, aes(x = fct_infreq(demographics_educ_level), 
                           fill = demographics_educ_level  )) +
@@ -84,14 +127,17 @@ e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity),
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 # Arrange all plots
-grid.arrange(grobs = list(e1, e3, e4, e5),
-             ncol = 2, nrow = 2,
+grid.arrange(grobs = list(e4, e5),
+             ncol = 2, nrow = 1,
              top = "Bar Plots of Key Demographic Variables in Estonia Dataset")
 ```
 
 **Legal status and choice of country**
 
-While 55.76% of respondents experienced family separation, reunification with relatives was among the primary motivations for coming to Estonia. The remaining important reasons for choosing Estonia are language, its proximity, work opportunities, and cultural reasons.
+While 55.76% of respondents experienced family separation, reunification
+with relatives was among the primary motivations for coming to Estonia.
+The remaining important reasons for choosing Estonia are language, its
+proximity, work opportunities, and cultural reasons.
 
 ```{r}
 
@@ -109,7 +155,12 @@ ggplot(top6, aes(x = reorder(Component, -Total_Proportion),
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Temporary protection is the predominant legal status covering around 50% of respondents. However, almost half of those who have taken the surey did not provide an answer, indicating possible administrative gaps or hesitation. The vast majority, over 92%, did not report having difficulties in accessing temporary protection, while only 3.24% faced obstacles. 
+Temporary protection is the predominant legal status covering around 50%
+of respondents. However, almost half of those who have taken the survey
+did not provide an answer, indicating possible administrative gaps or
+hesitation. The vast majority, over 92%, did not report having
+difficulties in accessing temporary protection, while only 3.24% faced
+obstacles.
 
 ```{r}
 # Function to create a clean proportion table
@@ -132,14 +183,17 @@ make_prop_table(data_ee$documentation_temp_protection_difficulty)
 make_prop_table(data_ee$documentation_temp_protection_difficulty_what)
 
 ```
+
 **Accommodation and Services**
 
-Over two thirds of refugees did not report having issues with accommodation. High rent appeared to be the main concern with one fifth of respondents experiencing the issue. Other problems include insufficient privacy and poor hygiene infrastructure, such as showers and toilets, but these options were chosen by less than 6% of respondents each.
+Over two thirds of refugees did not report having issues with
+accommodation. High rent appeared to be the main concern with one fifth
+of respondents experiencing the issue. Other problems include
+insufficient privacy and poor hygiene infrastructure, such as showers
+and toilets, but these options were chosen by less than 6% of
+respondents each.
 
 ```{r}
-
-# Function to create a clean proportion table
-
 
 # Choose top-5 reasons for accommodation issues
 top5 <- housing_issues_df |>
@@ -165,8 +219,13 @@ print(percent_table_legal_diff)
 
 ```
 
-+ School
-NA values were removed from columns related to childcare services, assuming that people who did not answer don't have children. Among those who participated in this section, almost everyone had access to childcare services. The situation was different with healthcare service. 30% of people experienced some problems with healthcare services, among which 49.5% reported long waiting times.
+-   School NA values were removed from columns related to childcare
+    services, assuming that people who did not answer don't have
+    children. Among those who participated in this section, almost
+    everyone had access to childcare services. The situation was
+    different with healthcare service. 30% of people experienced some
+    problems with healthcare services, among which 49.5% reported long
+    waiting times.
 
 ```{r}
 
@@ -198,9 +257,17 @@ combined_df |>
 
 ```
 
-**Economic capacity**
+**Economic capacity and Aid**
 
-The main source of income for Ukrainian refugees is employment in host country, as reported by 50% of respondents. Around a third of people rely on social protection benefits provided by the host country. 10% of people reported having no income, other sources or social benefits from Ukrainian government. 31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
+The main source of income for Ukrainian refugees is employment in host
+country, as reported by 50% of respondents. Around a third of people
+rely on social protection benefits provided by the host country. 10% of
+people reported having no income, other sources or social benefits from
+Ukrainian government. 31% of refugees didn't encounter any issues while
+looking for a job. The main concern, however, was the lack of language
+as 36% of people faced it. the second biggest obstacle was the lack of
+opportunities and lack of recognition, as noted by 11% and 7% of people
+respectively.
 
 ```{r}
 combined_df |>
@@ -225,11 +292,25 @@ make_prop_table(data_ee$economic_capicity_L13_1_SM_MORE_GOODS)
 make_prop_table(data_ee$economic_capicity_L13_1_SM_LESS_GOODS)
 ```
 
+Urgent needs first: employment, accommodation, education for adults.
+Second - medical, material, psychological.
+
+```{r}
+
+make_prop_table(data_ee$aap_AAP_0_SS_SATISFIED_AID)
+make_prop_table(data_ee$urgent_needs_urgent_needs_first)
+make_prop_table(data_ee$urgent_needs_urgent_needs_second)
+```
 
 **Safety**
 
-According to data, 35.61% of refugees in Estonia experiences hostile attitude, that included aggressive comments in news forums online' or
-social media, verbal aggression, or physical aggression. In particular, verbal aggression was one of the main concerns, as  14.6% of people reported this from of hostile behavior, followed by aggressive comments on social media and discriminatory behavior accounting for 7% and 6% of responses respectively.
+According to data, 35.61% of refugees in Estonia experiences hostile
+attitude, that included aggressive comments in news forums online' or
+social media, verbal aggression, or physical aggression. In particular,
+verbal aggression was one of the main concerns, as 14.6% of people
+reported this from of hostile behavior, followed by aggressive comments
+on social media and discriminatory behavior accounting for 7% and 6% of
+responses respectively.
 
 ```{r}
 
@@ -242,23 +323,12 @@ combined_df |>
   arrange(desc(Percent))
 ```
 
-**Aid**
-Urgent needs first: employment, accommodation, education for adults. Second - medical, material, psychological.
-
-```{r}
-
-make_prop_table(data_ee$aap_AAP_0_SS_SATISFIED_AID)
-make_prop_table(data_ee$urgent_needs_urgent_needs_first)
-make_prop_table(data_ee$urgent_needs_urgent_needs_second)
-#make_prop_table(data_ee$urgent_needs_urgent_needs_third)
-#make_prop_table(data_ee$info_needs_info_receive )
-
-```
-
 **Traveling back**
+
 Reasons of going permanently to Ukraine
 
-Reasons for traveling back temporarily: visit relatives, check property, get documents. 77.16% expect to stay in Estonia. 	
+Reasons for traveling back temporarily: visit relatives, check property,
+get documents. 77.16% expect to stay in Estonia.
 
 ```{r}
 make_prop_table(data_ee$Travel_Ukraine_temp_return )
@@ -273,6 +343,15 @@ make_prop_table(data_ee$Travel_Ukraine_no_return_plans )
 make_prop_table(data_ee$Travel_Ukraine_return_length)
 make_prop_table(data_ee$Travel_Ukraine_no_return_move_country )
 make_prop_table(data_ee$Travel_Ukraine_no_return_move_reasons )
+
+```
+
+**Tests**
+
+```{r}
+table1 <- table(data_ee$Travel_Ukraine_no_return_plans, data_ee$economic_capicity_L13_SS_AFF_GOODS)
+chisq.test(table1)
+fisher.test(table1)
 
 ```
 

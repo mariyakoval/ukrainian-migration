@@ -12,7 +12,14 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- read.csv("UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+data_eu <- read_csv("EU_countries.csv")
 ```
+```{r}
+data_eu <- data_eu |>
+  filter(!is.na(country) & country != 0)
+
+```
+
 
 ```{r}
 #Convert the year to the date format
@@ -548,4 +555,5 @@ combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
 
 saveRDS(data_ee, "data_ee")
 saveRDS(combined_df, "combined_df")
+write_csv(data_eu, "data_eu")
 ```
