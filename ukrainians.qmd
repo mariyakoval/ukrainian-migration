@@ -30,6 +30,8 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
+combined_eu <- readRDS("Data/combined_eu")
+reasons_country_ee <- readRDS("Data/reasons_country_ee")
 data_eu <- read_csv("Data/data_eu")
 ```
 
@@ -40,25 +42,27 @@ economic self-sufficiency? (affording more goods) - What influences the
 decision to return (temporarily or permanently) to Ukraine? - Does
 perceived hostility or social cohesion affect intent to stay?
 
+The geographical scope of the analysis includes countries in Central and Eastern Europe, such as Estonia, Poland, Czechia, Slovakia, Romania, Moldova. While some data is available for all countries, other variables are available only for a subset of countries. The main goals of the study include describing the socio-economic profiles of Ukrainian refugees in these countries; compare the quality of accommodation, services, and support; identify factors associated with economic self-sufficiency and the decision to return to Ukraine; examine the impact of social cohesion or perceived hostility on refugees’ intent to stay or move.
+
 **Data and methods**
 
 **Ukrainian Refugees in Estonia EDA**
 
 **Demographics**
 
-The bar chart displays the distribution of survey respondents by age
-group (18–34, 35–59, 60+) across six Central and Eastern European
-countries: Czechia, Estonia, Moldova, Poland, Romania, and Slovakia.
-Across all countries, the 35–59 age group consistently has the highest
-number of respondents, followed by the 18–34 group, with the 60+ group
-being the least represented. Romania stands out with a particularly high
-concentration of respondents in the 35–59 group compared to the other
-age categories. Estonia shows a more balanced distribution between the
-younger and middle-aged groups, though the same pattern persists. In
-contrast, the data for Poland appears to be missing or not displayed in
-the chart.
+The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high
+concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists. In contrast, the data for Poland appears to be missing or not displayed in the chart.
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE}
+# Function to create a clean proportion table
+make_prop_table <- function(variable) {
+  tibble(
+    Category = names(table(variable, useNA = "ifany")),
+    Count = as.numeric(table(variable, useNA = "ifany")),
+    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
+  )
+}
+
 gg <- theme_minimal() +
   theme(
     legend.position = "none",
@@ -67,51 +71,37 @@ gg <- theme_minimal() +
     axis.text = element_text(size = 7)
   )
 
-data_ee_clean <- data_ee %>%
-  rename(DR7_3_NUM_RESP_AGE = introduction_resp_age) %>%
-  mutate(country = "Estonia")
-
-combined_data <- data_eu %>%
-  filter(!country %in% c("Hungary","Bulgaria")) %>%
-  bind_rows(data_ee_clean)
-
-# Create faceted plot
-ggplot(combined_data,
-       aes(x = DR7_3_NUM_RESP_AGE, fill = DR7_3_NUM_RESP_AGE)) +
-  geom_bar(stat = "count") +
-  facet_wrap(~country) +
-  xlab("Age") + 
-  ylab("Count") +
-  scale_fill_brewer(palette = "Paired") +
-  labs(fill = "Age of respondents") +
+data_eu |>
+  filter(!country %in% c("Hungary", "Bulgaria")) |>
+  bind_rows(data_ee |> 
+              rename(DR7_3_NUM_RESP_AGE = introduction_resp_age) |> 
+              mutate(country = "Estonia")) |>
+  filter(!is.na(DR7_3_NUM_RESP_AGE), !is.na(country)) |>
+  mutate(DR7_3_NUM_RESP_AGE = factor(DR7_3_NUM_RESP_AGE, 
+                                     levels = c("18-34", "35-59", "60+"))) |>
+  count(country, DR7_3_NUM_RESP_AGE) |>
+  group_by(country) |>
+  mutate(Percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = Percent, fill = DR7_3_NUM_RESP_AGE)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(x = "Country",
+       y = "Percent of Respondents",
+       fill = "Age Group",
+       title = "Age Distribution of Respondents by Country") +
   theme_minimal() +
-  theme(legend.position = "bottom") +
+  theme(legend.position = "top",
+        axis.text.y = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5)) +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
-  ylim(c(0, 800))
+  scale_fill_brewer(palette = "Paired")
 
 ```
 
-The largest wave of arrivals to Estonia occurred between March and April
-of 2022, with 45.68% of all arrivals within the period falling in this
-range. There are mild arrival peaks in May and July of 2022. 49.46% of
-arrivals hold a vocational and specialization education, followed by
-around 38% of refugees with Master or Bachelor degrees. People with
-secondary education are moderately represented, but there are very few
-people with PhD education. The largest group is employed, indicating
-that many refugees were active in the workforce before displacement.
-Other categories include students, self-employed, and those in
-housekeeping.
+While the data on education of Ukrainian refugees is limited, the snapshot of age distribution reveals that the majority of arrivals are part of labor force. Notably, 49.46% of arrivals hold a vocational and specialization education, followed by
+around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping.
 
 ```{r, fig.width=7, fig.height=2, warning=FALSE}
-
-# e3 <- ggplot(data_ee, aes(x = introduction_date_arrival, 
-#                           fill = as.factor(introduction_date_arrival ))) +
-#   geom_bar(stat = "count") +
-#   scale_fill_brewer(palette = "Paired") +
-#   xlab("Date of arrival") +
-#   ylab("Count")+
-#   xlim(as.Date("2022-01-01"), as.Date("2023-01-01")) +gg +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 e4 <- ggplot(data_ee, aes(x = fct_infreq(demographics_educ_level), 
                           fill = demographics_educ_level  )) +
@@ -132,149 +122,69 @@ grid.arrange(grobs = list(e4, e5),
              top = "Bar Plots of Key Demographic Variables in Estonia Dataset")
 ```
 
-**Legal status and choice of country**
+It is needed to understand why refugees choose to resettle in specific states in order to evaluate integration policy and strategy responses. Demographic trends provide a general regional overview, but Estonia offers more detailed information on legal and individual determinants influencing refugees' decisions.
 
-While 55.76% of respondents experienced family separation, reunification
-with relatives was among the primary motivations for coming to Estonia.
-The remaining important reasons for choosing Estonia are language, its
-proximity, work opportunities, and cultural reasons.
+In Estonia, 55.76% of the interviewees said they had been subjected to family separation, and reunifying with family was among the most frequently cited reasons for choosing the destination. Language, geographic closeness, labor market opportunities, and cultural familiarity were also major determinants. All of these suggest that emotional, utilitarian, and socio-economic drivers all play a role in shaping refugee choice in destination countries.
 
 ```{r}
 
 # Choose top-5 reasons for choosing Estonia
 top6 <- reasons_country_ee |>
   dplyr::arrange(desc(Total_Proportion)) |>
-  dplyr::slice_head(n = 5)
+  dplyr::slice_head(n = 5)|>
+  mutate(Percent = round(Total_Proportion * 100, 2))
 
-# Reason for choosing Estonia graph
-ggplot(top6, aes(x = reorder(Component, -Total_Proportion), 
-                 y = Total_Proportion, fill = Total_Proportion)) +
+ggplot(top6, aes(x = reorder(Component, -Percent), 
+                 y = Percent, fill = Percent)) +
   geom_bar(stat = "identity") + gg +
+  coord_flip() +
   xlab("What motivated you to come to this country?") + ylab("Count") +
   scale_fill_gradient(low = "lightblue", high = "darkblue") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-Temporary protection is the predominant legal status covering around 50%
-of respondents. However, almost half of those who have taken the survey
-did not provide an answer, indicating possible administrative gaps or
-hesitation. The vast majority, over 92%, did not report having
-difficulties in accessing temporary protection, while only 3.24% faced
-obstacles.
-
-```{r}
-# Function to create a clean proportion table
-make_prop_table <- function(variable) {
-  tibble(
-    Category = names(table(variable, useNA = "ifany")),
-    Count = as.numeric(table(variable, useNA = "ifany")),
-    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
-  )
-}
-
-# Apply to each variable
-#Legal Status proportions
-make_prop_table(data_ee$documentation_legal_status)
-
-#Difficulty in getting temp protection
-make_prop_table(data_ee$documentation_temp_protection_difficulty) 
-
-# Types of difficulties 
-make_prop_table(data_ee$documentation_temp_protection_difficulty_what)
-
-```
-
-**Accommodation and Services**
-
-Over two thirds of refugees did not report having issues with
-accommodation. High rent appeared to be the main concern with one fifth
-of respondents experiencing the issue. Other problems include
-insufficient privacy and poor hygiene infrastructure, such as showers
-and toilets, but these options were chosen by less than 6% of
-respondents each.
-
-```{r}
-
-# Choose top-5 reasons for accommodation issues
-top5 <- housing_issues_df |>
-  dplyr::arrange(desc(Total_Proportion)) |>
-  dplyr::slice_head(n = 5)
-top5$Issue <- rownames(top5)
-
-# Graph
-ggplot(top5, aes(x = reorder(Issue, Total_Proportion), 
-                 y = Total_Proportion, fill = Total_Proportion)) +
-  geom_bar(stat = "identity") + gg +
-  xlab("Proportion (%)") + ylab("Accommodation issues") +
-  scale_fill_gradient(low = "lightblue", high = "darkblue")+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-make_prop_table(data_ee$host_country_accomm_reason)
-
-#Legal Status proportions
-freq_table_legal_diff <- table(data_ee$host_country_SE2_11_SS_INC_SOR , useNA = "ifany")
-prop_table_legal_diff <- prop.table(freq_table_legal_diff)
-percent_table_legal_diff <- round(100 * prop_table_legal_diff, 2)
-print(percent_table_legal_diff)
-
-```
-
--   School NA values were removed from columns related to childcare
-    services, assuming that people who did not answer don't have
-    children. Among those who participated in this section, almost
-    everyone had access to childcare services. The situation was
-    different with healthcare service. 30% of people experienced some
-    problems with healthcare services, among which 49.5% reported long
-    waiting times.
-
-```{r}
-
-# Remove NA values from childcare variable, assuming that NA respondents don't
-# have children
-data_ee_filtered <- data_ee |>
-  filter(!is.na(host_country_childcare_services))
-
-# Create the bar chart
-ggplot(data_ee_filtered, aes(x = host_country_childcare_services, 
-                             fill = host_country_childcare_services)) +
-  geom_bar(stat = "count") +
-  xlab("Childcare Services") +
-  ylab("Count") +
-  scale_fill_brewer(palette = "Paired") + gg
-
-ggplot(data_ee_filtered, aes(x = host_country_healthcare_access, 
-                             fill = host_country_healthcare_access)) +
-  geom_bar(stat = "count") +
-  xlab("Problems accessing Healthcare Services") +
-  ylab("Count") +
-  scale_fill_brewer(palette = "Paired") + gg
-
-combined_df |>
-  filter(Source == "med_issues") |>
-  mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Component, Percent) |>
-  arrange(desc(Percent))
-
-```
-
 **Economic capacity and Aid**
 
-The main source of income for Ukrainian refugees is employment in host
-country, as reported by 50% of respondents. Around a third of people
-rely on social protection benefits provided by the host country. 10% of
-people reported having no income, other sources or social benefits from
-Ukrainian government. 31% of refugees didn't encounter any issues while
-looking for a job. The main concern, however, was the lack of language
-as 36% of people faced it. the second biggest obstacle was the lack of
-opportunities and lack of recognition, as noted by 11% and 7% of people
-respectively.
+The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Moldova is the exception: "social protection in Ukraine" is the most frequently reported source, and may reflect that there are many refugees there who employ assistance from the home country. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "do not know", "prefer not to answer", and "no income" are low. This band shows levels of integration, access to work, and host country versus origin country welfare system reliance.
+
+```{r, fig.height = 7, fig.width=8}
+df_all <- bind_rows(
+  combined_eu |>
+    filter(Source == "income", !Country %in% c("Hungary", "Bulgaria")) |>
+    mutate(Percent = round(Total_Proportion * 100, 2)) |>
+    select(Component, Percent, Country),
+  
+  combined_df |>
+    filter(Source == "income_sources") |>
+    mutate(Percent = round(Total_Proportion * 100, 2),
+           Country = "Estonia") |>
+    select(Component, Percent, Country)) |>
+  group_by(Country) |>
+  arrange(desc(Percent), .by_group = TRUE) |>
+  slice_head(n = 5) |>
+  ungroup()
+
+df_all$Component <- factor(df_all$Component, levels = unique(df_all$Component))
+
+ggplot(df_all, aes(x = reorder(Component, -Percent), y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  theme_minimal() +
+  theme(legend.position = "right",
+        axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 10),
+        plot.title = element_text(hjust = 0.5)) +
+  ggtitle("Comparison of Reported Income Sources by Country") +
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5))
+
+```
+
+
+31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
+
 
 ```{r}
-combined_df |>
-  filter(Source == "income_sources") |>
-  mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Component, Percent) |>
-  arrange(desc(Percent))
 
 make_prop_table(data_ee$host_country_work_coa)
 
