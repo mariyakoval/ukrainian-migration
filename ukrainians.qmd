@@ -25,11 +25,8 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- readRDS("Data/data_ee")
-work_df <- readRDS("Data/work_df")
-income_sources_df <- readRDS("Data/income_sources_df")
-med_issues_df <- readRDS("Data/med_issues_df")
-reasons_country_ee <- readRDS("Data/reasons_country_ee")
-housing_issues_df <- readRDS("Data/housing_issues_df")
+combined_df <- readRDS("Data/combined_df")
+
 ```
 
 **Introduction**
@@ -126,21 +123,13 @@ make_prop_table <- function(variable) {
 
 # Apply to each variable
 #Legal Status proportions
-legal_status_table <- make_prop_table(
-  data_ee$documentation_legal_status)
+make_prop_table(data_ee$documentation_legal_status)
 
 #Difficulty in getting temp protection
-legal_diff_table <- make_prop_table(
-  data_ee$documentation_temp_protection_difficulty) 
+make_prop_table(data_ee$documentation_temp_protection_difficulty) 
 
 # Types of difficulties 
-legal_diff_what_table <- make_prop_table(
-  data_ee$documentation_temp_protection_difficulty_what)
-
-# View tables
-legal_status_table
-legal_diff_table
-legal_diff_what_table
+make_prop_table(data_ee$documentation_temp_protection_difficulty_what)
 
 ```
 **Accommodation and Services**
@@ -167,8 +156,6 @@ ggplot(top5, aes(x = reorder(Issue, Total_Proportion),
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 make_prop_table(data_ee$host_country_accomm_reason)
-
-
 
 #Legal Status proportions
 freq_table_legal_diff <- table(data_ee$host_country_SE2_11_SS_INC_SOR , useNA = "ifany")
@@ -203,9 +190,10 @@ ggplot(data_ee_filtered, aes(x = host_country_healthcare_access,
   ylab("Count") +
   scale_fill_brewer(palette = "Paired") + gg
 
-med_issues_df |>
+combined_df |>
+  filter(Source == "med_issues") |>
   mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Percent) |>
+  select(Component, Percent) |>
   arrange(desc(Percent))
 
 ```
@@ -215,16 +203,18 @@ med_issues_df |>
 The main source of income for Ukrainian refugees is employment in host country, as reported by 50% of respondents. Around a third of people rely on social protection benefits provided by the host country. 10% of people reported having no income, other sources or social benefits from Ukrainian government. 31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
 
 ```{r}
-income_sources_df |>
+combined_df |>
+  filter(Source == "income_sources") |>
   mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Percent) |>
+  select(Component, Percent) |>
   arrange(desc(Percent))
 
 make_prop_table(data_ee$host_country_work_coa)
 
-work_df |>
-  mutate(Percent = Total_Proportion * 100) |>
-  select(Percent) |>
+combined_df |>
+  filter(Source == "work") |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent) |>
   arrange(desc(Percent))
 ```
 
@@ -237,24 +227,54 @@ make_prop_table(data_ee$economic_capicity_L13_1_SM_LESS_GOODS)
 
 
 **Safety**
-social_cohesion_SC3_SS_EXP_HOSTILE
-social_cohesion_SC4_SM_HOSTILE_TYP
+
+According to data, 35.61% of refugees in Estonia experiences hostile attitude, that included aggressive comments in news forums online' or
+social media, verbal aggression, or physical aggression. In particular, verbal aggression was one of the main concerns, as  14.6% of people reported this from of hostile behavior, followed by aggressive comments on social media and discriminatory behavior accounting for 7% and 6% of responses respectively.
+
+```{r}
+
+make_prop_table(data_ee$social_cohesion_SC3_SS_EXP_HOSTILE)
+
+combined_df |>
+  filter(Source == "cohesion") |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent) |>
+  arrange(desc(Percent))
+```
 
 **Aid**
-aap_AAP_0_SS_SATISFIED_AID
-urgent_needs_urgent_needs_first
-urgent_needs_urgent_needs_second
-urgent_needs_urgent_needs_third
-info_needs_info_receive 
+Urgent needs first: employment, accommodation, education for adults. Second - medical, material, psychological.
+
+```{r}
+
+make_prop_table(data_ee$aap_AAP_0_SS_SATISFIED_AID)
+make_prop_table(data_ee$urgent_needs_urgent_needs_first)
+make_prop_table(data_ee$urgent_needs_urgent_needs_second)
+#make_prop_table(data_ee$urgent_needs_urgent_needs_third)
+#make_prop_table(data_ee$info_needs_info_receive )
+
+```
 
 **Traveling back**
 Reasons of going permanently to Ukraine
 
-Travel_Ukraine_temp_return 
-Travel_Ukraine_temp_return_reason
-Travel_Ukraine_no_return_plans 
-Travel_Ukraine_no_return_move_country 
-Travel_Ukraine_no_return_move_reasons 
+Reasons for traveling back temporarily: visit relatives, check property, get documents. 77.16% expect to stay in Estonia. 	
+
+```{r}
+make_prop_table(data_ee$Travel_Ukraine_temp_return )
+
+combined_df |>
+  filter(Source == "return") |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent) |>
+  arrange(desc(Percent))
+
+make_prop_table(data_ee$Travel_Ukraine_no_return_plans )
+make_prop_table(data_ee$Travel_Ukraine_return_length)
+make_prop_table(data_ee$Travel_Ukraine_no_return_move_country )
+make_prop_table(data_ee$Travel_Ukraine_no_return_move_reasons )
+
+```
 
 **Discussion**
 

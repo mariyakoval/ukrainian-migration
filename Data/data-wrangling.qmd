@@ -8,7 +8,7 @@ format: html
 # Load necessary packages
 if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
-              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo,
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, purr,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
 # Load data
 data_ee <- read.csv("UNHCR_EST_2023_MSNA_hh_data_v1.csv")
@@ -46,7 +46,9 @@ host_country_reasons_coa,
 SHL07_SM_LIV_COND,
 host_country_healthcare_difficulties,
 host_country_SE2_11_SS_INC_SOR,
-host_country_diff_work
+host_country_diff_work,
+Travel_Ukraine_return_length,
+Travel_Ukraine_return_reasons
          )
 ```
 
@@ -277,11 +279,11 @@ med_issue_props <- c(
 
 # Remove NA value column to find the actual weight of each issue among people
 #who ran into it
-na_value <- med_issue_props["<NA>"]
-med_issue_props <- med_issue_props[!names(med_issue_props) %in% "<NA>"]
-total_non_na <- sum(med_issue_props)
-med_issue_props <- med_issue_props + (med_issue_props / total_non_na) * as.numeric(na_value)
-sum(med_issue_props)
+#na_value <- med_issue_props["<NA>"]
+#med_issue_props <- med_issue_props[!names(med_issue_props) %in% "<NA>"]
+#total_non_na <- sum(med_issue_props)
+#med_issue_props <- med_issue_props + (med_issue_props / total_non_na) * as.numeric(na_value)
+#sum(med_issue_props)
 
 med_issues_df <- split_category_proportions(med_issue_props)
 
@@ -405,12 +407,145 @@ category_props_work <- c(
 work_df <- split_category_proportions(category_props_work)
 
 ```
+```{r}
+# Hostility proportions, social_cohesion_SC4_SM_HOSTILE_TYP
+freq_table_legal_diff <- table(data_ee$social_cohesion_SC4_SM_HOSTILE_TYP, 
+                               useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
+
+category_props_hostility <- c(
+  "comments_news_forums" = 0.001798561,
+  "comments_news_forums comments_social_media" = 0.008992806,
+  "comments_news_forums comments_social_media discriminatory_behavior" = 0.003597122,
+  "comments_news_forums comments_social_media verbal_aggression" = 0.012589928,
+  "comments_news_forums comments_social_media verbal_aggression discriminatory_behavior" = 0.005395683,
+  "comments_news_forums comments_social_media verbal_aggression other" = 0.001798561,
+  "comments_news_forums discriminatory_behavior" = 0.003597122,
+  "comments_news_forums other" = 0.001798561,
+  "comments_news_forums verbal_aggression" = 0.005395683,
+  "comments_news_forums verbal_aggression physical_attack" = 0.001798561,
+  "comments_social_media" = 0.037769784,
+  "comments_social_media comments_news_forums verbal_aggression other" = 0.001798561,
+  "comments_social_media discriminatory_behavior" = 0.008992806,
+  "comments_social_media other" = 0.003597122,
+  "comments_social_media verbal_aggression" = 0.001798561,
+  "comments_social_media verbal_aggression other" = 0.012589928,
+  "discriminatory_behavior" = 0.025179856,
+  "discriminatory_behavior comments_news_forums comments_social_media" = 0.001798561,
+  "discriminatory_behavior other" = 0.005395683,
+  "discriminatory_behavior verbal_aggression" = 0.003597122,
+  "discriminatory_behavior verbal_aggression comments_social_media" = 0.001798561,
+  "other" = 0.012589928,
+  "other verbal_aggression" = 0.001798561,
+  "physical_attack" = 0.001798561,
+  "physical_attack discriminatory_behavior" = 0.003597122,
+  "physical_attack other" = 0.003597122,
+  "physical_attack verbal_aggression" = 0.007194245,
+  "physical_attack verbal_aggression comments_news_forums comments_social_media" = 0.001798561,
+  "physical_attack verbal_aggression discriminatory_behavior" = 0.001798561,
+  "prefer_not_to_answer" = 0.001798561,
+  "sexual_harassment" = 0.001798561,
+  "verbal_aggression" = 0.084532374,
+  "verbal_aggression comments_news_forums comments_social_media" = 0.001798561,
+  "verbal_aggression comments_social_media" = 0.008992806,
+  "verbal_aggression comments_social_media comments_news_forums" = 0.001798561,
+  "verbal_aggression comments_social_media discriminatory_behavior" = 0.001798561,
+  "verbal_aggression comments_social_media other" = 0.001798561,
+  "verbal_aggression comments_social_media sexual_harassment discriminatory_behavior" = 0.001798561,
+  "verbal_aggression discriminatory_behavior" = 0.032374101,
+  "verbal_aggression discriminatory_behavior comments_social_media comments_news_forums" = 0.001798561,
+  "verbal_aggression discriminatory_behavior physical_attack" = 0.001798561,
+  "verbal_aggression other" = 0.026978417,
+  "verbal_aggression physical_attack other" = 0.001798561,
+  "<NA>" = 0.643884892
+)
+
+cohesion_df <- split_category_proportions(category_props_hostility)
+```
 
 ```{r}
+# Hostility proportions, social_cohesion_SC4_SM_HOSTILE_TYP
+freq_table_legal_diff <- table(data_ee$Travel_Ukraine_temp_return_reason , 
+                               useNA = "ifany")
+prop_table_legal_diff <- prop.table(freq_table_legal_diff)
+print(prop_table_legal_diff)
+
+category_props_return <- c(
+   "access_health" = 0.003597122,
+  "access_health get_documents" = 0.001798561,
+  "asked_empl" = 0.001798561,
+  "check_propr" = 0.016187050,
+  "check_propr access_health" = 0.001798561,
+  "check_propr check_sit" = 0.001798561,
+  "check_propr get_documents" = 0.003597122,
+  "check_propr visit_relat" = 0.028776978,
+  "check_propr visit_relat access_health" = 0.005395683,
+  "check_propr visit_relat get_documents" = 0.008992806,
+  "check_propr visit_relat get_supplies" = 0.001798561,
+  "check_sit" = 0.005395683,
+  "check_sit check_propr" = 0.001798561,
+  "check_sit check_propr access_health" = 0.008992806,
+  "check_sit check_propr visit_relat" = 0.008992806,
+  "check_sit check_propr visit_relat access_health" = 0.001798561,
+  "check_sit check_propr visit_relat get_documents access_health" = 0.001798561,
+  "check_sit check_propr visit_relat get_documents other" = 0.001798561,
+  "check_sit get_documents access_health" = 0.001798561,
+  "check_sit visit_relat" = 0.001798561,
+  "get_documents" = 0.014388489,
+  "get_documents access_health" = 0.010791367,
+  "get_documents other" = 0.001798561,
+  "get_documents visit_relat" = 0.007194245,
+  "help_relat" = 0.007194245,
+  "help_relat check_propr" = 0.001798561,
+  "help_relat get_documents access_health" = 0.003597122,
+  "other" = 0.007194245,
+  "visit_relat" = 0.066546763,
+  "visit_relat access_health" = 0.014388489,
+  "visit_relat access_health check_propr" = 0.001798561,
+  "visit_relat access_health get_documents" = 0.001798561,
+  "visit_relat access_health get_supplies" = 0.001798561,
+  "visit_relat check_propr" = 0.007194245,
+  "visit_relat check_propr access_health" = 0.003597122,
+  "visit_relat check_propr get_documents access_health" = 0.001798561,
+  "visit_relat check_sit" = 0.001798561,
+  "visit_relat get_documents" = 0.017985612,
+  "visit_relat get_documents access_health" = 0.007194245,
+  "visit_relat get_documents get_supplies" = 0.001798561,
+  "visit_relat get_documents other" = 0.003597122,
+  "visit_relat get_supplies" = 0.003597122,
+  "visit_relat get_supplies access_health" = 0.003597122,
+  "visit_relat get_supplies get_documents access_health" = 0.003597122,
+  "visit_relat help_relat" = 0.001798561,
+  "visit_relat help_relat get_documents" = 0.001798561,
+  "visit_relat other" = 0.003597122,
+  "<NA>" = 0.687050360
+)
+
+
+return_df <- split_category_proportions(category_props_return)
+```
+
+```{r}
+
+add_source_label <- function(df, source_name) {
+  df <- df[, c("Component", "Total_Proportion")]  
+  df$Source <- source_name
+  return(df)
+}
+
+df_list <- list(
+  work = work_df,
+  income_sources = income_sources_df,
+  med_issues = med_issues_df,
+  housing_issues = housing_issues_df,
+  reasons_country = reasons_country_ee,
+  cohesion = cohesion_df,
+  return = return_df
+)
+
+combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
+
 saveRDS(data_ee, "data_ee")
-saveRDS(work_df, "work_df")
-saveRDS(income_sources_df, "income_sources_df")
-saveRDS(med_issues_df, "med_issues_df")
-saveRDS(housing_issues_df, "housing_issues_df")
-saveRDS(reasons_country_ee, "reasons_country_ee")
+saveRDS(combined_df, "combined_df")
 ```
