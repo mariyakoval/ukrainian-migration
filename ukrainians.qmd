@@ -33,6 +33,7 @@ combined_df <- readRDS("Data/combined_df")
 combined_eu <- readRDS("Data/combined_eu")
 reasons_country_ee <- readRDS("Data/reasons_country_ee")
 data_eu <- read_csv("Data/data_eu")
+data_eu_ind <- read_csv("Data/EU_Ind.csv")
 ```
 
 **Introduction**
@@ -94,20 +95,15 @@ data_eu |>
         axis.text.y = element_text(size = 10),
         plot.title = element_text(hjust = 0.5)) +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
-  scale_fill_brewer(palette = "Paired")
+  scale_fill_brewer(palette = "Dark2")
 
 ```
 
-While the data on education of Ukrainian refugees is limited, the snapshot of age distribution reveals that the majority of arrivals are part of labor force. Notably, 49.46% of arrivals hold a vocational and specialization education, followed by
-around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping.
+While the data on education of Ukrainian refugees is limited, the snapshot of age distribution reveals that the majority of arrivals are part of labor force. Notably, in Estonia, 49.46% of arrivals hold a vocational and specialization education, followed by around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping.
 
-```{r, fig.width=7, fig.height=2, warning=FALSE}
+The educational categories range from primary and secondary education to higher levels such as Bachelor's, Master's, and PhD degrees, as well as technical or vocational training and no formal education. "Technical/Vocational" category appears frequently across multiple sections, suggesting a significant portion of the workforce in these regions may have either technical training. This trend could indicate a reliance on skilled labor or informal employment in certain areas. The number of people with Bachelor's degrees is almost the same across all countries and ranges from 10 to 20%. Slovakia and Romania have the highest proportion of people with Master's degrees. There are very few people with no education in all the countries. Slovakia and Czechia appear the most prominent for respondents with PdD degrees. 
 
-e4 <- ggplot(data_ee, aes(x = fct_infreq(demographics_educ_level), 
-                          fill = demographics_educ_level  )) +
-  geom_bar(stat = "count") + gg + xlab("Education") + ylab("Count") +
-  scale_fill_brewer(palette = "Paired")+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```{r, fig.width=7, fig.height=5, warning=FALSE}
 
 e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity), 
                           fill = demographics_resp_activity)) +
@@ -116,10 +112,37 @@ e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity),
   scale_fill_brewer(palette = "Paired")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-# Arrange all plots
-grid.arrange(grobs = list(e4, e5),
-             ncol = 2, nrow = 1,
-             top = "Bar Plots of Key Demographic Variables in Estonia Dataset")
+
+data_eu_ind |>
+   bind_rows(data_ee |> 
+              rename(SE1_SS_EDU_LVL = demographics_educ_level) |> 
+              mutate(country = "Estonia")) |>
+  filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+  mutate(SE1_SS_EDU_LVL = case_when(
+  grepl("tech", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Technical/Vocational",
+  grepl("sec", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Secondary",
+  grepl("pri", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Primary",
+  grepl("phd", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "PhD",
+  grepl("master", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Master's",
+  grepl("bachelor", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Bachelor's",
+  grepl("no_edu", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "No Education",
+  grepl("prefer", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "No Answer",
+  grepl("spec", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Specialization",
+  TRUE ~ SE1_SS_EDU_LVL ))|>
+  filter(!is.na(SE1_SS_EDU_LVL) & SE1_SS_EDU_LVL != "No Answer")|>
+  count(country, SE1_SS_EDU_LVL) |>
+  group_by(country) |>
+  mutate(prop = n / sum(n) *100) |>
+  ggplot(aes(x = fct_infreq(SE1_SS_EDU_LVL), y = prop, fill = SE1_SS_EDU_LVL)) +
+  geom_col() +
+  facet_wrap(~country) +
+  xlab("Education Status") +
+  ylab("Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Education Status"))+
+  scale_fill_brewer(palette = "Dark2")
+
 ```
 
 It is needed to understand why refugees choose to resettle in specific states in order to evaluate integration policy and strategy responses. Demographic trends provide a general regional overview, but Estonia offers more detailed information on legal and individual determinants influencing refugees' decisions.
@@ -176,7 +199,8 @@ ggplot(df_all, aes(x = reorder(Component, -Percent), y = Percent, fill = Compone
         axis.text.y = element_text(size = 10),
         plot.title = element_text(hjust = 0.5)) +
   ggtitle("Comparison of Reported Income Sources by Country") +
-  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5))
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
+  scale_fill_brewer(palette = "Paired")
 
 ```
 
