@@ -1,0 +1,122 @@
+---
+title: "data-wrangling"
+format: html
+---
+
+```{r, include=FALSE, warning=FALSE}
+
+# Load necessary packages
+if (!require('pacman')) install.packages('pacman'); library('pacman')
+pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, purr,
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
+# Load data
+data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+data_eu <- read_csv("Data/EU_countries.csv")
+data_eu_ind <- read_csv("Data/EU_Ind.csv")
+```
+
+```{r}
+data_eu <- data_eu |>
+  filter(!is.na(country) & country != 0 & 
+           !(country %in% c("Bulgaria", "Hungary", "construct")))
+
+```
+
+
+```{r}
+
+data_ee <- data_ee |>
+  select(introduction_resp_age, demographics_educ_level,
+         demographics_resp_activity, host_country_SE2_11_SS_INC_SOR,
+         host_country_diff_work, host_country_work_coa,
+         urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST)
+
+data_eu <- data_eu |>
+  select(DR7_3_NUM_RESP_AGE, SE2_11_SS_INC_SOR, 
+         SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country) |>
+  rename(introduction_resp_age = DR7_3_NUM_RESP_AGE,
+         income_source = SE2_11_SS_INC_SOR,
+         socioecon_needs = SE2_14_SM_SOC_AST_TYP,
+         socbenefits = SE2_11b_SM_BEN_HST)
+
+data_eu_ind <- data_eu_ind |>
+  select(SE1_SS_EDU_LVL, SE2_SS_WORK, SE12_SM_EMP_BARR, SE8_SS_ACTIVITY,
+         SE13_SS_WRK_TYP, country) |>
+  rename(demographics_educ_level = SE1_SS_EDU_LVL,
+         host_country_diff_work = SE12_SM_EMP_BARR,
+         demographics_resp_activity = SE13_SS_WRK_TYP)
+ 
+data_eu_ind <- data_eu_ind |>
+  mutate(SE8_SS_ACTIVITY = case_when(
+    SE2_SS_WORK == "yes" ~ "employed",
+    TRUE ~ SE8_SS_ACTIVITY)) |>
+    filter(!if_all(c(
+      "demographics_educ_level",
+      "SE2_SS_WORK",
+      "host_country_diff_work",
+      "SE8_SS_ACTIVITY",
+      "demographics_resp_activity"
+    ), is.na)) |>
+  rename(host_country_work_coa = SE8_SS_ACTIVITY)
+
+colnames(data_eu_ind)
+colnames(data_eu)
+colnames(data_ee)
+```
+
+```{r}
+data_ee <- data_ee |> 
+ rename(income_source = host_country_SE2_11_SS_INC_SOR,
+        socioecon_needs = urgent_needs_urgent_needs_first,
+        socbenefits = host_country_SE2_11b_SM_BEN_HST)|> 
+              mutate(country = "Estonia")
+
+common_cols <- c(
+  "demographics_educ_level",
+  "demographics_resp_activity",
+  "host_country_diff_work",
+  "country",
+  "host_country_work_coa"
+)
+
+combined_ind <- bind_rows(
+  select(data_eu_ind, all_of(common_cols)),
+  select(data_ee, all_of(common_cols)))|>
+    filter(!if_all(c(
+       "demographics_educ_level",
+       "demographics_resp_activity",
+       "host_country_diff_work",
+        "host_country_work_coa"), is.na))|> 
+    mutate(host_country_work_coa = case_when(
+    grepl("employed", host_country_work_coa, ignore.case = TRUE) ~ "Employed",
+    grepl("house", host_country_work_coa, ignore.case = TRUE) ~ "Housekeeping",
+    grepl("hh_resp", host_country_work_coa, ignore.case = TRUE) ~ "Housekeeping",
+    grepl("employed", host_country_work_coa, ignore.case = TRUE) ~ "Employed",
+    grepl("ill", host_country_work_coa, ignore.case = TRUE) ~ "Long term illness/injury",
+    grepl("stud", host_country_work_coa, ignore.case = TRUE) ~ "Student",
+    grepl("train", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
+    grepl("intern", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
+    grepl("volunt", host_country_work_coa, ignore.case = TRUE) ~ "Other",
+    grepl("other", host_country_work_coa, ignore.case = TRUE) ~ "Other",
+    grepl("unempl", host_country_work_coa, ignore.case = TRUE) ~ "Unemployed",
+    grepl("retired", host_country_work_coa, ignore.case = TRUE) ~ "Retired",
+    TRUE ~ host_country_work_coa ))
+
+common_cols1 <- c(
+  "introduction_resp_age",
+  "income_source",
+  "socioecon_needs",
+  "socbenefits",
+  "country"
+)
+
+combined_hh <- bind_rows(
+  select(data_eu, all_of(common_cols1)),
+  select(data_ee, all_of(common_cols1)))
+```
+
+```{r}
+saveRDS(combined_ind, "Data/combined_ind")
+saveRDS(combined_hh, "Data/combined_hh")
+```

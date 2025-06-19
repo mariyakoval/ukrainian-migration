@@ -112,7 +112,7 @@ e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity),
   scale_fill_brewer(palette = "Paired")+
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
+e5
 data_eu_ind |>
    bind_rows(data_ee |> 
               rename(SE1_SS_EDU_LVL = demographics_educ_level) |> 
@@ -213,8 +213,6 @@ bind_rows(
 
 ```{r, fig.height = 7, fig.width=8}
 
-make_prop_table(data_ee$host_country_work_coa)
-
 combined_df |>
   filter(Source == "work") |>
   mutate(Percent = round(Total_Proportion * 100, 2)) |>
@@ -264,8 +262,10 @@ bind_rows(
 #Which other best describes what (this person) is mainly doing at present?
 make_prop_table(data_eu_ind$SE8_SS_ACTIVITY)
 
-#What is the main activity of the place or business where (this person) works?
-make_prop_table(data_eu_ind$SE10_SS_MAIN_ACT)
+#During the past 7 days, did (this person) work for someone else for pay, for one
+# or more hours?
+make_prop_table(data_eu_ind$SE2_SS_WORK)
+
 
 #Which of the following best describes what the individual was mainly doing before leaving Ukraine?
 make_prop_table(data_eu_ind$SE13_SS_WRK_TYP)
