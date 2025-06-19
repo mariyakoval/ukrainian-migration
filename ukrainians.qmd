@@ -203,7 +203,7 @@ bind_rows(
   ggtitle("Comparison of Reported Income Sources by Country") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Education Status"))+
+  guides(fill = guide_legend(title = "Income Source"))+
   scale_fill_brewer(palette = "Dark2")
 
 ```
@@ -259,12 +259,45 @@ bind_rows(
 ```
 
 ```{r}
-SE8_SS_ACTIVITY 
 
-
+#Idividuals
+#Which other best describes what (this person) is mainly doing at present?
 make_prop_table(data_eu_ind$SE8_SS_ACTIVITY)
+
+#What is the main activity of the place or business where (this person) works?
 make_prop_table(data_eu_ind$SE10_SS_MAIN_ACT)
+
+#Which of the following best describes what the individual was mainly doing before leaving Ukraine?
 make_prop_table(data_eu_ind$SE13_SS_WRK_TYP)
+
+#Households:
+#In the next 6 months, what type of socio-econonic needs do you think your HH will have?
+SE2_14_SM_SOC_AST_TYP 
+
+#Since your arrival to this country, have you or any member of your household received 
+# any payment from the Ukrainian government from the following sources?
+SE2_13_SM_PAY_URK 
+
+#Since your arrival to this country, have you or any member(s) of your household received any
+#payment in [host country] from the following sources?
+SE2_12_SM_SOC_PRT 
+
+#Which social protection benefits do you receive from the Ukrainian government?
+SE2_11c_SM_BEN_UKR 
+
+#How much money do you receive from Social protection benefits from Ukraine government, for
+#unemployment benefit
+SE2_11c_NUM_BEN_AMT_UNE_UKR 
+
+#Which social protection benefits do you receive from the [host country] government?
+SE2_11b_SM_BEN_HST 
+
+#For socio-economic inclusion, which of the following services would help you to improve your
+#economic opportunities in the [country]?
+SE1_SM_SUP_SRV 
+```
+
+```{r}
 
 make_prop_table(data_ee$economic_capicity_L13_SS_AFF_GOODS)
 make_prop_table(data_ee$economic_capicity_L13_1_SM_MORE_GOODS)
