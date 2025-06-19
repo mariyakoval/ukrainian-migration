@@ -136,8 +136,7 @@ data_eu_ind |>
   ggplot(aes(x = fct_infreq(SE1_SS_EDU_LVL), y = prop, fill = SE1_SS_EDU_LVL)) +
   geom_col() +
   facet_wrap(~country) +
-  xlab("Education Status") +
-  ylab("Count") +
+  xlab("Education Status") + ylab("Count") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   guides(fill = guide_legend(title = "Education Status"))+
@@ -171,7 +170,8 @@ ggplot(top6, aes(x = reorder(Component, -Percent),
 The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Moldova is the exception: "social protection in Ukraine" is the most frequently reported source, and may reflect that there are many refugees there who employ assistance from the home country. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "do not know", "prefer not to answer", and "no income" are low. This band shows levels of integration, access to work, and host country versus origin country welfare system reliance.
 
 ```{r, fig.height = 7, fig.width=8}
-df_all <- bind_rows(
+
+bind_rows(
   combined_eu |>
     filter(Source == "income", !Country %in% c("Hungary", "Bulgaria")) |>
     mutate(Percent = round(Total_Proportion * 100, 2)) |>
@@ -182,25 +182,29 @@ df_all <- bind_rows(
     mutate(Percent = round(Total_Proportion * 100, 2),
            Country = "Estonia") |>
     select(Component, Percent, Country)) |>
-  group_by(Country) |>
-  arrange(desc(Percent), .by_group = TRUE) |>
-  slice_head(n = 5) |>
-  ungroup()
-
-df_all$Component <- factor(df_all$Component, levels = unique(df_all$Component))
-
-ggplot(df_all, aes(x = reorder(Component, -Percent), y = Percent, fill = Component)) +
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+     mutate(Component = fct_recode(Component,
+     "Job" = "employment_host_country",
+     "Social Protection" = "social_protection_host_govt",
+     "Social Protection from Ukraine" = "social_protection_ukr_govt",
+     "Job in Ukraine" = "employment_ukraine_country",
+     "Remmittances" = "remmittances",
+     "No income" = "no_income",
+     "Other Sources" = "other_sources",
+     "No Answer" = "prefer_no_answer")) |> 
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
   xlab("Income Source") + ylab("Percent") +
-  theme_minimal() +
-  theme(legend.position = "right",
-        axis.text.x = element_text(angle = 45, hjust = 1),
-        axis.text.y = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5)) +
   ggtitle("Comparison of Reported Income Sources by Country") +
-  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
-  scale_fill_brewer(palette = "Paired")
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Education Status"))+
+  scale_fill_brewer(palette = "Dark2")
 
 ```
 
