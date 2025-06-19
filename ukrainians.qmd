@@ -136,10 +136,10 @@ data_eu_ind |>
   ggplot(aes(x = fct_infreq(SE1_SS_EDU_LVL), y = prop, fill = SE1_SS_EDU_LVL)) +
   geom_col() +
   facet_wrap(~country) +
-  xlab("Education Status") + ylab("Count") +
+  xlab("Education Status") + ylab("Percent") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Education Status"))+
+  guides(fill = guide_legend(title = "Education Status")) +
   scale_fill_brewer(palette = "Dark2")
 
 ```
@@ -211,8 +211,7 @@ bind_rows(
 
 31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
 
-
-```{r}
+```{r, fig.height = 7, fig.width=8}
 
 make_prop_table(data_ee$host_country_work_coa)
 
@@ -221,9 +220,51 @@ combined_df |>
   mutate(Percent = round(Total_Proportion * 100, 2)) |>
   select(Component, Percent) |>
   arrange(desc(Percent))
+
+bind_rows(
+  combined_eu |>
+    filter(Source == "job", !Country %in% c("Hungary", "Bulgaria")) |>
+    mutate(Percent = round(Total_Proportion * 100, 2)) |>
+    select(Component, Percent, Country),
+  
+  combined_df |>
+    filter(Source == "work") |>
+    mutate(Percent = round(Total_Proportion * 100, 2),
+           Country = "Estonia") |>
+    select(Component, Percent, Country)) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+    mutate(Component = case_when(
+    grepl("lang", Component, ignore.case = TRUE) ~ "Language barrier",
+    grepl("decent",Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
+    grepl("opp", Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
+    grepl("skills", Component, ignore.case = TRUE) ~ "Lack of skills",
+    grepl("care",Component, ignore.case = TRUE) ~ "Care for others",
+    grepl("none", Component, ignore.case = TRUE) ~ "None",
+    grepl("recog", Component, ignore.case = TRUE) ~ "Lack of recognition",
+    grepl("looking", Component, ignore.case = TRUE) ~ "Not looking for work",
+    TRUE ~ Component ))|>
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  ggtitle("Problems with Finding Employment") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Reasons")) +
+  scale_fill_brewer(palette = "Dark2")
 ```
 
 ```{r}
+SE8_SS_ACTIVITY 
+
+
+make_prop_table(data_eu_ind$SE8_SS_ACTIVITY)
+make_prop_table(data_eu_ind$SE10_SS_MAIN_ACT)
+make_prop_table(data_eu_ind$SE13_SS_WRK_TYP)
 
 make_prop_table(data_ee$economic_capicity_L13_SS_AFF_GOODS)
 make_prop_table(data_ee$economic_capicity_L13_1_SM_MORE_GOODS)
