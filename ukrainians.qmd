@@ -34,6 +34,9 @@ combined_eu <- readRDS("Data/combined_eu")
 reasons_country_ee <- readRDS("Data/reasons_country_ee")
 data_eu <- read_csv("Data/data_eu")
 data_eu_ind <- read_csv("Data/EU_Ind.csv")
+
+combined_hh <-readRDS("Data/combined_hh")
+combined_ind <-readRDS("Data/combined_ind")
 ```
 
 **Introduction**
@@ -72,28 +75,28 @@ gg <- theme_minimal() +
     axis.text = element_text(size = 7)
   )
 
-data_eu |>
-  filter(!country %in% c("Hungary", "Bulgaria")) |>
-  bind_rows(data_ee |> 
-              rename(DR7_3_NUM_RESP_AGE = introduction_resp_age) |> 
-              mutate(country = "Estonia")) |>
-  filter(!is.na(DR7_3_NUM_RESP_AGE), !is.na(country)) |>
-  mutate(DR7_3_NUM_RESP_AGE = factor(DR7_3_NUM_RESP_AGE, 
-                                     levels = c("18-34", "35-59", "60+"))) |>
-  count(country, DR7_3_NUM_RESP_AGE) |>
+combined_hh |>
+  filter(!is.na(introduction_resp_age), !is.na(country)) |>
+  mutate(introduction_resp_age = factor(introduction_resp_age,
+                                        levels = c("18-34", "35-59", "60+"))) |>
+  count(country, introduction_resp_age) |>
   group_by(country) |>
   mutate(Percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = Percent, fill = DR7_3_NUM_RESP_AGE)) +
+  ggplot(aes(x = country, y = Percent, fill = introduction_resp_age)) +
   geom_bar(stat = "identity") +
   coord_flip() +
-  labs(x = "Country",
-       y = "Percent of Respondents",
-       fill = "Age Group",
-       title = "Age Distribution of Respondents by Country") +
+  labs(
+    x = "Country",
+    y = "Percent of Respondents",
+    fill = "Age Group",
+    title = "Age Distribution of Respondents by Country"
+  ) +
   theme_minimal() +
-  theme(legend.position = "top",
-        axis.text.y = element_text(size = 10),
-        plot.title = element_text(hjust = 0.5)) +
+  theme(
+    legend.position = "top",
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5)
+  ) +
   guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
   scale_fill_brewer(palette = "Dark2")
 
@@ -113,33 +116,32 @@ e5 <- ggplot(data_ee, aes(x = fct_infreq(demographics_resp_activity),
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 e5
-data_eu_ind |>
-   bind_rows(data_ee |> 
-              rename(SE1_SS_EDU_LVL = demographics_educ_level) |> 
-              mutate(country = "Estonia")) |>
+combined_ind |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
-  mutate(SE1_SS_EDU_LVL = case_when(
-  grepl("tech", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Technical/Vocational",
-  grepl("sec", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Secondary",
-  grepl("pri", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Primary",
-  grepl("phd", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "PhD",
-  grepl("master", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Master's",
-  grepl("bachelor", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Bachelor's",
-  grepl("no_edu", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "No Education",
-  grepl("prefer", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "No Answer",
-  grepl("spec", SE1_SS_EDU_LVL, ignore.case = TRUE) ~ "Specialization",
-  TRUE ~ SE1_SS_EDU_LVL ))|>
-  filter(!is.na(SE1_SS_EDU_LVL) & SE1_SS_EDU_LVL != "No Answer")|>
-  count(country, SE1_SS_EDU_LVL) |>
+  mutate(demographics_educ_level = case_when(
+    grepl("tech", demographics_educ_level, ignore.case = TRUE) ~ "Technical/Vocational",
+    grepl("sec", demographics_educ_level, ignore.case = TRUE) ~ "Secondary",
+    grepl("pri", demographics_educ_level, ignore.case = TRUE) ~ "Primary",
+    grepl("phd", demographics_educ_level, ignore.case = TRUE) ~ "PhD",
+    grepl("master", demographics_educ_level, ignore.case = TRUE) ~ "Master's",
+    grepl("bachelor", demographics_educ_level, ignore.case = TRUE) ~ "Bachelor's",
+    grepl("no_edu", demographics_educ_level, ignore.case = TRUE) ~ "No Education",
+    grepl("prefer", demographics_educ_level, ignore.case = TRUE) ~ "No Answer",
+    grepl("spec", demographics_educ_level, ignore.case = TRUE) ~ "Specialization",
+    TRUE ~ demographics_educ_level
+  )) |>
+  filter(!is.na(demographics_educ_level) & demographics_educ_level != "No Answer") |>
+  count(country, demographics_educ_level) |>
   group_by(country) |>
-  mutate(prop = n / sum(n) *100) |>
-  ggplot(aes(x = fct_infreq(SE1_SS_EDU_LVL), y = prop, fill = SE1_SS_EDU_LVL)) +
+  mutate(prop = n / sum(n) * 100) |>
+  ggplot(aes(x = fct_infreq(demographics_educ_level), y = prop, fill = demographics_educ_level)) +
   geom_col() +
   facet_wrap(~country) +
-  xlab("Education Status") + ylab("Percent") +
+  xlab("Education Level") +
+  ylab("Percent") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Education Status")) +
+  guides(fill = guide_legend(title = "Education Level")) +
   scale_fill_brewer(palette = "Dark2")
 
 ```
@@ -213,12 +215,6 @@ bind_rows(
 
 ```{r, fig.height = 7, fig.width=8}
 
-combined_df |>
-  filter(Source == "work") |>
-  mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Component, Percent) |>
-  arrange(desc(Percent))
-
 bind_rows(
   combined_eu |>
     filter(Source == "job", !Country %in% c("Hungary", "Bulgaria")) |>
@@ -255,6 +251,50 @@ bind_rows(
   guides(fill = guide_legend(title = "Reasons")) +
   scale_fill_brewer(palette = "Dark2")
 ```
+
+```{r, fig.height = 5, fig.width=8}
+
+combined_ind |>
+  filter(!is.na(host_country_work_coa), !country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+  
+  mutate(employment_status = case_when(
+    grepl("employed", host_country_work_coa, ignore.case = TRUE) ~ "Employed",
+    grepl("retired", host_country_work_coa, ignore.case = TRUE) ~ "Retired",
+    grepl("student|trainee|illness|housekeeping|other", host_country_work_coa, ignore.case = TRUE) ~ "Unemployed",
+    TRUE ~ "Other"
+  )) |>
+
+  mutate(unemployed_type = case_when(
+    grepl("student", host_country_work_coa, ignore.case = TRUE) ~ "Student",
+    grepl("trainee", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
+    grepl("illness", host_country_work_coa, ignore.case = TRUE) ~ "Long-term Illness",
+    grepl("housekeeping", host_country_work_coa, ignore.case = TRUE) ~ "Housekeeping",
+    grepl("other", host_country_work_coa, ignore.case = TRUE) ~ "Other",
+    TRUE ~ NA_character_
+  )) |>
+
+  mutate(unemployed_type = ifelse(employment_status == "Employed", "Employed",
+                           ifelse(employment_status == "Retired", "Retired", unemployed_type))) |>
+  
+  filter(!is.na(unemployed_type)) |>
+  count(country, unemployed_type) |>
+  group_by(country) |>
+  mutate(percent = n / sum(n) * 100) |>
+  
+  ggplot(aes(x = country, y = percent, fill = unemployed_type)) +
+  geom_col(position = "stack") +
+  xlab("Country") +
+  ylab("Percent") +
+  ggtitle("Employment Activity Type by Country") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right") +
+  guides(fill = guide_legend(title = "Activity Type")) +
+  scale_fill_brewer(palette = "Dark2")
+
+
+```
+
 
 ```{r}
 

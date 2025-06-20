@@ -99,6 +99,7 @@ combined_ind <- bind_rows(
     grepl("intern", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
     grepl("volunt", host_country_work_coa, ignore.case = TRUE) ~ "Other",
     grepl("other", host_country_work_coa, ignore.case = TRUE) ~ "Other",
+    grepl("prefer", host_country_work_coa, ignore.case = TRUE) ~ "Other",
     grepl("unempl", host_country_work_coa, ignore.case = TRUE) ~ "Unemployed",
     grepl("retired", host_country_work_coa, ignore.case = TRUE) ~ "Retired",
     TRUE ~ host_country_work_coa ))
