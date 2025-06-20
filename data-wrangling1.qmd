@@ -89,20 +89,34 @@ combined_ind <- bind_rows(
        "host_country_diff_work",
         "host_country_work_coa"), is.na))|> 
     mutate(host_country_work_coa = case_when(
-    grepl("employed", host_country_work_coa, ignore.case = TRUE) ~ "Employed",
+    tolower(host_country_work_coa) %in% c("employed_here", "employed_remote", "self_employed", "employed") ~ "Employed",
+    tolower(host_country_work_coa) %in% c("status_unempl", "unemployed") ~ "Unemployed",
     grepl("house", host_country_work_coa, ignore.case = TRUE) ~ "Housekeeping",
     grepl("hh_resp", host_country_work_coa, ignore.case = TRUE) ~ "Housekeeping",
-    grepl("employed", host_country_work_coa, ignore.case = TRUE) ~ "Employed",
     grepl("ill", host_country_work_coa, ignore.case = TRUE) ~ "Long term illness/injury",
-    grepl("stud", host_country_work_coa, ignore.case = TRUE) ~ "Student",
+    grepl("stud", host_country_work_coa, ignore.case = TRUE) ~ "Studying",
     grepl("train", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
     grepl("intern", host_country_work_coa, ignore.case = TRUE) ~ "Trainee",
     grepl("volunt", host_country_work_coa, ignore.case = TRUE) ~ "Other",
     grepl("other", host_country_work_coa, ignore.case = TRUE) ~ "Other",
     grepl("prefer", host_country_work_coa, ignore.case = TRUE) ~ "Other",
-    grepl("unempl", host_country_work_coa, ignore.case = TRUE) ~ "Unemployed",
     grepl("retired", host_country_work_coa, ignore.case = TRUE) ~ "Retired",
-    TRUE ~ host_country_work_coa ))
+    TRUE ~ host_country_work_coa )) |>
+    mutate(demographics_resp_activity = case_when(
+    tolower(demographics_resp_activity) %in% c("employee", "self_employed", "employed", "family_business") ~ "Employed",
+    tolower(demographics_resp_activity) %in% c("unemployed") ~ "Unemployed",
+    grepl("other", demographics_resp_activity, ignore.case = TRUE) ~ "Other",
+    grepl("prefer_no_answer", demographics_resp_activity, ignore.case = TRUE) ~ "Other",
+    grepl("unpaid", demographics_resp_activity, ignore.case = TRUE) ~ "Other",
+    grepl("retired", demographics_resp_activity, ignore.case = TRUE) ~ "Retired",
+    grepl("engaged_in_HH_resp", demographics_resp_activity, ignore.case = TRUE) ~ "Housekeeping",
+    grepl("housekeeping", demographics_resp_activity, ignore.case = TRUE) ~ "Housekeeping",
+    grepl("stud", demographics_resp_activity, ignore.case = TRUE) ~ "Studying",
+    grepl("train", demographics_resp_activity, ignore.case = TRUE) ~ "Trainee",
+    grepl("ill", demographics_resp_activity, ignore.case = TRUE) ~ "Long term illness/injury",
+    TRUE ~ demographics_resp_activity )) 
+
+unique(combined_ind$demographics_resp_activity)
 
 common_cols1 <- c(
   "introduction_resp_age",
@@ -115,6 +129,89 @@ common_cols1 <- c(
 combined_hh <- bind_rows(
   select(data_eu, all_of(common_cols1)),
   select(data_ee, all_of(common_cols1)))
+```
+
+```{r}
+split_category_proportions_by_country <- function(data, category_col, country_col) {
+  data[[category_col]] <- as.character(data[[category_col]])
+  data[[country_col]] <- as.character(data[[country_col]])
+  data <- data[!is.na(data[[category_col]]) & data[[category_col]] != "" & 
+                 !is.na(data[[country_col]]) & data[[country_col]] != "", ]
+  
+  result_list <- list()
+  for (cntry in unique(data[[country_col]])) {
+    subset_data <- data[data[[country_col]] == cntry, ]
+    cat_table <- prop.table(table(subset_data[[category_col]]))
+    
+    component_list <- list()
+    for (name in names(cat_table)) {
+      components <- unlist(strsplit(name, " "))
+      prop_per_component <- cat_table[[name]] / length(components)
+      
+      for (comp in components) {
+        if (!is.null(component_list[[comp]])) {
+          component_list[[comp]] <- component_list[[comp]] + prop_per_component
+        } else {
+          component_list[[comp]] <- prop_per_component
+        }
+      }
+    }
+    
+    temp_df <- data.frame(
+      Component = names(component_list),
+      Total_Proportion = unlist(component_list),
+      Country = cntry
+    )
+    result_list[[cntry]] <- temp_df
+  }
+  final_df <- do.call(rbind, result_list)
+  rownames(final_df) <- NULL
+  
+  return(final_df[order(final_df$Country, -final_df$Total_Proportion), ])
+}
+
+income_df <- split_category_proportions_by_country(
+  data = combined_hh,
+  category_col = "income_source",
+  country_col = "country"
+)
+
+jobs_df <- split_category_proportions_by_country(
+  data = combined_ind,
+  category_col = "host_country_diff_work",
+  country_col = "country"
+)
+
+needs_df <- split_category_proportions_by_country(
+  data = combined_hh,
+  category_col = "socioecon_needs",
+  country_col = "country"
+)
+
+benefits_df <- split_category_proportions_by_country(
+  data = combined_hh,
+  category_col = "socbenefits",
+  country_col = "country"
+)
+```
+
+```{r}
+
+add_source_label <- function(df, source_name) {
+  df <- df[, c("Country", "Component", "Total_Proportion")] 
+  df$Source <- source_name
+  return(df)
+}
+
+df_list <- list(
+  income = income_df,
+  job = jobs_df,
+  needs = needs_df,
+  benefits = benefits_df
+)
+
+combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
+saveRDS(combined_df, "Data/combined_df")
 ```
 
 ```{r}
