@@ -174,15 +174,6 @@ combined_df |>
     arrange(desc(Percent), .by_group = TRUE) |>
     slice_head(n = 5) |>
     ungroup() |> 
-     mutate(Component = fct_recode(Component,
-     "Job" = "employment_host_country",
-     "Social Protection" = "social_protection_host_govt",
-     "Social Protection from Ukraine" = "social_protection_ukr_govt",
-     "Job in Ukraine" = "employment_ukraine_country",
-     "Remmittances" = "remmittances",
-     "No income" = "no_income",
-     "Other Sources" = "other_sources",
-     "No Answer" = "prefer_no_answer")) |> 
   ggplot(aes(x = reorder(Component, -Percent), 
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
@@ -214,16 +205,6 @@ combined_df |>
     arrange(desc(Percent), .by_group = TRUE) |>
     slice_head(n = 5) |>
     ungroup() |> 
-    mutate(Component = case_when(
-    grepl("lang", Component, ignore.case = TRUE) ~ "Language barrier",
-    grepl("decent",Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
-    grepl("opp", Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
-    grepl("skills", Component, ignore.case = TRUE) ~ "Lack of skills",
-    grepl("care",Component, ignore.case = TRUE) ~ "Care for others",
-    grepl("none", Component, ignore.case = TRUE) ~ "None",
-    grepl("recog", Component, ignore.case = TRUE) ~ "Lack of recognition",
-    grepl("looking", Component, ignore.case = TRUE) ~ "Not looking for work",
-    TRUE ~ Component ))|>
   ggplot(aes(x = reorder(Component, -Percent), 
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
@@ -306,15 +287,6 @@ combined_df |>
     arrange(desc(Percent), .by_group = TRUE) |>
     slice_head(n = 5) |>
     ungroup() |> 
-    mutate(Component = case_when(
-    grepl("cash", Component, ignore.case = TRUE) ~ "Cash benefits",
-    grepl("child",Component, ignore.case = TRUE) ~ "Family grant",
-    grepl("disab", Component, ignore.case = TRUE) ~ "Disability grant",
-    grepl("do_not", Component, ignore.case = TRUE) ~ "Don't know",
-    grepl("other",Component, ignore.case = TRUE) ~ "Other Source",
-    grepl("prefer", Component, ignore.case = TRUE) ~ "Prefer no answer",
-    grepl("unemp", Component, ignore.case = TRUE) ~ "Unemployment grant",
-    TRUE ~ Component ))|>
   ggplot(aes(x = reorder(Component, -Percent), 
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
@@ -335,19 +307,7 @@ combined_df |>
     group_by(Country) |>
     arrange(desc(Percent), .by_group = TRUE) |>
     slice_head(n = 5) |>
-    ungroup() |> 
-    mutate(Component = case_when(
-    grepl("employment", Component, ignore.case = TRUE) ~ "Employment",
-    grepl("hous",Component, ignore.case = TRUE) ~ "Accommodation",
-    grepl("accom", Component, ignore.case = TRUE) ~ "Accommodation",
-    grepl("med", Component, ignore.case = TRUE) ~ "Healthcare",
-    grepl("health",Component, ignore.case = TRUE) ~ "Healthcare",
-    grepl("prefer", Component, ignore.case = TRUE) ~ "Prefer no answer",
-    grepl("educ", Component, ignore.case = TRUE) ~ "Education",
-    grepl("govt", Component, ignore.case = TRUE) ~ "Government assistance",
-    grepl("none", Component, ignore.case = TRUE) ~ "None",
-     grepl("human", Component, ignore.case = TRUE) ~ "Humanitarian assistance",
-    TRUE ~ Component ))|>
+    ungroup() |>
   ggplot(aes(x = reorder(Component, -Percent), 
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
@@ -413,6 +373,10 @@ table1 <- table(data_ee$Travel_Ukraine_no_return_plans, data_ee$economic_capicit
 chisq.test(table1)
 fisher.test(table1)
 
+
+colnames(combined_df)
+colnames(combined_hh)
+colnames(combined_ind)
 ```
 
 **Discussion**

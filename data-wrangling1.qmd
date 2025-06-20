@@ -30,11 +30,11 @@ data_ee <- data_ee |>
   select(introduction_resp_age, demographics_educ_level,
          demographics_resp_activity, host_country_SE2_11_SS_INC_SOR,
          host_country_diff_work, host_country_work_coa,
-         urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST)
+         urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST, hh_id)
 
 data_eu <- data_eu |>
   select(DR7_3_NUM_RESP_AGE, SE2_11_SS_INC_SOR, 
-         SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country) |>
+         SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country, hh_id) |>
   rename(introduction_resp_age = DR7_3_NUM_RESP_AGE,
          income_source = SE2_11_SS_INC_SOR,
          socioecon_needs = SE2_14_SM_SOC_AST_TYP,
@@ -42,7 +42,7 @@ data_eu <- data_eu |>
 
 data_eu_ind <- data_eu_ind |>
   select(SE1_SS_EDU_LVL, SE2_SS_WORK, SE12_SM_EMP_BARR, SE8_SS_ACTIVITY,
-         SE13_SS_WRK_TYP, country) |>
+         SE13_SS_WRK_TYP, country, hh_id) |>
   rename(demographics_educ_level = SE1_SS_EDU_LVL,
          host_country_diff_work = SE12_SM_EMP_BARR,
          demographics_resp_activity = SE13_SS_WRK_TYP)
@@ -77,7 +77,8 @@ common_cols <- c(
   "demographics_resp_activity",
   "host_country_diff_work",
   "country",
-  "host_country_work_coa"
+  "host_country_work_coa",
+  "hh_id"
 )
 
 combined_ind <- bind_rows(
@@ -123,12 +124,156 @@ common_cols1 <- c(
   "income_source",
   "socioecon_needs",
   "socbenefits",
-  "country"
+  "country",
+  "hh_id"
 )
 
 combined_hh <- bind_rows(
   select(data_eu, all_of(common_cols1)),
   select(data_ee, all_of(common_cols1)))
+
+combined_data <- merge(combined_hh, combined_ind, by = c("country", "hh_id"))
+combined_data <- combined_data |>
+  mutate(employed_binary = ifelse(host_country_work_coa == "Employed", 1, 0))
+
+combined_data <- combined_data |>
+  mutate(
+    demographics_educ_level = as.factor(demographics_educ_level),
+    demographics_resp_activity = as.factor(demographics_resp_activity),
+    socioecon_needs = as.factor(socioecon_needs),
+    socbenefits = as.factor(socbenefits),
+    income_source = as.factor(income_source)
+  ) 
+```
+
+```{r}
+
+combined_data <- combined_data|>
+  mutate(row_id = row_number())
+
+income_dummies <- combined_data |>
+  select(row_id, income_source) |>
+  separate_rows(income_source, sep = " ") |>
+  mutate(income_source = str_trim(income_source)) |>
+  mutate(income_source = case_when(
+    income_source %in% c("employment_remote", 
+                         "remote_work__for_other_country_that_the_") ~ "employment_remote",
+    income_source %in% c("employment_host_country") ~ "employment_host_country",
+    income_source %in% c("employment_ukraine_country", 
+                         "continued_to_be_employed_in_ukraine__inc") ~ "employment_ukraine_country",
+    income_source %in% c("do_not_know", "dont_know") ~ "do_not_know",
+    income_source %in% c("prefer_not_to_answer", "prefer_no_answer") ~ "prefer_no_answer",
+    TRUE ~ income_source
+  ))|>
+  mutate(flag = 1) |>
+  pivot_wider(names_from = income_source,
+              values_from = flag,
+              values_fill = list(flag = 0),
+              names_prefix = "income_")
+
+combined_data <- combined_data |>
+  left_join(income_dummies, by = "row_id")
+  
+  combined_data <- combined_data |>
+  select(-income_NA)
+  
+#-------------------------------------------------------
+diff_dummies <- combined_data %>%
+  select(row_id, host_country_diff_work) %>%
+  separate_rows(host_country_diff_work, sep = " ") %>%
+  mutate(host_country_diff_work = str_trim(host_country_diff_work)) %>%
+  mutate(flag = 1) %>%
+  pivot_wider(names_from = host_country_diff_work,
+              values_from = flag,
+              values_fill = list(flag = 0),
+              names_prefix = "diff_")
+
+combined_data <- combined_data %>%
+  left_join(diff_dummies, by = "row_id")
+
+#-------------------------------------------------------
+
+needs_dummies <- combined_data %>%
+  select(row_id, socioecon_needs) %>%
+  separate_rows(socioecon_needs, sep = " ") %>%
+  mutate(socioecon_needs = str_trim(socioecon_needs)) %>%
+  mutate(flag = 1) %>%
+  pivot_wider(names_from = socioecon_needs,
+              values_from = flag,
+              values_fill = list(flag = 0),
+              names_prefix = "needs_")
+
+combined_data <- combined_data %>%
+  left_join(needs_dummies, by = "row_id")
+
+#-------------------------------------------------------
+
+benefits_dummies <- combined_data %>%
+  select(row_id, socbenefits) %>%
+  separate_rows(socbenefits, sep = " ") %>%
+  mutate(socbenefits = str_trim(socbenefits)) %>%
+  mutate(flag = 1) %>%
+  pivot_wider(names_from = socbenefits,
+              values_from = flag,
+              values_fill = list(flag = 0),
+              names_prefix = "benefits_")
+
+combined_data <- combined_data %>%
+  left_join(benefits_dummies, by = "row_id")
+
+combined_data <- combined_data |>
+  select(-needs_NA, benefits_NA, diff_NA)
+
+#-------------------------------------------------------
+
+colnames(combined_data)
+
+```
+
+```{r}
+# Define the list of good predictors
+predictors <- c(
+  "demographics_educ_level",
+  "demographics_resp_activity",
+  "diff_lack_of_opportunities",
+  "diff_lack_of_skills",
+  "diff_lack_of_language",
+  "diff_discrimination",
+  "diff_lack_documentation",
+  "diff_care_for_others",
+  "diff_lack_of_transport",
+  "diff_lack_work_permit",
+  "diff_not_looking_for_work",
+  "diff_not_planning_to_stay",
+  "diff_lack_of_address",
+  "diff_loss_benefits",
+  "needs_employment",
+  "needs_employment_assistance",
+  "needs_education_aduls",
+  "needs_transportation",
+  "needs_food",
+  "needs_material",
+  "needs_accommodation",
+  "income_no_income",
+  "income_social_protection_host_govt",
+  "income_social_protection_ukr_govt",
+  "income_remmittances"
+)
+model_data <- combined_data |>
+  select(employed_binary, all_of(predictors)) |>
+  drop_na()
+
+model_data$employed_binary <- as.factor(model_data$employed_binary)
+
+model <- glm(employed_binary ~ ., data = model_data, family = binomial)
+summary(model)
+
+model_data$predicted_prob <- predict(model, type = "response")
+model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
+mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
+table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
+
+
 ```
 
 ```{r}
@@ -211,6 +356,64 @@ df_list <- list(
 )
 
 combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
+
+needs_df <- combined_df |>
+  filter(Source == "needs") |>
+  mutate(Component = case_when(
+    grepl("employment", Component, ignore.case = TRUE) ~ "Employment",
+    grepl("hous|accom", Component, ignore.case = TRUE) ~ "Accommodation",
+    grepl("med|health", Component, ignore.case = TRUE) ~ "Healthcare",
+    grepl("educ", Component, ignore.case = TRUE) ~ "Education",
+    grepl("govt", Component, ignore.case = TRUE) ~ "Government assistance",
+    grepl("human", Component, ignore.case = TRUE) ~ "Humanitarian assistance",
+    grepl("prefer", Component, ignore.case = TRUE) ~ "Prefer no answer",
+    grepl("none", Component, ignore.case = TRUE) ~ "None",
+    TRUE ~ Component
+  ))
+
+benefits_df <- combined_df |>
+  filter(Source == "benefits") |>
+  mutate(Component = case_when(
+    grepl("cash", Component, ignore.case = TRUE) ~ "Cash benefits",
+    grepl("child", Component, ignore.case = TRUE) ~ "Family grant",
+    grepl("disab", Component, ignore.case = TRUE) ~ "Disability grant",
+    grepl("unemp", Component, ignore.case = TRUE) ~ "Unemployment grant",
+    grepl("prefer", Component, ignore.case = TRUE) ~ "Prefer no answer",
+    grepl("do_not", Component, ignore.case = TRUE) ~ "Don't know",
+    grepl("other", Component, ignore.case = TRUE) ~ "Other Source",
+    TRUE ~ Component
+  ))
+
+job_df <- combined_df |>
+  filter(Source == "job") |>
+  mutate(Component = case_when(
+    grepl("lang", Component, ignore.case = TRUE) ~ "Language barrier",
+    grepl("decent|opp", Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
+    grepl("skills", Component, ignore.case = TRUE) ~ "Lack of skills",
+    grepl("care", Component, ignore.case = TRUE) ~ "Care for others",
+    grepl("none", Component, ignore.case = TRUE) ~ "None",
+    grepl("recog", Component, ignore.case = TRUE) ~ "Lack of recognition",
+    grepl("looking", Component, ignore.case = TRUE) ~ "Not looking for work",
+    TRUE ~ Component
+  ))
+
+income_df <- combined_df |>
+  filter(Source == "income") |>
+  mutate(Component = fct_recode(Component,
+    "Job" = "employment_host_country",
+    "Job" = "employment_remote",
+    "Social Protection" = "social_protection_host_govt",
+    "Social Protection from Ukraine" = "social_protection_ukr_govt",
+    "Job in Ukraine" = "employment_ukraine_country",
+    "Remmittances" = "remmittances",
+    "No income" = "no_income",
+    "Other Sources" = "other_sources",
+    "No Answer" = "prefer_no_answer",
+    "Don't know" = "do_not_know",
+    "Don't know" = "dont_know"
+  ))
+combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df)
+
 saveRDS(combined_df, "Data/combined_df")
 ```
 
