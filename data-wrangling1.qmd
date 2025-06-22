@@ -17,15 +17,16 @@ data_eu_ind <- read_csv("Data/EU_Ind.csv")
 ```
 
 ```{r}
+# Filter out countries that aren't included in the analysis
 data_eu <- data_eu |>
   filter(!is.na(country) & country != 0 & 
            !(country %in% c("Bulgaria", "Hungary", "construct")))
-
 ```
 
 
 ```{r}
 
+#Select the variables of interest from 3 datasets (Estonia, Europe HH and Ind)
 data_ee <- data_ee |>
   select(introduction_resp_age, demographics_educ_level,
          demographics_resp_activity, host_country_SE2_11_SS_INC_SOR,
@@ -46,11 +47,17 @@ data_eu_ind <- data_eu_ind |>
   rename(demographics_educ_level = SE1_SS_EDU_LVL,
          host_country_diff_work = SE12_SM_EMP_BARR,
          demographics_resp_activity = SE13_SS_WRK_TYP)
+
+#--------------------------------------------------------------------
  
+# 'SE8_SS_ACTIVITY': if respondent worked (SE2_SS_WORK == "yes"), label "employed"
+# SE8_SS_ACTIVITY contains data on actviity if unemployed
+# So 2 columns' data is merged
 data_eu_ind <- data_eu_ind |>
   mutate(SE8_SS_ACTIVITY = case_when(
     SE2_SS_WORK == "yes" ~ "employed",
     TRUE ~ SE8_SS_ACTIVITY)) |>
+  # Remove rows where all of the listed columns are NA
     filter(!if_all(c(
       "demographics_educ_level",
       "SE2_SS_WORK",
@@ -58,20 +65,18 @@ data_eu_ind <- data_eu_ind |>
       "SE8_SS_ACTIVITY",
       "demographics_resp_activity"
     ), is.na)) |>
+  # Rename the updated column to for merging
   rename(host_country_work_coa = SE8_SS_ACTIVITY)
 
-colnames(data_eu_ind)
-colnames(data_eu)
-colnames(data_ee)
-```
-
-```{r}
+#Change column names and add country name - Estonia
 data_ee <- data_ee |> 
  rename(income_source = host_country_SE2_11_SS_INC_SOR,
         socioecon_needs = urgent_needs_urgent_needs_first,
         socbenefits = host_country_SE2_11b_SM_BEN_HST)|> 
               mutate(country = "Estonia")
+```
 
+```{r}
 common_cols <- c(
   "demographics_educ_level",
   "demographics_resp_activity",
@@ -81,6 +86,7 @@ common_cols <- c(
   "hh_id"
 )
 
+# Combine tows of EU Ind and EE data by common columns
 combined_ind <- bind_rows(
   select(data_eu_ind, all_of(common_cols)),
   select(data_ee, all_of(common_cols)))|>
@@ -117,7 +123,9 @@ combined_ind <- bind_rows(
     grepl("ill", demographics_resp_activity, ignore.case = TRUE) ~ "Long term illness/injury",
     TRUE ~ demographics_resp_activity )) 
 
-unique(combined_ind$demographics_resp_activity)
+#--------------------------------------------------------------------
+
+# Combine tows of EU HH and EE data by common columns
 
 common_cols1 <- c(
   "introduction_resp_age",
@@ -132,10 +140,16 @@ combined_hh <- bind_rows(
   select(data_eu, all_of(common_cols1)),
   select(data_ee, all_of(common_cols1)))
 
+#--------------------------------------------------------------------
+
+#Merge two datasets by household id
 combined_data <- merge(combined_hh, combined_ind, by = c("country", "hh_id"))
+
+#Refractor the employed/unemployed variable into a binary variable
 combined_data <- combined_data |>
   mutate(employed_binary = ifelse(host_country_work_coa == "Employed", 1, 0))
 
+#Convert variables to factors
 combined_data <- combined_data |>
   mutate(
     demographics_educ_level = as.factor(demographics_educ_level),
@@ -177,18 +191,42 @@ combined_data <- combined_data |>
   combined_data <- combined_data |>
   select(-income_NA)
   
+  
 #-------------------------------------------------------
-diff_dummies <- combined_data %>%
-  select(row_id, host_country_diff_work) %>%
-  separate_rows(host_country_diff_work, sep = " ") %>%
-  mutate(host_country_diff_work = str_trim(host_country_diff_work)) %>%
-  mutate(flag = 1) %>%
+  
+  unique(combined_data$host_country_diff_work)
+diff_dummies <- combined_data |>
+  select(row_id, host_country_diff_work) |>
+  separate_rows(host_country_diff_work, sep = " ")|>
+  mutate(host_country_diff_work = str_trim(host_country_diff_work))|>
+    mutate(host_country_diff_work = case_when(
+    host_country_diff_work %in% c("lack_of_local_language", 
+                         "lack_lang") ~ "lack_of_lang",
+     host_country_diff_work %in% c("need_to_take_care_of_others", 
+                         "lack_childcare") ~ "lack_childcare",
+     host_country_diff_work %in% c("discrimination", 
+                         "discrim") ~ "discrimination",
+     host_country_diff_work %in% c("lack_of_information", 
+                         "lack_info") ~ "lack_of_info",
+    host_country_diff_work %in% c("lack_of_registered_address", 
+                         "lack_address") ~ "lack_of_address",
+    host_country_diff_work %in% c("lack_permit", 
+                         "lack_of_work_permit") ~ "lack_of_work_permit",
+    host_country_diff_work %in% c("not_staying", "not_planning_to_stay") ~ "leaving",
+    host_country_diff_work %in% c("lack_docum", "lack_of_other_documentation") ~ "lack_of_documentation",
+     #    host_country_diff_work %in% c("lack_of_decent_employment", 
+     #                     "lack_of_age_opportunities", "lack_opp") ~ "lack_of_opportunities",
+     # host_country_diff_work %in% c("lack_of_education_skills", 
+     #                     "lack_of_skills") ~ "lack_of_skills",
+    TRUE ~ host_country_diff_work
+  ))|>
+  mutate(flag = 1) |>
   pivot_wider(names_from = host_country_diff_work,
               values_from = flag,
               values_fill = list(flag = 0),
               names_prefix = "diff_")
 
-combined_data <- combined_data %>%
+combined_data <- combined_data |>
   left_join(diff_dummies, by = "row_id")
 
 #-------------------------------------------------------
