@@ -194,7 +194,6 @@ combined_data <- combined_data |>
   
 #-------------------------------------------------------
   
-  unique(combined_data$host_country_diff_work)
 diff_dummies <- combined_data |>
   select(row_id, host_country_diff_work) |>
   separate_rows(host_country_diff_work, sep = " ")|>
@@ -202,8 +201,8 @@ diff_dummies <- combined_data |>
     mutate(host_country_diff_work = case_when(
     host_country_diff_work %in% c("lack_of_local_language", 
                          "lack_lang") ~ "lack_of_lang",
-     host_country_diff_work %in% c("need_to_take_care_of_others", 
-                         "lack_childcare") ~ "lack_childcare",
+     host_country_diff_work %in% c( 
+                         "lack_childcare", "lack_of_childcare") ~ "lack_childcare",
      host_country_diff_work %in% c("discrimination", 
                          "discrim") ~ "discrimination",
      host_country_diff_work %in% c("lack_of_information", 
@@ -235,6 +234,21 @@ needs_dummies <- combined_data %>%
   select(row_id, socioecon_needs) %>%
   separate_rows(socioecon_needs, sep = " ") %>%
   mutate(socioecon_needs = str_trim(socioecon_needs)) %>%
+   mutate(socioecon_needs = case_when(
+    socioecon_needs %in% c("employment", 
+                         "employment_assistance") ~ "employment",
+    socioecon_needs %in% c("medical", 
+                         "health_services") ~ "medical",
+    socioecon_needs %in% c("material", 
+                         "humanitarian assistance") ~ "material",
+    socioecon_needs %in% c("accommodation", 
+                         "housing_support") ~ "accommodation",
+    socioecon_needs %in% c("education_support", 
+                         "education_aduls") ~ "education_support",
+    socioecon_needs %in% c("education_children", 
+                         "childcare") ~ "childcare",
+    TRUE ~ socioecon_needs
+  ))|>
   mutate(flag = 1) %>%
   pivot_wider(names_from = socioecon_needs,
               values_from = flag,
@@ -243,6 +257,8 @@ needs_dummies <- combined_data %>%
 
 combined_data <- combined_data %>%
   left_join(needs_dummies, by = "row_id")
+combined_data <- combined_data |>
+  select(-needs_NA, -diff_NA)
 
 #-------------------------------------------------------
 
@@ -260,7 +276,7 @@ combined_data <- combined_data %>%
   left_join(benefits_dummies, by = "row_id")
 
 combined_data <- combined_data |>
-  select(-needs_NA, benefits_NA, diff_NA)
+  select(-benefits_NA)
 
 #-------------------------------------------------------
 
@@ -271,31 +287,53 @@ colnames(combined_data)
 ```{r}
 # Define the list of good predictors
 predictors <- c(
+  "introduction_resp_age",
   "demographics_educ_level",
   "demographics_resp_activity",
-  "diff_lack_of_opportunities",
+  "income_social_protection_ukr_govt",
+  "diff_lack_of_lang",
+  "diff_lack_childcare",
   "diff_lack_of_skills",
-  "diff_lack_of_language",
+  "diff_none",
   "diff_discrimination",
-  "diff_lack_documentation",
-  "diff_care_for_others",
-  "diff_lack_of_transport",
-  "diff_lack_work_permit",
-  "diff_not_looking_for_work",
-  "diff_not_planning_to_stay",
-  "diff_lack_of_address",
+  "diff_lack_of_documentation",
+  "diff_lack_opp",
+  "diff_lack_recog",
   "diff_loss_benefits",
   "needs_employment",
-  "needs_employment_assistance",
-  "needs_education_aduls",
-  "needs_transportation",
+  "needs_employment",
+  "needs_education_support",
   "needs_food",
-  "needs_material",
   "needs_accommodation",
-  "income_no_income",
-  "income_social_protection_host_govt",
-  "income_social_protection_ukr_govt",
-  "income_remmittances"
+  "benefits_cash_benefits",
+  "benefits_unemployment_grant"
+  
+  
+  # "demographics_educ_level",
+  # "demographics_resp_activity",
+  # "diff_lack_of_opportunities",
+  # "diff_lack_of_skills",
+  # "diff_lack_of_language",
+  # "diff_discrimination",
+  # "diff_lack_documentation",
+  # "diff_care_for_others",
+  # "diff_lack_of_transport",
+  # "diff_lack_work_permit",
+  # "diff_not_looking_for_work",
+  # "diff_not_planning_to_stay",
+  # "diff_lack_of_address",
+  # "diff_loss_benefits",
+  # "needs_employment",
+  # "needs_employment_assistance",
+  # "needs_education_aduls",
+  # "needs_transportation",
+  # "needs_food",
+  # "needs_material",
+  # "needs_accommodation",
+  # "income_no_income",
+  # "income_social_protection_host_govt",
+  # "income_social_protection_ukr_govt",
+  # "income_remmittances"
 )
 model_data <- combined_data |>
   select(employed_binary, all_of(predictors)) |>
