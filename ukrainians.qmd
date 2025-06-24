@@ -26,17 +26,12 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot)
+              patchwork, cowplot, pROC, rms)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
-combined_eu <- readRDS("Data/combined_eu")
 reasons_country_ee <- readRDS("Data/reasons_country_ee")
-data_eu <- read_csv("Data/data_eu")
-data_eu_ind <- read_csv("Data/EU_Ind.csv")
-
-combined_hh <-readRDS("Data/combined_hh")
-combined_ind <-readRDS("Data/combined_ind")
+combined_data <- readRDS("Data/combined_data")
 ```
 
 **Introduction**
@@ -74,7 +69,7 @@ gg <- theme_minimal() +
     axis.text = element_text(size = 7)
   )
 
-combined_hh |>
+combined_data |>
   filter(!is.na(introduction_resp_age), !is.na(country)) |>
   mutate(introduction_resp_age = factor(introduction_resp_age,
                                         levels = c("18-34", "35-59", "60+"))) |>
@@ -107,7 +102,7 @@ The educational categories range from primary and secondary education to higher 
 
 ```{r, fig.width=7, fig.height=5, warning=FALSE}
 
-combined_ind |>
+combined_data |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
   mutate(demographics_educ_level = case_when(
     grepl("tech", demographics_educ_level, ignore.case = TRUE) ~ "Technical/Vocational",
@@ -219,7 +214,7 @@ combined_df |>
 
 ```{r, fig.height = 4, fig.width=8}
 
-act_host <- combined_ind |>
+act_host <- combined_data |>
   filter(
     !is.na(host_country_work_coa),
     !country %in% c("Hungary", "Bulgaria", "construct", NA)
@@ -239,7 +234,7 @@ act_host <- combined_ind |>
   guides(fill = guide_legend(title = "Activity")) +
   scale_fill_brewer(palette = "Dark2") + theme(legend.position = "none") + ylab(NULL)
 
-act_ukr <- combined_ind|>
+act_ukr <- combined_data|>
   filter(
     !is.na(host_country_work_coa),
     !country %in% c("Hungary", "Bulgaria", "construct", NA)
@@ -343,41 +338,187 @@ combined_df |>
   arrange(desc(Percent))
 ```
 
-**Traveling back**
-
-Reasons of going permanently to Ukraine
-
-Reasons for traveling back temporarily: visit relatives, check property,
-get documents. 77.16% expect to stay in Estonia.
-
-```{r}
-make_prop_table(data_ee$Travel_Ukraine_temp_return )
-
-combined_df |>
-  filter(Source == "return") |>
-  mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Component, Percent) |>
-  arrange(desc(Percent))
-
-make_prop_table(data_ee$Travel_Ukraine_no_return_plans )
-make_prop_table(data_ee$Travel_Ukraine_return_length)
-make_prop_table(data_ee$Travel_Ukraine_no_return_move_country )
-make_prop_table(data_ee$Travel_Ukraine_no_return_move_reasons )
-
-```
-
 **Tests**
 
+**Logistic regression**
+
 ```{r}
-table1 <- table(data_ee$Travel_Ukraine_no_return_plans, data_ee$economic_capicity_L13_SS_AFF_GOODS)
-chisq.test(table1)
-fisher.test(table1)
+# Define the list of good predictors
+predictors <- c(
+  "introduction_resp_age",
+  "demographics_educ_level_grouped",
+  "demographics_resp_activity",
+  "income_social_protection_ukr_govt",
+  "diff_lack_of_lang",
+  "diff_lack_childcare",
+  "diff_lack_of_skills",
+  "diff_none",
+  "diff_discrimination",
+  "diff_lack_of_documentation",
+  "diff_lack_opp",
+  "diff_lack_recog",
+  "diff_loss_benefits",
+  "needs_employment",
+  "needs_employment",
+  "needs_education_support",
+  "needs_food",
+  "needs_accommodation",
+  "benefits_cash_benefits",
+  "benefits_unemployment_grant"
+)
+
+model_data <- combined_data |>
+  select(employed_binary, all_of(predictors)) |>
+  drop_na()
+
+model <- glm(employed_binary ~ ., data = model_data, family = binomial)
+summary(model)
+
+# model_data$predicted_prob <- predict(model, type = "response")
+# model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
+# mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
+# table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
 
 
-colnames(combined_df)
-colnames(combined_hh)
-colnames(combined_ind)
+# ggplot(model_data, aes(x = predicted_prob, fill = factor(employed_binary))) +
+#   geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.6) +
+#   labs(fill = "Actual Employment", x = "Predicted Probability", y = "Count") +
+#   theme_minimal()
+
+#hoslem.test(model_data$employed_binary, fitted(model), g = 10)
 ```
+
+**Random forest**
+
+```{r, fig.width=8, fig.height=8}
+colnames(combined_data)
+
+important_vars <- c(
+  "introduction_resp_age",
+  "demographics_educ_level_grouped",
+  "demographics_resp_activity",
+  "income_social_protection_host_govt",
+  "income_remmittances",
+  "income_social_protection_ukr_govt",
+  "diff_lack_of_lang",
+  "diff_lack_childcare",
+  "diff_lack_of_skills",
+  "diff_lack_of_education_skills",
+  "diff_lack_of_info",
+  "diff_none",
+  "diff_discrimination",
+  "diff_lack_of_documentation",
+  "needs_education_support",
+  "needs_medical",
+  "needs_accommodation",
+  "needs_host_govt_assistance",
+  "benefits_cash_benefits",
+  "benefits_unemployment_grant"
+)
+
+model_data <- combined_data |>
+  select(employed_binary, all_of(important_vars)) |>
+  drop_na()
+
+model_data_reduced <- model_data[, c("employed_binary", important_vars)]
+
+rf_reduced <- randomForest(
+  factor(employed_binary) ~ .,
+  data = model_data_reduced,
+  ntree = 500,
+  importance = TRUE
+)
+
+rf_reduced
+importance(rf_reduced)
+varImpPlot(rf_reduced)
+```
+
+```{r}
+set.seed(123)
+
+# Define train control with stratified 5-fold CV
+train_control <- trainControl(
+  method = "cv",       
+  number = 5,        
+  classProbs = TRUE,   
+  summaryFunction = twoClassSummary, 
+  savePredictions = TRUE,
+  sampling = "up",  
+  verboseIter = TRUE
+)
+
+model_data_reduced$employed_binary <- factor(model_data_reduced$employed_binary, levels = c(0,1), labels = c("No", "Yes"))
+
+# Train random forest with caret 
+rf_model <- train(
+  employed_binary ~ .,
+  data = model_data_reduced,
+  method = "rf",
+  trControl = train_control,
+  metric = "ROC",     
+  tuneLength = 5         
+)
+
+print(rf_model)
+
+rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data_reduced,
+                         ntree = 500, mtry = 2, importance = TRUE)
+
+imp <- importance(rf_model)
+top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:15]
+
+
+
+model_data_selected <- model_data_reduced[, c("employed_binary", top_vars)]
+model_data_selected$employed_binary <- ifelse(model_data_selected$employed_binary == "Yes", 1, 0)
+logit_model <- glm(employed_binary ~ ., data = model_data_selected, family = binomial)
+summary(logit_model)
+
+pred_probs <- predict(logit_model, type = "response")
+pred_class <- ifelse(pred_probs > 0.5, 1, 0)
+table(Predicted = pred_class, Actual = model_data_selected$employed_binary)
+mean(pred_class == model_data_selected$employed_binary)
+roc_obj <- roc(model_data_selected$employed_binary, pred_probs)
+plot(roc_obj)
+auc(roc_obj)
+```
+
+```{r}
+# Country specific data
+formula_str <- paste("employed_binary ~", paste(top_vars, collapse = " + "))
+formula <- as.formula(formula_str)
+
+models_by_country <- combined_data |>
+  group_by(country) |>
+  group_split() |>
+  map(~ glm(formula, data = ., family = binomial))
+
+names(models_by_country) <- unique(combined_data$country)
+
+
+summary(models_by_country$Estonia)
+summary(models_by_country$Poland)
+summary(models_by_country$Slovakia)
+summary(models_by_country$Romania)
+summary(models_by_country$Czechia)
+summary(models_by_country$Moldova)
+
+```
+
+```{r, fig.width=8, fig.height=8}
+dd <- datadist(model_data_selected)
+options(datadist = "dd")
+
+logit_model_rms <- lrm(employed_binary ~ ., data = model_data_selected, x=TRUE, y=TRUE)
+cal <- calibrate(logit_model_rms, method="boot", B=1000)
+
+plot(cal, xlab="Predicted Probability", ylab="Observed Probability", main="Calibration Plot")
+
+summary(logit_model_rms)
+summary(logit_model)
+```
+
 
 **Discussion**
 
