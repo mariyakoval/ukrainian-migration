@@ -42,14 +42,40 @@ perceived hostility or social cohesion affect intent to stay?
 
 The geographical scope of the analysis includes countries in Central and Eastern Europe, such as Estonia, Poland, Czechia, Slovakia, Romania, Moldova. While some data is available for all countries, other variables are available only for a subset of countries. The main goals of the study include describing the socio-economic profiles of Ukrainian refugees in these countries; compare the quality of accommodation, services, and support; identify factors associated with economic self-sufficiency and the decision to return to Ukraine; examine the impact of social cohesion or perceived hostility on refugees’ intent to stay or move.
 
-**Data and methods**
+*Data and methods*
+
+This study employs Multi-Sectoral Needs Assessments (MSNA) of 2023, which provide data on Ukrainian refugees' needs and priorities in Estonia, Slovakia, Poland, Romania, Moldova, and Czechia. The assessment employs both household-level and individual-level data collected through structured surveys in all the countries.
+
+**Data Wrangling and Preparation**
+
+To enable cross-regional comparisons, variables that were consistently present across all six national datasets were selected and merged into a single dataset. Questions allowing multiple responses (e.g., types of support received, reasons for unemployment, barriers to accessing services) were transformed using one-hot encoding into a series of binary indicator variables (1 = selected, 0 = not selected) to show each of the possible response categories in disaggregated form. Where categorical responses varied slightly across countries (e.g., differences in wording or coding), the values were recoded into a uniform format for comparison. 
+
+For the convenience of exploratory data analysis (EDA) and model building, the outcome variable (employment status) was defined as follows:
+
+- Respondents were classified as employed (1) if they reported any form of employment.
+- All others (unemployed, in education, retired, or not working due to other factors) were classified as unemployed (0).
+
+This two-category outcome variable, Employed, was used as the dependent variable for all the following regression and classification models.
+
+Based on the proportions of missing data and their impact on model performance, non-available observations were excluded or imputed. Individual aggregated dataframes were created so that the distribution of binary-coded multi-response variables could be visualized and country-level comparisons could be made.
+
+**Statistical Modeling**
+
+Logistic regression and random forest classification were applied in an attempt to identify influential factors concerning employment among Ukrainian refugees:
+
+- Random Forest Classifier
+
+A random forest model was trained to account for potential non-linearities and interactions between variables. The model was trained using predictors selected based on feature importance scores. Its performance was evaluated using classification measures such as accuracy, precision, recall, and area under the ROC curve (AUC). Random forest allowed for selection of the most significant predictors of job-finding based on mean decrease in impurity (Gini importance) and permutation importance.
+
+- Logistic Regression
+
+Binary logistic regression analysis was used to estimate the probability of employment (Employed = 1). Independent variables included demographic and socio-economic ones such as age, education level, country of residence, language skills, accommodation, and social services consumption of social services, among others. Odds ratios were estimated to define direction and strength of associations.
 
 **Ukrainian Refugees in Estonia EDA**
 
 **Demographics**
 
-The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high
-concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists. In contrast, the data for Poland appears to be missing or not displayed in the chart.
+The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists. In contrast, the data for Poland appears to be missing or not displayed in the chart.
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE}
 # Function to create a clean proportion table
@@ -520,6 +546,12 @@ summary(logit_model)
 ```
 
 
-**Discussion**
+*Discussion*
 
-**Conclusion**
+*Conclusion*
+
+*Citations*
+
+- SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
+
+- UNHCR (2023). Estonia: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
