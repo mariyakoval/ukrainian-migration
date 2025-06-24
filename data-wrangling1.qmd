@@ -16,6 +16,9 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
 data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
 data_eu <- read_csv("Data/EU_countries.csv")
 data_eu_ind <- read_csv("Data/EU_Ind.csv")
+
+unique(data_eu_ind$DR_11_NUM_AGE)
+unique(data_eu$introduction_resp_age)
 ```
 
 ```{r}
@@ -36,19 +39,26 @@ data_ee <- data_ee |>
          urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST, hh_id)
 
 data_eu <- data_eu |>
-  select(DR7_3_NUM_RESP_AGE, SE2_11_SS_INC_SOR, 
+  select(SE2_11_SS_INC_SOR, 
          SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country, hh_id) |>
-  rename(introduction_resp_age = DR7_3_NUM_RESP_AGE,
-         income_source = SE2_11_SS_INC_SOR,
+  rename(income_source = SE2_11_SS_INC_SOR,
          socioecon_needs = SE2_14_SM_SOC_AST_TYP,
          socbenefits = SE2_11b_SM_BEN_HST)
 
 data_eu_ind <- data_eu_ind |>
   select(SE1_SS_EDU_LVL, SE2_SS_WORK, SE12_SM_EMP_BARR, SE8_SS_ACTIVITY,
-         SE13_SS_WRK_TYP, country, hh_id) |>
+         SE13_SS_WRK_TYP, country, hh_id, DR_11_NUM_AGE) |>
   rename(demographics_educ_level = SE1_SS_EDU_LVL,
          host_country_diff_work = SE12_SM_EMP_BARR,
-         demographics_resp_activity = SE13_SS_WRK_TYP)
+         demographics_resp_activity = SE13_SS_WRK_TYP) |>
+  mutate(
+    age_group = case_when(
+      DR_11_NUM_AGE >= 18 & DR_11_NUM_AGE <= 34 ~ "18-34",
+      DR_11_NUM_AGE >= 35 & DR_11_NUM_AGE <= 59 ~ "35-59",
+      DR_11_NUM_AGE >= 60 ~ "60+",
+      TRUE ~ NA_character_
+    )
+  )
 
 #--------------------------------------------------------------------
  
@@ -68,7 +78,8 @@ data_eu_ind <- data_eu_ind |>
       "demographics_resp_activity"
     ), is.na)) |>
   # Rename the updated column to for merging
-  rename(host_country_work_coa = SE8_SS_ACTIVITY)
+  rename(host_country_work_coa = SE8_SS_ACTIVITY, 
+         introduction_resp_age = age_group)
 
 #Change column names and add country name - Estonia
 data_ee <- data_ee |> 
@@ -85,7 +96,8 @@ common_cols <- c(
   "host_country_diff_work",
   "country",
   "host_country_work_coa",
-  "hh_id"
+  "hh_id",
+  "introduction_resp_age"
 )
 
 # Combine tows of EU Ind and EE data by common columns
@@ -130,7 +142,6 @@ combined_ind <- bind_rows(
 # Combine tows of EU HH and EE data by common columns
 
 common_cols1 <- c(
-  "introduction_resp_age",
   "income_source",
   "socioecon_needs",
   "socbenefits",
@@ -293,99 +304,12 @@ combined_data <- combined_data|>
     demographics_educ_level %in% c("pri_edu", "sec_edu", "secondary") ~ "primary_secondary",
     demographics_educ_level == "specialization" ~ "specialization",
     TRUE ~ as.character(demographics_educ_level)
-  ))
+  )) |>
+  mutate(socbenefits = ifelse(is.na(socbenefits), "none", socbenefits))
 
 ```
 
-```{r}
-# Define the list of good predictors
-predictors <- c(
-  "introduction_resp_age",
-  "demographics_educ_level_grouped",
-  "demographics_resp_activity",
-  "income_social_protection_ukr_govt",
-  "diff_lack_of_lang",
-  "diff_lack_childcare",
-  "diff_lack_of_skills",
-  "diff_none",
-  "diff_discrimination",
-  "diff_lack_of_documentation",
-  "diff_lack_opp",
-  "diff_lack_recog",
-  "diff_loss_benefits",
-  "needs_employment",
-  "needs_employment",
-  "needs_education_support",
-  "needs_food",
-  "needs_accommodation",
-  "benefits_cash_benefits",
-  "benefits_unemployment_grant"
-)
-
-
-
-model_data <- combined_data |>
-  select(employed_binary, all_of(predictors)) |>
-  drop_na()
-
-model <- glm(employed_binary ~ ., data = model_data, family = binomial)
-summary(model)
-# 
-# model_data$predicted_prob <- predict(model, type = "response")
-# model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
-# mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
-# table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
-
-
-# ggplot(model_data, aes(x = predicted_prob, fill = factor(employed_binary))) +
-#   geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.6) +
-#   labs(fill = "Actual Employment", x = "Predicted Probability", y = "Count") +
-#   theme_minimal()
-
-#hoslem.test(model_data$employed_binary, fitted(model), g = 10)
-
-model_step <- step(model, direction = "both")
-rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data, ntree = 500, importance = TRUE)
-
-rf_model
-importance(rf_model)
-varImpPlot(rf_model)
-```
-
-```{r}
-important_vars <- c(
-  "introduction_resp_age",
-  "demographics_educ_level_grouped",
-  "demographics_resp_activity",
-  "income_social_protection_ukr_govt",
-  "diff_lack_of_lang",
-  "diff_lack_childcare",
-  "diff_lack_of_skills",
-  "diff_none",
-  "diff_discrimination",
-  "diff_lack_of_documentation",
-  "diff_lack_opp",
-  "diff_lack_recog",
-  "needs_employment",
-  "needs_accommodation",
-  "benefits_cash_benefits",
-  "benefits_unemployment_grant"
-)
-model_data_reduced <- model_data[, c("employed_binary", important_vars)]
-
-rf_reduced <- randomForest(
-  factor(employed_binary) ~ .,
-  data = model_data_reduced,
-  ntree = 500,
-  importance = TRUE
-)
-
-print(rf_reduced)
-model_data$employed_binary <- as.numeric(as.character(model_data$employed_binary))
-model1 <- glm(employed_binary ~ ., data = model_data_reduced, family = binomial)
-hoslem.test(model_data_reduced$employed_binary, fitted(model1), g = 10)
-
-```
+**Aggregated data**
 
 ```{r}
 split_category_proportions_by_country <- function(data, category_col, country_col) {
@@ -527,9 +451,4 @@ combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df)
 
 saveRDS(combined_df, "Data/combined_df")
 saveRDS(combined_data, "Data/combined_data")
-```
-
-```{r}
-saveRDS(combined_ind, "Data/combined_ind")
-saveRDS(combined_hh, "Data/combined_hh")
 ```
