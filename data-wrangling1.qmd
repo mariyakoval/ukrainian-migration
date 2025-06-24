@@ -9,7 +9,9 @@ format: html
 if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, purr,
-              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
+              randomForest, caret, car, brglm2, detectseparation,
+              ResourceSelection)
 # Load data
 data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
 data_eu <- read_csv("Data/EU_countries.csv")
@@ -282,13 +284,24 @@ combined_data <- combined_data |>
 
 colnames(combined_data)
 
+combined_data <- combined_data|>
+  mutate(demographics_educ_level_grouped = case_when(
+    demographics_educ_level %in% c("tech", "tech_vocat") ~ "technical",
+    demographics_educ_level %in% c("phd", "phd_doctor", "grand_phd") ~ "phd_group",
+    demographics_educ_level == "master" ~ "master",
+    demographics_educ_level == "no_edu" ~ "no_edu",
+    demographics_educ_level %in% c("pri_edu", "sec_edu", "secondary") ~ "primary_secondary",
+    demographics_educ_level == "specialization" ~ "specialization",
+    TRUE ~ as.character(demographics_educ_level)
+  ))
+
 ```
 
 ```{r}
 # Define the list of good predictors
 predictors <- c(
   "introduction_resp_age",
-  "demographics_educ_level",
+  "demographics_educ_level_grouped",
   "demographics_resp_activity",
   "income_social_protection_ukr_govt",
   "diff_lack_of_lang",
@@ -307,48 +320,70 @@ predictors <- c(
   "needs_accommodation",
   "benefits_cash_benefits",
   "benefits_unemployment_grant"
-  
-  
-  # "demographics_educ_level",
-  # "demographics_resp_activity",
-  # "diff_lack_of_opportunities",
-  # "diff_lack_of_skills",
-  # "diff_lack_of_language",
-  # "diff_discrimination",
-  # "diff_lack_documentation",
-  # "diff_care_for_others",
-  # "diff_lack_of_transport",
-  # "diff_lack_work_permit",
-  # "diff_not_looking_for_work",
-  # "diff_not_planning_to_stay",
-  # "diff_lack_of_address",
-  # "diff_loss_benefits",
-  # "needs_employment",
-  # "needs_employment_assistance",
-  # "needs_education_aduls",
-  # "needs_transportation",
-  # "needs_food",
-  # "needs_material",
-  # "needs_accommodation",
-  # "income_no_income",
-  # "income_social_protection_host_govt",
-  # "income_social_protection_ukr_govt",
-  # "income_remmittances"
 )
+
+
+
 model_data <- combined_data |>
   select(employed_binary, all_of(predictors)) |>
   drop_na()
 
-model_data$employed_binary <- as.factor(model_data$employed_binary)
-
 model <- glm(employed_binary ~ ., data = model_data, family = binomial)
 summary(model)
+# 
+# model_data$predicted_prob <- predict(model, type = "response")
+# model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
+# mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
+# table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
 
-model_data$predicted_prob <- predict(model, type = "response")
-model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
-mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
-table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
 
+# ggplot(model_data, aes(x = predicted_prob, fill = factor(employed_binary))) +
+#   geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.6) +
+#   labs(fill = "Actual Employment", x = "Predicted Probability", y = "Count") +
+#   theme_minimal()
+
+#hoslem.test(model_data$employed_binary, fitted(model), g = 10)
+
+model_step <- step(model, direction = "both")
+rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data, ntree = 500, importance = TRUE)
+
+rf_model
+importance(rf_model)
+varImpPlot(rf_model)
+```
+
+```{r}
+important_vars <- c(
+  "introduction_resp_age",
+  "demographics_educ_level_grouped",
+  "demographics_resp_activity",
+  "income_social_protection_ukr_govt",
+  "diff_lack_of_lang",
+  "diff_lack_childcare",
+  "diff_lack_of_skills",
+  "diff_none",
+  "diff_discrimination",
+  "diff_lack_of_documentation",
+  "diff_lack_opp",
+  "diff_lack_recog",
+  "needs_employment",
+  "needs_accommodation",
+  "benefits_cash_benefits",
+  "benefits_unemployment_grant"
+)
+model_data_reduced <- model_data[, c("employed_binary", important_vars)]
+
+rf_reduced <- randomForest(
+  factor(employed_binary) ~ .,
+  data = model_data_reduced,
+  ntree = 500,
+  importance = TRUE
+)
+
+print(rf_reduced)
+model_data$employed_binary <- as.numeric(as.character(model_data$employed_binary))
+model1 <- glm(employed_binary ~ ., data = model_data_reduced, family = binomial)
+hoslem.test(model_data_reduced$employed_binary, fitted(model1), g = 10)
 
 ```
 
@@ -491,6 +526,7 @@ income_df <- combined_df |>
 combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df)
 
 saveRDS(combined_df, "Data/combined_df")
+saveRDS(combined_data, "Data/combined_data")
 ```
 
 ```{r}
