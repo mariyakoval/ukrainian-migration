@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
   fig.width = 5, fig.height = 3) 
 ```
 
-```{r, include=FALSE}
+```{r, include=FALSE, warning=FALSE}
 
 # Load necessary packages
 if (!require('pacman')) install.packages('pacman'); library('pacman')
@@ -34,13 +34,9 @@ reasons_country_ee <- readRDS("Data/reasons_country_ee")
 combined_data <- readRDS("Data/combined_data")
 ```
 
-**Introduction**
-Potential research questions: - Which factors are associated with
-economic self-sufficiency? (affording more goods) - What influences the
-decision to return (temporarily or permanently) to Ukraine? - Does
-perceived hostility or social cohesion affect intent to stay?
+*Introduction*
 
-The geographical scope of the analysis includes countries in Central and Eastern Europe, such as Estonia, Poland, Czechia, Slovakia, Romania, Moldova. While some data is available for all countries, other variables are available only for a subset of countries. The main goals of the study include describing the socio-economic profiles of Ukrainian refugees in these countries; compare the quality of accommodation, services, and support; identify factors associated with economic self-sufficiency and the decision to return to Ukraine; examine the impact of social cohesion or perceived hostility on refugees’ intent to stay or move.
+The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. People fleeing the war in Ukraine are allowed to live and work in the European Union for up tp 3 years under the Temporary Protection Status. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). According to Preut, expanding language courses, childcare services, and accelerating credential recognition can enhance employment likelihood (Preut, 2023).
 
 *Data and methods*
 
@@ -71,13 +67,13 @@ A random forest model was trained to account for potential non-linearities and i
 
 Binary logistic regression analysis was used to estimate the probability of employment (Employed = 1). Independent variables included demographic and socio-economic ones such as age, education level, country of residence, language skills, accommodation, and social services consumption of social services, among others. Odds ratios were estimated to define direction and strength of associations.
 
-**Ukrainian Refugees in Estonia EDA**
+*Descriptive Statistics*
 
 **Demographics**
 
 The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists. In contrast, the data for Poland appears to be missing or not displayed in the chart.
 
-```{r, fig.width=6, fig.height=4, warning=FALSE}
+```{r, fig.width=6, fig.height=4, warning=FALSE, echo=FALSE}
 # Function to create a clean proportion table
 make_prop_table <- function(variable) {
   tibble(
@@ -126,7 +122,7 @@ While the data on education of Ukrainian refugees is limited, the snapshot of ag
 
 The educational categories range from primary and secondary education to higher levels such as Bachelor's, Master's, and PhD degrees, as well as technical or vocational training and no formal education. "Technical/Vocational" category appears frequently across multiple sections, suggesting a significant portion of the workforce in these regions may have either technical training. This trend could indicate a reliance on skilled labor or informal employment in certain areas. The number of people with Bachelor's degrees is almost the same across all countries and ranges from 10 to 20%. Slovakia and Romania have the highest proportion of people with Master's degrees. There are very few people with no education in all the countries. Slovakia and Czechia appear the most prominent for respondents with PdD degrees. 
 
-```{r, fig.width=7, fig.height=5, warning=FALSE}
+```{r, fig.width=7, fig.height=5, warning=FALSE, echo==FALSE}
 
 combined_data |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
@@ -158,32 +154,13 @@ combined_data |>
 
 ```
 
-It is needed to understand why refugees choose to resettle in specific states in order to evaluate integration policy and strategy responses. Demographic trends provide a general regional overview, but Estonia offers more detailed information on legal and individual determinants influencing refugees' decisions.
 
-In Estonia, 55.76% of the interviewees said they had been subjected to family separation, and reunifying with family was among the most frequently cited reasons for choosing the destination. Language, geographic closeness, labor market opportunities, and cultural familiarity were also major determinants. All of these suggest that emotional, utilitarian, and socio-economic drivers all play a role in shaping refugee choice in destination countries.
-
-```{r}
-
-# Choose top-5 reasons for choosing Estonia
-top6 <- reasons_country_ee |>
-  dplyr::arrange(desc(Total_Proportion)) |>
-  dplyr::slice_head(n = 5)|>
-  mutate(Percent = round(Total_Proportion * 100, 2))
-
-ggplot(top6, aes(x = reorder(Component, -Percent), 
-                 y = Percent, fill = Percent)) +
-  geom_bar(stat = "identity") + gg +
-  coord_flip() +
-  xlab("What motivated you to come to this country?") + ylab("Count") +
-  scale_fill_gradient(low = "lightblue", high = "darkblue") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
 **Economic capacity and Aid**
 
-The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Moldova is the exception: "social protection in Ukraine" is the most frequently reported source, and may reflect that there are many refugees there who employ assistance from the home country. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "do not know", "prefer not to answer", and "no income" are low. This band shows levels of integration, access to work, and host country versus origin country welfare system reliance.
+The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "no answer", and "no income" are low. 
 
-```{r, fig.height = 7, fig.width=8}
+```{r, fig.height = 7, fig.width=8, echo=FALSE}
 
 #Aggregated data
 
@@ -206,14 +183,12 @@ combined_df |>
   guides(fill = guide_legend(title = "Income Source"))+
   scale_fill_brewer(palette = "Dark2")
 
-
-
 ```
 
 
-31% of refugees didn't encounter any issues while looking for a job. The main concern, however, was the lack of language as 36% of people faced it. the second biggest obstacle was the lack of opportunities and lack of recognition, as noted by 11% and 7% of people respectively.
+The chart shows that the most commonly reported reason for not experiencing employment problems is "None," particularly in Moldova and Slovakia, where over 40% of respondents indicated no difficulties. In contrast, Estonia stands out with a high incidence of the "Language barrier" (around 37%), suggesting it is a major obstacle there. Across all countries, language barriers and the fact that many are “Not looking for work” are consistently among the top reasons cited, though to varying degrees. "Lack of skills" and "Lack of recognition" are less frequently mentioned, typically below 10%. Moldova, Romania, and Poland also report relatively high percentages for "Not looking for work" and "Insufficient opportunities," indicating structural and motivational challenges.
 
-```{r, fig.height = 7, fig.width=8}
+```{r, fig.height = 7, fig.width=8, echo=FALSE}
 
 #Aggregated data
 
@@ -238,7 +213,9 @@ combined_df |>
   scale_fill_brewer(palette = "Dark2")
 ```
 
-```{r, fig.height = 4, fig.width=8}
+The graph compares employment activity of Ukrainian refugees prior to displacement with their current activities in host countries. In Ukraine, the vast majority of refugees across all countries were employed, with employment rates ranging from approximately 60% to over 70%. Housekeeping and retirement were the next most common categories, but far less prevalent. In contrast, in host countries, employment drops significantly, while unemployment, studying, and housekeeping rise sharply. For example, in Poland, Romania, and Slovakia, a substantial portion - around one-third - of refugees are now unemployed. Studying categories also grow considerably, particularly in Romania and Moldova. This shift indicates a major transition for many refugees, from stable employment in Ukraine to navigating unemployment or reskilling opportunities in their new environments.
+
+```{r, fig.height = 4, fig.width=8, echo=FALSE}
 
 act_host <- combined_data |>
   filter(
@@ -296,9 +273,9 @@ plot_grid(
   rel_widths = c(0.5, 0.2)
 )
 ```
+The chart illustrates the types of social protection benefits received by Ukrainian refugees across six host countries. In most countries—especially Czechia, Moldova, Romania, and Slovakia—cash benefits are the dominant form of support, reaching around 80–90% in some cases. Poland stands out as the only country where the majority (over 80%) report receiving family grants instead of cash benefits. Estonia also presents a more balanced distribution, with both cash benefits and unemployment grants being common, and a notable share receiving unemployment grants or reporting “Other Source.” Across all countries, disability and unemployment grants remain minor components. Overall, the data suggest that cash-based support remains the primary mechanism, though the specific type of aid can vary significantly by host country.
 
-
-```{r, fig.height = 7, fig.width=8}
+```{r, fig.height = 7, fig.width=8, echo=FALSE}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "benefits") |>
@@ -319,7 +296,7 @@ combined_df |>
   guides(fill = guide_legend(title = "Type")) +
   scale_fill_brewer(palette = "Dark2")
 ```
-```{r, fig.height = 7, fig.width=8}
+```{r, fig.height = 7, fig.width=8, echo=FALSE}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "needs") |>
@@ -461,30 +438,30 @@ varImpPlot(rf_reduced)
 ```
 
 ```{r}
-set.seed(123)
-
-# Define train control with stratified 5-fold CV
-train_control <- trainControl(
-  method = "cv",       
-  number = 5,        
-  classProbs = TRUE,   
-  summaryFunction = twoClassSummary, 
-  savePredictions = TRUE,
-  sampling = "up",  
-  verboseIter = TRUE
-)
-
+# set.seed(123)
+# 
+# # Define train control with stratified 5-fold CV
+# train_control <- trainControl(
+#   method = "cv",       
+#   number = 5,        
+#   classProbs = TRUE,   
+#   summaryFunction = twoClassSummary, 
+#   savePredictions = TRUE,
+#   sampling = "up",  
+#   verboseIter = TRUE
+# )
+# 
 model_data_reduced$employed_binary <- factor(model_data_reduced$employed_binary, levels = c(0,1), labels = c("No", "Yes"))
-
-# Train random forest with caret 
-rf_model <- train(
-  employed_binary ~ .,
-  data = model_data_reduced,
-  method = "rf",
-  trControl = train_control,
-  metric = "ROC",     
-  tuneLength = 5         
-)
+# 
+# # Train random forest with caret 
+# rf_model <- train(
+#   employed_binary ~ .,
+#   data = model_data_reduced,
+#   method = "rf",
+#   trControl = train_control,
+#   metric = "ROC",     
+#   tuneLength = 5         
+# )
 
 print(rf_model)
 
@@ -492,7 +469,7 @@ rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data_reduced,
                          ntree = 500, mtry = 2, importance = TRUE)
 
 imp <- importance(rf_model)
-top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:15]
+top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:12]
 
 
 
@@ -555,3 +532,8 @@ summary(logit_model)
 - SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
 - UNHCR (2023). Estonia: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
+
+- Preut, Holger. “고용을위한길:독일노동시장의우크라이나난민들을위한통합적도전과전망.” Zeitschrift Der Koreanisch-Deutschen Gesellschaft Für Sozialwissenschaften, vol. 33, no. 3, Koreanisch-Deutsche Gesellschaft fuer Sozlaiwssenschaften, Sept. 2023, pp. 3–33. Crossref, doi:10.19032/zkdgs.2023.09.33.3.3.
+
+- Londar, S., et al. “Challenges for Ukrainian Refugees in the EU Labour Market: The Case of Poland and Germany.” Educational Analytics of Ukraine, no. 5, State Scientific Institution - Institute of Educational Analytics, 2024, pp. 5–16. Crossref, doi:10.32987/2617-8532-2024-5-5-16.
+
