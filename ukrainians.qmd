@@ -26,7 +26,7 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot, pROC, rms)
+              patchwork, cowplot, pROC, rms, vcd)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
@@ -346,6 +346,7 @@ combined_df |>
 **Logistic regression**
 
 ```{r}
+
 # Define the list of good predictors
 predictors <- c(
   "introduction_resp_age",
@@ -394,8 +395,8 @@ summary(model)
 **Random forest**
 
 ```{r, fig.width=8, fig.height=8}
-colnames(combined_data)
 
+set.seed(123)
 important_vars <- c(
   "introduction_resp_age",
   "demographics_educ_level_grouped",
@@ -411,7 +412,6 @@ important_vars <- c(
   "diff_none",
   "diff_discrimination",
   "diff_lack_of_documentation",
-  "needs_education_support",
   "needs_medical",
   "needs_accommodation",
   "needs_host_govt_assistance",
@@ -524,6 +524,9 @@ summary(logit_model)
 
 
 *Discussion*
+
+Based on the output of logistic regression, reporting no difficulties increases the odds of employment by 768%, indicating that individuals who report no barriers are far more likely to be employed. Lack of language skills surprisingly increases employment odds by 223%, likely reflecting that those actively seeking work are both employed and aware of language as a barrier - suggesting this may be a sign for effort or exposure. Lack of skills increases odds by 56%, and lack of education skills by 70%, again potentially reflecting motivated individuals who are aware of their deficits but engaged in the labor market. Receiving unemployment benefits is associated with a 78% decrease in odds of employment, and cash benefits reduce odds by 50%, suggesting potential disincentives or that recipients are in more vulnerable situations. Being unemployed in Ukraine reduces the odds of employment in the European country of residence by 58% compared to the reference activity group, showing the persistence of non-employment status.
+Individuals needing host government assistance, medical, or accommodation support have reduced employment odds by 56%, 39%, and 16% respectively, highlighting structural barriers to integration. Older adults (60+) are 65% less likely to be employed than those under 35. People doing housekeeping, studying, or retired have significantly lower employment odds (around 55–85% lower) compared to the baseline group.
 
 *Conclusion*
 
