@@ -1,0 +1,272 @@
+---
+format: 
+  pdf:
+    fontsize: 11pt 
+    geometry: top=2cm, bottom=2.5cm, left=2cm, right=2cm
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+\begin{center}
+\vspace*{-1cm}
+
+{\LARGE \textbf{Path of Resilience: Job-Seeking Behavior of Ukrainian Refugees in Central and Eastern Europe}}\\[0.5cm]
+Mariia
+\end{center}
+
+The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. People fleeing the war in Ukraine are allowed to live and work in the European Union for up tp 3 years under the Temporary Protection Status. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). According to Preut, expanding language courses, childcare services, and accelerating credential recognition can enhance employment likelihood (Preut, 2023).
+
+**Demographics**
+
+Across all countries, the 35–59 age group dominates the refugee population, highlighting a significant presence of individuals in their prime working years. The 18–34 group follows, while the 60+ demographic is least represented. Estonia stands out with a particularly high share of people aged 18-34, while balancing distribution between young and middle-aged adults.
+
+```{r, include=FALSE, warning=FALSE}
+
+# Load necessary packages
+if (!require('pacman')) install.packages('pacman'); library('pacman')
+pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
+              patchwork, cowplot, pROC, rms)
+# Load data
+data_ee <- readRDS("Data/data_ee")
+combined_df <- readRDS("Data/combined_df")
+reasons_country_ee <- readRDS("Data/reasons_country_ee")
+combined_data <- readRDS("Data/combined_data")
+```
+
+```{r, fig.height = 3, fig.width=8, echo=FALSE}
+combined_data |>
+  filter(!is.na(introduction_resp_age), !is.na(country)) |>
+  mutate(introduction_resp_age = factor(introduction_resp_age,
+                                levels = c("18-34", "35-59", "60+"))) |>
+  count(country, introduction_resp_age) |>
+  group_by(country) |>
+  mutate(Percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = Percent, fill = introduction_resp_age)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  labs(
+    x = "Country",
+    y = "Percent of Respondents",
+    fill = "Age Group",
+    title = "Age Distribution of Respondents by Country"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(size = 10),
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
+  scale_fill_brewer(palette = "Dark2")
+
+```
+
+**Education**
+
+Educational attainment varies, but most refugees possess at least secondary education. In Estonia, nearly half of the respondents (49.46%) hold vocational or specialized training, followed by 38% with a Bachelor's or Master's degree. Across all countries, the proportion of individuals with a Bachelor’s degree hovers between 10–20%, while Master's degrees are particularly common in Slovakia and Romania.
+
+```{r, fig.height = 6, fig.width=8, warning=FALSE, echo=FALSE}
+
+combined_data |>
+  filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+  mutate(demographics_educ_level = case_when(
+    grepl("tech", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Technical",
+    grepl("sec", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Secondary",
+    grepl("pri", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Primary",
+    grepl("phd", demographics_educ_level, 
+          ignore.case = TRUE) ~ "PhD",
+    grepl("master", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Master's",
+    grepl("bachelor", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Bachelor's",
+    grepl("no_edu", demographics_educ_level, 
+          ignore.case = TRUE) ~ "No Education",
+    grepl("prefer", demographics_educ_level, 
+          ignore.case = TRUE) ~ "No Answer",
+    grepl("spec", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Specialization",
+    TRUE ~ demographics_educ_level
+  )) |>
+  filter(!is.na(demographics_educ_level) & 
+           demographics_educ_level != "No Answer") |>
+  count(country, demographics_educ_level) |>
+  group_by(country) |>
+  mutate(prop = n / sum(n) * 100) |>
+  arrange(desc(prop), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |>
+  ggplot(aes(x = reorder(demographics_educ_level, -prop), 
+             y = prop, fill = demographics_educ_level)) +
+  geom_col() +
+  facet_wrap(~country, scales = "free_x") +
+  xlab("Education Level") +
+  ylab("Percent") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 0.8, size = 6)) +
+  guides(fill = guide_legend(title = "Education Level")) +
+  scale_fill_brewer(palette = "Dark2")
+
+```
+
+Although few hold PhDs, their presence is most visible in Slovakia. Notably, technical and vocational training is prevalent, suggesting that many refugees were skilled laborers—yet challenges remain in transferring those skills to host-country labor markets.
+
+**Employment and Economic Participation**
+
+Before displacement, employment rates among Ukrainian refugees were high (60–70%), regardless of host country. However, after resettlement, the picture changes dramatically. Employment drops while unemployment, housekeeping, and studying rise sharply - particularly in Romania, Slovakia, and Poland, where about one-third of refugees are now unemployed.
+
+```{r, fig.height = 3.5, fig.width=8, echo=FALSE, warning=FALSE}
+
+act_host <- combined_data |>
+  filter(
+    !is.na(host_country_work_coa),
+    !country %in% c("Hungary", "Bulgaria", "construct", NA)
+  ) |>
+  count(country, host_country_work_coa) |>
+  group_by(country) |>
+  mutate(percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = percent, 
+             fill = fct_infreq(host_country_work_coa))) +
+  geom_col() +
+  xlab("Country") +
+  ggtitle("Host Country Activities") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45,  hjust = 0.8, size = 6),
+    legend.position = "right"
+  ) +
+  guides(fill = guide_legend(title = "Activity")) +
+  scale_fill_brewer(palette = "Dark2") + 
+  theme(legend.position = "none") + ylab(NULL)
+
+act_ukr <- combined_data|>
+  filter(
+    !is.na(host_country_work_coa),
+    !country %in% c("Hungary", "Bulgaria", "construct", NA)
+  ) |>
+  filter(!is.na(demographics_resp_activity), 
+         demographics_resp_activity != "No Answer") |>
+  count(country, demographics_resp_activity) |>
+  group_by(country) |>
+  mutate(percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = percent, 
+             fill = demographics_resp_activity)) +
+  geom_col(position = "stack") +
+  xlab("Country") +
+  ylab("Percent") +
+  ggtitle("Employment Activity in Ukraine") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45,  hjust = 0.8, size = 6),
+    legend.position = "right"
+  ) +
+  guides(fill = guide_legend(title = "Activity Type")) +
+  scale_fill_brewer(palette = "Dark2") + theme(legend.position = "none")
+
+shared_legend <- get_legend(act_host + theme(legend.position = "right"))
+
+combined_plot <- plot_grid(
+  act_ukr, act_host,
+  labels = NULL,
+  ncol = 2,
+  align = "hv"
+)
+plot_grid(
+  combined_plot, shared_legend,
+  ncol = 2,  
+  rel_widths = c(0.5, 0.2)
+)
+```
+
+Several barriers explain this shift. Language emerges as a prominent obstacle, especially in Estonia (cited by ~37% of respondents). Meanwhile, Moldova and Slovakia report higher rates of respondents experiencing no employment difficulties. Other commonly cited barriers include "Not looking for work" and insufficient opportunities, suggesting both personal and structural factors at play.
+
+```{r, fig.height = 6, fig.width=8, echo=FALSE}
+
+#Aggregated data
+
+combined_df |>
+  filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+    filter(Source == "job") |>
+    mutate(Percent = round(Total_Proportion * 100, 2)) |>
+    select(Component, Percent, Country) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  ggtitle("Problems with Finding Employment") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45,  hjust = 1, size = 6)) +
+  guides(fill = guide_legend(title = "Reasons")) +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+**Income Sources**
+
+Employment in the host country is the leading source of income across the board, especially in Estonia, Czechia, and Slovakia - where it exceeds 40–50%. Romania is an outlier, showing an even distribution among host-country jobs and alternative sources. Poland sees higher-than-average reliance on remittances.
+
+```{r, fig.height = 6, fig.width=8, echo=FALSE}
+
+#Aggregated data
+
+combined_df |>
+    filter(Source == "income") |>
+    mutate(Percent = round(Total_Proportion * 100, 2))|>
+    select(Component, Percent, Country) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  ggtitle("Comparison of Reported Income Sources by Country") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45,  hjust = 1, size = 6)) +
+  guides(fill = guide_legend(title = "Income Source"))+
+  scale_fill_brewer(palette = "Dark2")
+
+```
+
+Still, income insecurity remains a concern. Romania reports the highest number of refugees with no income, and in all countries, "No income" and "No answer" responses, though generally low, suggest hidden economic vulnerability.
+
+**Aid and Social Protection** 
+
+Cash benefits are the most widespread form of aid, reaching nearly 90% of respondents in countries like Czechia, Moldova, and Romania. Poland differs drastically: over 80% of respondents there receive family grants instead. Estonia presents a more diverse profile, with both cash and unemployment grants being common.
+
+```{r, fig.height = 5, fig.width=8, echo=FALSE}
+combined_df |>
+  filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+    filter(Source == "benefits") |>
+    mutate(Percent = round(Total_Proportion * 100, 2)) |>
+    select(Component, Percent, Country) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  ggtitle("Social Protection Benefits from Host Country") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45,  hjust = 0.8, size = 6)) +
+  guides(fill = guide_legend(title = "Type")) +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+Despite variations, the data underscores the central role of direct financial assistance in refugee support systems. However, the limited role of unemployment or disability benefits raises concerns about longer-term inclusion in formal welfare systems.
+
+
