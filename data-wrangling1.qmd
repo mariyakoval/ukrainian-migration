@@ -16,9 +16,6 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
 data_ee <- read.csv("Data/UNHCR_EST_2023_MSNA_hh_data_v1.csv")
 data_eu <- read_csv("Data/EU_countries.csv")
 data_eu_ind <- read_csv("Data/EU_Ind.csv")
-
-unique(data_eu_ind$DR_11_NUM_AGE)
-unique(data_eu$introduction_resp_age)
 ```
 
 ```{r}
@@ -26,6 +23,15 @@ unique(data_eu$introduction_resp_age)
 data_eu <- data_eu |>
   filter(!is.na(country) & country != 0 & 
            !(country %in% c("Bulgaria", "Hungary", "construct")))
+
+# Function to create a clean proportion table
+make_prop_table <- function(variable) {
+  tibble(
+    Category = names(table(variable, useNA = "ifany")),
+    Count = as.numeric(table(variable, useNA = "ifany")),
+    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
+  )
+}
 ```
 
 
@@ -36,14 +42,25 @@ data_ee <- data_ee |>
   select(introduction_resp_age, demographics_educ_level,
          demographics_resp_activity, host_country_SE2_11_SS_INC_SOR,
          host_country_diff_work, host_country_work_coa,
-         urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST, hh_id)
+         urgent_needs_urgent_needs_first, host_country_SE2_11b_SM_BEN_HST, 
+         social_cohesion_SC3_SS_EXP_HOSTILE, 
+         social_cohesion_SC4_SM_HOSTILE_TYP, hh_id) |> 
+ rename(income_source = host_country_SE2_11_SS_INC_SOR,
+        socioecon_needs = urgent_needs_urgent_needs_first,
+        socbenefits = host_country_SE2_11b_SM_BEN_HST,
+        hostile_behavior = social_cohesion_SC3_SS_EXP_HOSTILE,
+        hostile_behavior_type = social_cohesion_SC4_SM_HOSTILE_TYP)|> 
+              mutate(country = "Estonia")
 
 data_eu <- data_eu |>
   select(SE2_11_SS_INC_SOR, 
-         SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country, hh_id) |>
+         SE2_14_SM_SOC_AST_TYP, SE2_11b_SM_BEN_HST, country, 
+         SC3_SS_EXP_HOSTILE, SC4_SM_HOSTILE_TYP, hh_id) |>
   rename(income_source = SE2_11_SS_INC_SOR,
          socioecon_needs = SE2_14_SM_SOC_AST_TYP,
-         socbenefits = SE2_11b_SM_BEN_HST)
+         socbenefits = SE2_11b_SM_BEN_HST,
+         hostile_behavior = SC3_SS_EXP_HOSTILE,
+         hostile_behavior_type = SC4_SM_HOSTILE_TYP)
 
 data_eu_ind <- data_eu_ind |>
   select(SE1_SS_EDU_LVL, SE2_SS_WORK, SE12_SM_EMP_BARR, SE8_SS_ACTIVITY,
@@ -80,13 +97,6 @@ data_eu_ind <- data_eu_ind |>
   # Rename the updated column to for merging
   rename(host_country_work_coa = SE8_SS_ACTIVITY, 
          introduction_resp_age = age_group)
-
-#Change column names and add country name - Estonia
-data_ee <- data_ee |> 
- rename(income_source = host_country_SE2_11_SS_INC_SOR,
-        socioecon_needs = urgent_needs_urgent_needs_first,
-        socbenefits = host_country_SE2_11b_SM_BEN_HST)|> 
-              mutate(country = "Estonia")
 ```
 
 ```{r}
@@ -146,7 +156,9 @@ common_cols1 <- c(
   "socioecon_needs",
   "socbenefits",
   "country",
-  "hh_id"
+  "hh_id",
+   "hostile_behavior",
+   "hostile_behavior_type"
 )
 
 combined_hh <- bind_rows(
@@ -158,9 +170,19 @@ combined_hh <- bind_rows(
 #Merge two datasets by household id
 combined_data <- merge(combined_hh, combined_ind, by = c("country", "hh_id"))
 
-#Refractor the employed/unemployed variable into a binary variable
+#Refactor the employed/unemployed variable into a binary variable
 combined_data <- combined_data |>
-  mutate(employed_binary = ifelse(host_country_work_coa == "Employed", 1, 0))
+  mutate(employed_binary = 
+           ifelse(host_country_work_coa == "Employed", 1, 0)) |>
+  #Normalize responses of hostile behavior category 
+  mutate (hostile_behavior = case_when (
+    hostile_behavior %in% c("prefer_no_answer", "PreferNotAnswer") ~ "prefer_no_answer",
+    hostile_behavior %in% c("do_not_know", "DoNotKnow") ~ "do_not_know",
+    TRUE ~ hostile_behavior
+  )) |>
+ mutate(hostile_behavior_type = case_when(
+    hostile_behavior == "no" ~ "none",
+    TRUE ~ hostile_behavior_type))
 
 #Convert variables to factors
 combined_data <- combined_data |>
@@ -169,7 +191,9 @@ combined_data <- combined_data |>
     demographics_resp_activity = as.factor(demographics_resp_activity),
     socioecon_needs = as.factor(socioecon_needs),
     socbenefits = as.factor(socbenefits),
-    income_source = as.factor(income_source)
+    income_source = as.factor(income_source),
+    hostile_behavior = as.factor(hostile_behavior),
+    hostile_behavior = as.factor(hostile_behavior_type)
   ) 
 ```
 
@@ -200,11 +224,7 @@ income_dummies <- combined_data |>
 
 combined_data <- combined_data |>
   left_join(income_dummies, by = "row_id")
-  
-  combined_data <- combined_data |>
-  select(-income_NA)
-  
-  
+
 #-------------------------------------------------------
   
 diff_dummies <- combined_data |>
@@ -243,10 +263,10 @@ combined_data <- combined_data |>
 
 #-------------------------------------------------------
 
-needs_dummies <- combined_data %>%
-  select(row_id, socioecon_needs) %>%
-  separate_rows(socioecon_needs, sep = " ") %>%
-  mutate(socioecon_needs = str_trim(socioecon_needs)) %>%
+needs_dummies <- combined_data |>
+  select(row_id, socioecon_needs)|>
+  separate_rows(socioecon_needs, sep = " ") |>
+  mutate(socioecon_needs = str_trim(socioecon_needs)) |>
    mutate(socioecon_needs = case_when(
     socioecon_needs %in% c("employment", 
                          "employment_assistance") ~ "employment",
@@ -262,38 +282,50 @@ needs_dummies <- combined_data %>%
                          "childcare") ~ "childcare",
     TRUE ~ socioecon_needs
   ))|>
-  mutate(flag = 1) %>%
+  mutate(flag = 1) |>
   pivot_wider(names_from = socioecon_needs,
               values_from = flag,
               values_fill = list(flag = 0),
               names_prefix = "needs_")
 
-combined_data <- combined_data %>%
-  left_join(needs_dummies, by = "row_id")
 combined_data <- combined_data |>
-  select(-needs_NA, -diff_NA)
+  left_join(needs_dummies, by = "row_id")
 
 #-------------------------------------------------------
 
-benefits_dummies <- combined_data %>%
-  select(row_id, socbenefits) %>%
-  separate_rows(socbenefits, sep = " ") %>%
-  mutate(socbenefits = str_trim(socbenefits)) %>%
-  mutate(flag = 1) %>%
+benefits_dummies <- combined_data |>
+  select(row_id, socbenefits) |>
+  separate_rows(socbenefits, sep = " ") |>
+  mutate(socbenefits = str_trim(socbenefits)) |>
+  mutate(flag = 1) |>
   pivot_wider(names_from = socbenefits,
               values_from = flag,
               values_fill = list(flag = 0),
               names_prefix = "benefits_")
 
-combined_data <- combined_data %>%
+combined_data <- combined_data|>
   left_join(benefits_dummies, by = "row_id")
-
-combined_data <- combined_data |>
-  select(-benefits_NA)
 
 #-------------------------------------------------------
 
-colnames(combined_data)
+hostile_dummies <- combined_data |>
+  select(row_id, hostile_behavior_type) |>
+  separate_rows(hostile_behavior_type, sep = " ") |>
+  mutate(hostile_behavior_type = str_trim(hostile_behavior_type)) |>
+  mutate(hostile_behavior_type = case_when(
+    hostile_behavior_type %in% c("prefer_not_to_answer", "prefer_no_answer") ~ "prefer_not_to_answer",
+   TRUE ~ hostile_behavior_type
+  )) |>
+  mutate(flag = 1) |>
+  pivot_wider(names_from = hostile_behavior_type,
+              values_from = flag,
+              values_fill = list(flag = 0),
+              names_prefix = "hostile_")
+
+combined_data <- combined_data |>
+  left_join(hostile_dummies, by = "row_id")
+
+#-------------------------------------------------------
 
 combined_data <- combined_data|>
   mutate(demographics_educ_level_grouped = case_when(
@@ -305,7 +337,8 @@ combined_data <- combined_data|>
     demographics_educ_level == "specialization" ~ "specialization",
     TRUE ~ as.character(demographics_educ_level)
   )) |>
-  mutate(socbenefits = ifelse(is.na(socbenefits), "none", socbenefits))
+  mutate(socbenefits = ifelse(is.na(socbenefits), "none", socbenefits)) |>
+  select(-income_NA, -hostile_NA, -benefits_NA, -needs_NA, -diff_NA)
 
 ```
 

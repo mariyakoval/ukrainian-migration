@@ -1,0 +1,206 @@
+---
+title: "data-wrangling"
+format: html
+---
+
+```{r, include=FALSE}
+
+# Load necessary packages
+if (!require('pacman')) install.packages('pacman'); library('pacman')
+pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
+              janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, purr,
+              gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer)
+# Load data
+data_ee <- read.csv("UNHCR_EST_2023_MSNA_hh_data_v1.csv")
+data_eu <- read_csv("EU_countries.csv")
+data_eu_ind <- read_csv("EU_Ind.csv")
+```
+
+```{r}
+data_eu <- data_eu |>
+  filter(!is.na(country) & country != 0)
+
+```
+
+
+```{r}
+#Convert the year to the date format
+data_ee$introduction_date_departure <- as.Date(
+  as.yearmon(data_ee$introduction_date_departure, format = "%Y-%m")) 
+data_ee$introduction_date_arrival <- as.Date(
+  as.yearmon(data_ee$introduction_date_arrival , format = "%Y-%m")) 
+
+data_ee <- data_ee |>
+  select(introduction_resp_age, introduction_date_arrival, demographics_educ_level,
+         demographics_resp_activity, Family_Separation_separation_y_n, 
+         documentation_legal_status, documentation_temp_protection_difficulty,
+         documentation_temp_protection_difficulty_what, host_country_accomm_reason,
+         host_country_childcare_services, host_country_healthcare_access, 
+         host_country_work_coa, economic_capicity_L13_SS_AFF_GOODS, 
+         economic_capicity_L13_1_SM_MORE_GOODS,
+         economic_capicity_L13_1_SM_LESS_GOODS,
+         social_cohesion_SC3_SS_EXP_HOSTILE,
+social_cohesion_SC4_SM_HOSTILE_TYP,
+aap_AAP_0_SS_SATISFIED_AID,
+urgent_needs_urgent_needs_first,
+urgent_needs_urgent_needs_second,
+urgent_needs_urgent_needs_third,
+info_needs_info_receive,
+Travel_Ukraine_temp_return,
+Travel_Ukraine_temp_return_reason,
+Travel_Ukraine_no_return_plans, 
+Travel_Ukraine_no_return_move_country,
+Travel_Ukraine_no_return_move_reasons,
+host_country_reasons_coa,
+SHL07_SM_LIV_COND,
+host_country_healthcare_difficulties,
+host_country_SE2_11_SS_INC_SOR,
+host_country_diff_work,
+Travel_Ukraine_return_length,
+Travel_Ukraine_return_reasons
+         )
+```
+
+```{r}
+
+#function to split combined categories of choices by proportion
+split_category_proportions <- function(category_props) {
+
+  component_list <- list()
+  for (name in names(category_props)) {
+    if (is.na(name) || name == "") next
+    components <- unlist(strsplit(name, " "))
+    prop_per_component <- category_props[[name]] / length(components)
+    
+    for (comp in components) {
+      if (!is.null(component_list[[comp]])) {
+        component_list[[comp]] <- component_list[[comp]] + prop_per_component
+      } else {
+        component_list[[comp]] <- prop_per_component
+      }
+    }
+  }
+  
+  result_df <- data.frame(
+    Component = names(component_list),
+    Total_Proportion = unlist(component_list)
+  )
+  
+  result_df <- result_df[order(-result_df$Total_Proportion), ]
+  
+  return(result_df)
+}
+
+```
+
+```{r}
+prop_table_legal_diff <- prop.table(table(data_ee$host_country_reasons_coa, useNA = "ifany"))
+reasons_country_ee <- split_category_proportions(prop_table_legal_diff)
+
+prop_table_legal_diff <- prop.table(table(data_ee$SHL07_SM_LIV_COND, useNA = "ifany"))
+housing_issues_df <- split_category_proportions(prop_table_legal_diff)
+
+prop_table_legal_diff <- prop.table(table(data_ee$host_country_SE2_11_SS_INC_SOR, useNA = "ifany"))
+income_sources_df <- split_category_proportions(prop_table_legal_diff)
+
+prop_table_legal_diff <- prop.table(table(data_ee$host_country_diff_work, useNA = "ifany"))
+work_df <- split_category_proportions(prop_table_legal_diff)
+
+prop_table_legal_diff <- prop.table(table(data_ee$social_cohesion_SC4_SM_HOSTILE_TYP, useNA = "ifany"))
+cohesion_df <- split_category_proportions(prop_table_legal_diff)
+
+prop_table_legal_diff <- prop.table(table(data_ee$Travel_Ukraine_temp_return_reason, useNA = "ifany"))
+return_df <- split_category_proportions(prop_table_legal_diff)
+```
+
+
+```{r}
+split_category_proportions_by_country <- function(data, category_col, country_col) {
+  data[[category_col]] <- as.character(data[[category_col]])
+  data[[country_col]] <- as.character(data[[country_col]])
+  data <- data[!is.na(data[[category_col]]) & data[[category_col]] != "" & 
+                 !is.na(data[[country_col]]) & data[[country_col]] != "", ]
+  
+  result_list <- list()
+  for (cntry in unique(data[[country_col]])) {
+    subset_data <- data[data[[country_col]] == cntry, ]
+    cat_table <- prop.table(table(subset_data[[category_col]]))
+    
+    component_list <- list()
+    for (name in names(cat_table)) {
+      components <- unlist(strsplit(name, " "))
+      prop_per_component <- cat_table[[name]] / length(components)
+      
+      for (comp in components) {
+        if (!is.null(component_list[[comp]])) {
+          component_list[[comp]] <- component_list[[comp]] + prop_per_component
+        } else {
+          component_list[[comp]] <- prop_per_component
+        }
+      }
+    }
+    
+    temp_df <- data.frame(
+      Component = names(component_list),
+      Total_Proportion = unlist(component_list),
+      Country = cntry
+    )
+    result_list[[cntry]] <- temp_df
+  }
+  final_df <- do.call(rbind, result_list)
+  rownames(final_df) <- NULL
+  
+  return(final_df[order(final_df$Country, -final_df$Total_Proportion), ])
+}
+
+income_eu_df <- split_category_proportions_by_country(
+  data = data_eu,
+  category_col = "SE2_11_SS_INC_SOR",
+  country_col = "country"
+)
+
+jobs_eu_df <- split_category_proportions_by_country(
+  data = data_eu_ind,
+  category_col = "SE12_SM_EMP_BARR",
+  country_col = "country"
+)
+
+
+
+```
+
+```{r}
+
+add_source_label <- function(df, source_name) {
+  df <- df[, c("Component", "Total_Proportion")]  
+  df$Source <- source_name
+  return(df)
+}
+df_list <- list(
+  work = work_df,
+  income_sources = income_sources_df,
+  housing_issues = housing_issues_df,
+  reasons_country = reasons_country_ee,
+  cohesion = cohesion_df,
+  return = return_df
+)
+combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
+
+add_source_label_eu <- function(df, source_name) {
+  df <- df[, c("Country", "Component", "Total_Proportion")] 
+  df$Source <- source_name
+  return(df)
+}
+
+df_list_eu <- list(
+  income = income_eu_df,
+  job = jobs_eu_df
+)
+
+combined_df_eu <- imap_dfr(df_list_eu, ~ add_source_label_eu(.x, .y))
+
+saveRDS(data_ee, "data_ee")
+saveRDS(combined_df, "combined_df")
+saveRDS(combined_df_eu, "combined_eu")
+write_csv(data_eu, "data_eu")
+```
