@@ -1,8 +1,8 @@
 ---
-format: 
-  pdf:
-    fontsize: 11pt 
-    geometry: top=2cm, bottom=2.5cm, left=2cm, right=2cm
+format: html
+  # pdf:
+  #   fontsize: 11pt 
+  #   geometry: top=2cm, bottom=2.5cm, left=2cm, right=2cm
 editor: 
   markdown: 
     wrap: 72

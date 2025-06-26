@@ -30,7 +30,6 @@ pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr,
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
-reasons_country_ee <- readRDS("Data/reasons_country_ee")
 combined_data <- readRDS("Data/combined_data")
 ```
 
@@ -416,7 +415,11 @@ important_vars <- c(
   "needs_accommodation",
   "needs_host_govt_assistance",
   "benefits_cash_benefits",
-  "benefits_unemployment_grant"
+  "benefits_unemployment_grant",
+  "hostile_comments_social_media",
+  "hostile_verbal_aggression",
+  "hostile_discriminatory_behavior",
+  "hostile_none"
 )
 
 model_data <- combined_data |>
@@ -469,7 +472,7 @@ rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data_reduced,
                          ntree = 500, mtry = 2, importance = TRUE)
 
 imp <- importance(rf_model)
-top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:12]
+top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:15]
 
 
 
