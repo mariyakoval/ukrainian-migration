@@ -269,4 +269,232 @@ combined_df |>
 
 Despite variations, the data underscores the central role of direct financial assistance in refugee support systems. However, the limited role of unemployment or disability benefits raises concerns about longer-term inclusion in formal welfare systems.
 
+**Estonia graphs for popular article**
 
+```{r}
+# Filter & recode activities in Estonia
+act_host_data <- combined_data |>
+  filter(
+    country == "Estonia",
+    !is.na(host_country_work_coa)
+  ) 
+
+# Count and calculate percentage
+act_host_summary <- act_host_data |>
+  count(host_country_work_coa, name = "n_host") |>
+  mutate(percent_host = round(n_host / sum(n_host) * 100, 1))
+
+
+# Filter & recode activities in Ukraine
+act_ukr_data <- combined_data |>
+  filter(
+    country == "Estonia",
+    !is.na(demographics_resp_activity),
+    demographics_resp_activity != "No Answer"
+  ) 
+
+# Count and calculate percentage
+act_ukr_summary <- act_ukr_data |>
+  count(demographics_resp_activity, name = "n_ukr") |>
+  mutate(percent_ukr = round(n_ukr / sum(n_ukr) * 100, 1))
+
+
+# Merge summaries for comparison
+activity_comparison <- full_join(
+  act_ukr_summary,
+  act_host_summary,
+  by = c("demographics_resp_activity" = "host_country_work_coa")
+)
+
+activity_comparison
+```
+
+```{r, fig.height = 7, fig.width=8, echo=FALSE}
+combined_df |>
+  filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
+    filter(Source == "needs", Country == "Estonia") |>
+    mutate(Percent = round(Total_Proportion * 100, 2)) |>
+    select(Component, Percent, Country) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |>
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Income Source") + ylab("Percent") +
+  ggtitle("Socioeconomic needs") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Type")) +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+```{r, fig.height = 4, fig.width=6.7, echo=FALSE}
+
+act_host <- combined_data |>
+  filter(
+    !is.na(host_country_work_coa),
+    country == "Estonia"
+  ) |>
+  mutate(host_country_work_coa = factor(host_country_work_coa))|>
+  mutate(host_country_work_coa = fct_recode(
+  host_country_work_coa,
+  "Работал(-а)" = "Employed",
+  "Учился(-ась)" = "Studying",
+  "Занимался(-ась) домом" = "Housekeeping",
+  "Стажер" = "Trainee",
+  "Вышел(-ла) на пенсию" = "Retired",
+  "Нетрудоустроенный(-ая)" = "Unemployed",
+  "Болезнь или травма" = "Long term illness/injury",
+  "Другое" = "Other"
+))|>
+  count(country, host_country_work_coa) |>
+  mutate(percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = percent, fill = host_country_work_coa)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  guides(fill = guide_legend(title = "Тип деятельности")) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = "none") +
+  ylab(element_blank()) +
+  ggtitle( " ",
+    subtitle = "Занятость в Эстонии"
+  )
+
+act_ukr <- combined_data |>
+  filter(
+    country == "Estonia"
+  ) |>
+  mutate(demographics_resp_activity = fct_recode(
+  demographics_resp_activity,
+  "Работал(-а)" = "Employed",
+  "Учился(-ась)" = "Studying",
+  "Занимался(-ась) домом" = "Housekeeping",
+  "Стажер" = "Trainee",
+  "Вышел(-ла) на пенсию" = "Retired",
+  "Нетрудоустроенный(-ая)" = "Unemployed",
+  "Болезнь или травма" = "Long term illness/injury",
+  "Другое" = "Other"
+))|>
+  filter(!is.na(demographics_resp_activity), demographics_resp_activity != "No Answer") |>
+  count(country, demographics_resp_activity) |>
+  mutate(percent = n / sum(n) * 100) |>
+  ggplot(aes(x = country, y = percent, fill = demographics_resp_activity)) +
+  geom_bar(stat = "identity") +
+  ylab("Проценты") +
+  theme_minimal() +
+  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  guides(fill = guide_legend(title = "Activity Type")) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme(legend.position = "none" )+
+  ggtitle(
+    "Рабочая активность украинцев до и после переезда в Эстонию (2023)",
+    subtitle = "Занятость в Украине"
+  )
+
+# Shared legend
+shared_legend <- get_legend(
+  act_host + theme(legend.position = "right")
+)
+
+# Combined plot
+combined_plot <- plot_grid(
+  act_ukr, act_host,
+  labels = NULL,
+  ncol = 2,
+  align = "hv"
+)
+
+plot_grid(
+  combined_plot, shared_legend,
+  ncol = 2,
+  rel_widths = c(0.19, 0.1)
+)
+
+```
+
+```{r, fig.width=7, fig.height=5, warning=FALSE, echo==FALSE}
+
+combined_data |>
+  filter(
+    country == "Estonia",
+    !is.na(demographics_educ_level),
+    !is.na(introduction_resp_age)
+  ) |>
+  mutate(demographics_educ_level = case_when(
+    grepl("tech", demographics_educ_level, ignore.case = TRUE) ~ "Техническое",
+    grepl("sec", demographics_educ_level, ignore.case = TRUE) ~ "Среднее",
+    grepl("pri", demographics_educ_level, ignore.case = TRUE) ~ "Начальное",
+    grepl("phd", demographics_educ_level, ignore.case = TRUE) ~ "Докторантура",
+    grepl("master", demographics_educ_level, ignore.case = TRUE) ~ "Магистратура",
+    grepl("bachelor", demographics_educ_level, ignore.case = TRUE) ~ "Бакалавриат",
+    grepl("no_edu", demographics_educ_level, ignore.case = TRUE) ~ "Без образования",
+    grepl("prefer", demographics_educ_level, ignore.case = TRUE) ~ "Без ответа",
+    grepl("spec", demographics_educ_level, ignore.case = TRUE) ~ "Специализация",
+    TRUE ~ demographics_educ_level
+  )) |>
+  filter(demographics_educ_level != "Без ответа") |>
+  count(introduction_resp_age, demographics_educ_level) |>
+  group_by(introduction_resp_age) |>
+  mutate(prop = n / sum(n) * 100) |>
+  ungroup() |>
+  mutate(demographics_educ_level = fct_reorder(demographics_educ_level, n, .fun = sum, .desc = TRUE)) |>
+  ggplot(aes(x = introduction_resp_age, y = prop, fill = demographics_educ_level)) +
+  geom_col(position = "stack") +
+  xlab("Возраст") +
+  ylab("Проценты") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Уровень образования")) +
+  scale_fill_brewer(palette = "Dark2") +
+  ggtitle("Уровень образования по возрастным группам украинцев в Эстонии (2023)")
+
+```
+
+```{r, fig.height = 4, fig.width=7, echo=FALSE}
+
+#Aggregated data
+
+combined_df |>
+  filter(Country == "Estonia", Source == "job") |>
+  mutate(Component = fct_recode(Component,
+    "Языковой барьер" = "Language barrier",
+    "Нет препятствий" = "None",
+    "Недостаток возможностей" = "Insuffisient opportunities",
+    "Непризнание квалификаций" = "Lack of recognition",
+    "Другое" = "other",
+    "Не планирую оставаться" = "not_staying",
+    "Уход за другими" = "Care for others",
+    "Нет разрешения на работу" = "lack_permit",
+    "Дискриминация" = "discrim",
+    "Потеря пособий" = "loss_benefits",
+    "Предпочитаю не отвечать" = "prefer_no_answer",
+    "Нет адреса" = "lack_address",
+    "Нет информации" = "lack_info",
+    "Нет документов" = "lack_docum"
+  )) |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent, Country) |>
+  group_by(Country) |>
+  arrange(desc(Percent), .by_group = TRUE) |>
+  slice_head(n = 5) |>
+  ungroup() |> 
+  ggplot(aes(x = reorder(Component, Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  geom_text(aes(label = paste0(Percent, "%")), 
+            hjust = -0.1, size = 3) +
+  xlab("Причина") + 
+  ylab("Проценты") +
+  ggtitle("Основные препятствия для трудоустройства украинцев") +
+  theme_minimal() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 35,  hjust = 1, size = 6),
+        legend.position = "none") +
+  scale_fill_brewer(palette = "Dark2")+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+
+```
