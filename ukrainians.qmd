@@ -26,7 +26,7 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot, pROC, rms, vcd)
+              patchwork, cowplot, pROC, rms, vcd, gt)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
@@ -74,11 +74,17 @@ The bar chart displays the distribution of survey respondents by age group (18�
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE, echo=FALSE}
 # Function to create a clean proportion table
-make_prop_table <- function(variable) {
-  tibble(
-    Category = names(table(variable, useNA = "ifany")),
-    Count = as.numeric(table(variable, useNA = "ifany")),
-    Percent = round(100 * (prop.table(table(variable, useNA = "ifany"))), 2)
+make_prop_table <- function(variable, na.rm = FALSE) {
+  if (na.rm) {
+    variable <- variable[!is.na(variable)]
+  }
+
+  tab <- table(variable)
+  
+  tibble::tibble(
+    Category = names(tab),
+    Count = as.numeric(tab),
+    Percent = round(100 * prop.table(tab), 2)
   )
 }
 
@@ -547,164 +553,3 @@ Individuals needing host government assistance, medical, or accommodation suppor
 - Preut, Holger. “고용을위한길:독일노동시장의우크라이나난민들을위한통합적도전과전망.” Zeitschrift Der Koreanisch-Deutschen Gesellschaft Für Sozialwissenschaften, vol. 33, no. 3, Koreanisch-Deutsche Gesellschaft fuer Sozlaiwssenschaften, Sept. 2023, pp. 3–33. Crossref, doi:10.19032/zkdgs.2023.09.33.3.3.
 
 - Londar, S., et al. “Challenges for Ukrainian Refugees in the EU Labour Market: The Case of Poland and Germany.” Educational Analytics of Ukraine, no. 5, State Scientific Institution - Institute of Educational Analytics, 2024, pp. 5–16. Crossref, doi:10.32987/2617-8532-2024-5-5-16.
-
-**Estonia graphs for popular article**
-
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
-combined_df |>
-  filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
-    filter(Source == "needs", Country == "Estonia") |>
-    mutate(Percent = round(Total_Proportion * 100, 2)) |>
-    select(Component, Percent, Country) |>
-    group_by(Country) |>
-    arrange(desc(Percent), .by_group = TRUE) |>
-    slice_head(n = 5) |>
-    ungroup() |>
-  ggplot(aes(x = reorder(Component, -Percent), 
-             y = Percent, fill = Component)) +
-  geom_col(show.legend = TRUE) +
-  facet_wrap(~Country, scales = "free_x") +
-  xlab("Income Source") + ylab("Percent") +
-  ggtitle("Socioeconomic needs") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Type")) +
-  scale_fill_brewer(palette = "Dark2")
-```
-
-```{r, fig.height = 4, fig.width=6.7, echo=FALSE}
-
-act_host <- combined_data |>
-  filter(
-    !is.na(host_country_work_coa),
-    country == "Estonia"
-  ) |>
-  mutate(host_country_work_coa = factor(host_country_work_coa))|>
-  mutate(host_country_work_coa = fct_recode(
-  host_country_work_coa,
-  "Работал(-а)" = "Employed",
-  "Учился(-ась)" = "Studying",
-  "Занимался(-ась) домом" = "Housekeeping",
-  "Стажер" = "Trainee",
-  "Вышел(-ла) на пенсию" = "Retired",
-  "Нетрудоустроенный(-ая)" = "Unemployed",
-  "Болезнь или травма" = "Long term illness/injury",
-  "Другое" = "Other"
-))|>
-  count(country, host_country_work_coa) |>
-  mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = host_country_work_coa)) +
-  geom_bar(stat = "identity") +
-  theme_minimal() +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  guides(fill = guide_legend(title = "Тип деятельности")) +
-  scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "none") +
-  ylab(element_blank()) +
-  ggtitle( " ",
-    subtitle = "Занятость в Эстонии"
-  )
-
-act_ukr <- combined_data |>
-  filter(
-    country == "Estonia"
-  ) |>
-  mutate(demographics_resp_activity = fct_recode(
-  demographics_resp_activity,
-  "Работал(-а)" = "Employed",
-  "Учился(-ась)" = "Studying",
-  "Занимался(-ась) домом" = "Housekeeping",
-  "Стажер" = "Trainee",
-  "Вышел(-ла) на пенсию" = "Retired",
-  "Нетрудоустроенный(-ая)" = "Unemployed",
-  "Болезнь или травма" = "Long term illness/injury",
-  "Другое" = "Other"
-))|>
-  filter(!is.na(demographics_resp_activity), demographics_resp_activity != "No Answer") |>
-  count(country, demographics_resp_activity) |>
-  mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = demographics_resp_activity)) +
-  geom_bar(stat = "identity") +
-  ylab("Проценты") +
-  theme_minimal() +
-  theme(axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  guides(fill = guide_legend(title = "Activity Type")) +
-  scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "none" )+
-  ggtitle(
-    "Рабочая активность украинцев до и после переезда в Эстонию (2023)",
-    subtitle = "Занятость в Украине"
-  )
-
-# Shared legend
-shared_legend <- get_legend(
-  act_host + theme(legend.position = "right")
-)
-
-# Combined plot
-combined_plot <- plot_grid(
-  act_ukr, act_host,
-  labels = NULL,
-  ncol = 2,
-  align = "hv"
-)
-
-plot_grid(
-  combined_plot, shared_legend,
-  ncol = 2,
-  rel_widths = c(0.19, 0.1)
-)
-
-```
-
-```{r, fig.height = 4, fig.width=8, echo=FALSE}
-
-filtered_estonia <- combined_data |>
-  filter(country == "Estonia")
-
-act_host <- filtered_estonia |>
-  filter(!is.na(host_country_work_coa)) |>
-  count(country, host_country_work_coa) |>
-  group_by(country) |>
-  mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = host_country_work_coa)) +
-  geom_col() +
-  xlab("Country") +
-  ggtitle("Host Country Activities") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Activity")) +
-  scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "none") +
-  ylab(NULL)
-
-act_ukr <- filtered_estonia |>
-  filter(!is.na(demographics_resp_activity), demographics_resp_activity != "No Answer") |>
-  count(country, demographics_resp_activity) |>
-  group_by(country) |>
-  mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = demographics_resp_activity)) +
-  geom_col(position = "stack") +
-  xlab("Country") +
-  ylab("Percent") +
-  ggtitle("Employment Activity in Ukraine") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  guides(fill = guide_legend(title = "Activity Type")) +
-  scale_fill_brewer(palette = "Dark2") +
-  theme(legend.position = "none")
-
-shared_legend <- get_legend(act_host + theme(legend.position = "right"))
-
-combined_plot <- plot_grid(
-  act_ukr, act_host,
-  labels = NULL,
-  ncol = 2,
-  align = "hv"
-)
-plot_grid(
-  combined_plot, shared_legend,
-  ncol = 2,  
-  rel_widths = c(0.5, 0.2)
-)
-```

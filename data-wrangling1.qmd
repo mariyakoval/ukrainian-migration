@@ -406,6 +406,11 @@ benefits_df <- split_category_proportions_by_country(
   category_col = "socbenefits",
   country_col = "country"
 )
+
+cohesion_df <- split_category_proportions_by_country(
+  data = combined_data,
+  category_col = "hostile_behavior_type",
+  country_col = "country")
 ```
 
 ```{r}
@@ -420,7 +425,8 @@ df_list <- list(
   income = income_df,
   job = jobs_df,
   needs = needs_df,
-  benefits = benefits_df
+  benefits = benefits_df,
+  cohesion = cohesion_df
 )
 
 combined_df <- imap_dfr(df_list, ~ add_source_label(.x, .y))
@@ -480,7 +486,13 @@ income_df <- combined_df |>
     "Don't know" = "do_not_know",
     "Don't know" = "dont_know"
   ))
-combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df)
+
+cohesion_df <- combined_df |>
+  filter(Source == "cohesion")
+
+combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df, cohesion_df)
+
+levels(combined_df$coh)
 
 saveRDS(combined_df, "Data/combined_df")
 saveRDS(combined_data, "Data/combined_data")

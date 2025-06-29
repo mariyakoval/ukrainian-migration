@@ -309,26 +309,38 @@ activity_comparison <- full_join(
 activity_comparison
 ```
 
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
+```{r, fig.height = 4, fig.width=7, echo=FALSE}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "needs", Country == "Estonia") |>
+  mutate(Component = fct_recode(Component,
+    "Жилье" = "Accommodation",
+    "Обучение" = "Education",
+    "Трудоустройство" = "Employment",
+    "Медицина" = "Healthcare",
+    "Никаких" = "None",
+  )) |>
     mutate(Percent = round(Total_Proportion * 100, 2)) |>
     select(Component, Percent, Country) |>
     group_by(Country) |>
     arrange(desc(Percent), .by_group = TRUE) |>
     slice_head(n = 5) |>
     ungroup() |>
-  ggplot(aes(x = reorder(Component, -Percent), 
+  ggplot(aes(x = reorder(Component, Percent), 
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
-  facet_wrap(~Country, scales = "free_x") +
-  xlab("Income Source") + ylab("Percent") +
-  ggtitle("Socioeconomic needs") +
+  geom_text(aes(label = paste0(Percent, "%")), 
+            hjust = -0.1, size = 3) +
+  coord_flip() +
+  xlab("Нужды") + ylab("Проценты") +
+  ggtitle("Социально-экономические потребности украинцев") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+         legend.position = "none"
+        ) +
   guides(fill = guide_legend(title = "Type")) +
-  scale_fill_brewer(palette = "Dark2")
+  scale_fill_brewer(palette = "Dark2") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
 ```
 
 ```{r, fig.height = 4, fig.width=6.7, echo=FALSE}
@@ -452,6 +464,9 @@ combined_data |>
   scale_fill_brewer(palette = "Dark2") +
   ggtitle("Уровень образования по возрастным группам украинцев в Эстонии (2023)")
 
+
+make_prop_table(data_ee$demographics_educ_level)
+
 ```
 
 ```{r, fig.height = 4, fig.width=7, echo=FALSE}
@@ -496,5 +511,132 @@ combined_df |>
         legend.position = "none") +
   scale_fill_brewer(palette = "Dark2")+
   scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+
+```
+
+```{r, fig.height = 4, fig.width=7, echo=FALSE}
+
+#Aggregated data
+
+combined_df |>
+  filter(Country == "Estonia", Source == "cohesion") |>
+   mutate(Component = fct_recode(Component,
+    "Вербальная агрессия" = "verbal_aggression",
+    "Никаких" = "none",
+    "Негатив в соцсетях" = "comments_social_media",
+    "Дискриминация" = "discriminatory_behavior",
+    "Другое" = "other"
+  )) |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent, Country) |>
+  group_by(Country) |>
+  arrange(desc(Percent), .by_group = TRUE) |>
+  slice_head(n = 5) |>
+  ungroup() |> 
+  ggplot(aes(x = reorder(Component, Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  geom_text(aes(label = paste0(Percent, "%")), 
+            hjust = -0.1, size = 3) +
+  xlab("Тип препятствия") + 
+  ylab("Проценты") +
+  ggtitle("Основные проявления дискриминации и социальной изоляции") +
+  theme_minimal() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 35,  hjust = 1, size = 6),
+        legend.position = "none") +
+  scale_fill_brewer(palette = "Dark2")+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+
+```
+
+```{r, fig.height = 4, fig.width=7, echo=FALSE}
+
+#Aggregated data
+
+combined_df |>
+    filter(Source == "income", Country == "Estonia") |>
+  mutate(Component = fct_recode(Component,
+    "Работа" = "Job",
+    "Социальная защита" = "Social Protection",
+    "Нет дохода" = "No income",
+    "Другие источники" = "Other Sources",
+    "Социальная защита в Украине" = "Social Protection from Ukraine"
+  )) |>
+    mutate(Percent = round(Total_Proportion * 100, 2))|>
+    select(Component, Percent, Country) |>
+    group_by(Country) |>
+    arrange(desc(Percent), .by_group = TRUE) |>
+    slice_head(n = 5) |>
+    ungroup() |> 
+  ggplot(aes(x = reorder(Component, Percent), 
+             y = Percent, fill = Component)) +
+   geom_col(show.legend = TRUE) +
+  geom_text(aes(label = paste0(Percent, "%")), 
+            hjust = -0.1, size = 3) +
+  xlab("Источник дохода") + ylab("Проценты") +
+  ggtitle("Источники дохода украинцев в Эстонии") +
+  theme_minimal() +
+  coord_flip() +
+  theme(axis.text.x = element_text(angle = 35,  hjust = 1, size = 6),
+        legend.position = "none") +
+  scale_fill_brewer(palette = "Dark2")+
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15)))
+
+```
+
+```{r}
+
+# Function to create a clean proportion table
+make_prop_table <- function(variable, na.rm = FALSE) {
+  if (na.rm) {
+    variable <- variable[!is.na(variable)]
+  }
+
+  tab <- table(variable)
+  
+  tibble::tibble(
+    Category = names(tab),
+    Count = as.numeric(tab),
+    Percent = round(100 * prop.table(tab), 2)
+  )
+}
+
+rus_labels <- c(
+  "dont_know" = "Затрудняюсь ответить",
+  "fewer" = "Меньше, чем до войны",
+  "more" = "Больше, чем до войны",
+  "prefer_not_to_answer" = "Предпочитаю не отвечать",
+  "same" = "Примерно столько же"
+)
+
+# Generate and format table
+make_prop_table(data_ee$economic_capicity_L13_SS_AFF_GOODS, na.rm = TRUE) |>
+ mutate(Category = rus_labels[Category]) |>
+  kable(booktabs = TRUE, align = "c",
+        col.names = c("Ответ", "Количество", "Процент"))|>
+  kable_styling(latex_options = c("striped"), font_size = 12) |>
+  column_spec(1, bold = TRUE) |>
+  row_spec(0, bold = TRUE, color = "white", background = "gray") |>
+  add_header_above(c("Способность приобретать товары по сравнению с довоенным временем" = 3))
+
+make_prop_table(data_ee$economic_capicity_L13_1_SM_MORE_GOODS)
+make_prop_table(data_ee$economic_capicity_L13_1_SM_LESS_GOODS)
+```
+
+
+```{r}
+ggplot(data_ee, aes(x = host_country_healthcare_access, 
+                             fill = host_country_healthcare_access)) +
+  geom_bar(stat = "count") +
+  xlab("Problems accessing Healthcare Services") +
+  ylab("Count") +
+  scale_fill_brewer(palette = "Paired") + gg
+
+combined_df |>
+  filter(Source == "med_issues") |>
+  mutate(Percent = round(Total_Proportion * 100, 2)) |>
+  select(Component, Percent) |>
+  arrange(desc(Percent))
 
 ```
