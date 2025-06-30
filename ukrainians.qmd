@@ -26,7 +26,7 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot, pROC, rms, vcd, gt)
+              patchwork, cowplot, pROC, rms, vcd, pscl)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
@@ -71,6 +71,41 @@ Binary logistic regression analysis was used to estimate the probability of empl
 **Demographics**
 
 The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists.
+
+
+```{r}
+# Custom plotting function
+plot_employment_vs_vars <- function(data, vars, country_name) {
+  # Filter for country
+  df <- data |> 
+    filter(country == country_name) |> 
+    select(employed_binary, all_of(vars)) |> 
+    drop_na()
+
+  df$employed_binary <- factor(df$employed_binary, labels = c("Unemployed", "Employed"))
+
+  for (var in vars) {
+    # Convert variable to factor if it's not numeric
+    if (!is.numeric(df[[var]])) {
+      df[[var]] <- as.factor(df[[var]])
+    }
+
+    # Generate plot
+    p <- ggplot(df, aes(x = employed_binary, fill = as.factor(.data[[var]]))) +
+      geom_bar(position = "fill") +
+      scale_y_continuous(labels = scales::percent_format()) +
+      labs(
+        title = paste("Employment vs", var, "in", country_name),
+        x = "Employment Status",
+        y = "Proportion",
+        fill = var
+      ) +
+      theme_minimal()
+
+    print(p)  # You can use ggsave() here to save plots instead of printing
+  }
+}
+```
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE, echo=FALSE}
 # Function to create a clean proportion table
@@ -353,55 +388,6 @@ combined_df |>
 
 **Tests**
 
-**Logistic regression**
-
-```{r}
-
-# Define the list of good predictors
-predictors <- c(
-  "introduction_resp_age",
-  "demographics_educ_level_grouped",
-  "demographics_resp_activity",
-  "income_social_protection_ukr_govt",
-  "diff_lack_of_lang",
-  "diff_lack_childcare",
-  "diff_lack_of_skills",
-  "diff_none",
-  "diff_discrimination",
-  "diff_lack_of_documentation",
-  "diff_lack_opp",
-  "diff_lack_recog",
-  "diff_loss_benefits",
-  "needs_employment",
-  "needs_employment",
-  "needs_education_support",
-  "needs_food",
-  "needs_accommodation",
-  "benefits_cash_benefits",
-  "benefits_unemployment_grant"
-)
-
-model_data <- combined_data |>
-  select(employed_binary, all_of(predictors)) |>
-  drop_na()
-
-model <- glm(employed_binary ~ ., data = model_data, family = binomial)
-summary(model)
-
-# model_data$predicted_prob <- predict(model, type = "response")
-# model_data$predicted_class <- ifelse(model_data$predicted_prob > 0.5, 1, 0)
-# mean(model_data$predicted_class == as.numeric(as.character(model_data$employed_binary)))
-# table(Predicted = model_data$predicted_class, Actual = model_data$employed_binary)
-
-
-# ggplot(model_data, aes(x = predicted_prob, fill = factor(employed_binary))) +
-#   geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.6) +
-#   labs(fill = "Actual Employment", x = "Predicted Probability", y = "Count") +
-#   theme_minimal()
-
-#hoslem.test(model_data$employed_binary, fitted(model), g = 10)
-```
-
 **Random forest**
 
 ```{r, fig.width=8, fig.height=8}
@@ -437,60 +423,26 @@ model_data <- combined_data |>
   select(employed_binary, all_of(important_vars)) |>
   drop_na()
 
-model_data_reduced <- model_data[, c("employed_binary", important_vars)]
+model_data$employed_binary <- factor(model_data$employed_binary, levels = c(0,1), labels = c("No", "Yes"))
 
-rf_reduced <- randomForest(
-  factor(employed_binary) ~ .,
-  data = model_data_reduced,
-  ntree = 500,
-  importance = TRUE
-)
-
-rf_reduced
-importance(rf_reduced)
-varImpPlot(rf_reduced)
+rf_model <- randomForest(employed_binary ~ ., data = model_data,
+                         ntree = 500, mtry = 2, importance = TRUE)
 ```
 
-```{r}
-# set.seed(123)
-# 
-# # Define train control with stratified 5-fold CV
-# train_control <- trainControl(
-#   method = "cv",       
-#   number = 5,        
-#   classProbs = TRUE,   
-#   summaryFunction = twoClassSummary, 
-#   savePredictions = TRUE,
-#   sampling = "up",  
-#   verboseIter = TRUE
-# )
-# 
-model_data_reduced$employed_binary <- factor(model_data_reduced$employed_binary, levels = c(0,1), labels = c("No", "Yes"))
-# 
-# # Train random forest with caret 
-# rf_model <- train(
-#   employed_binary ~ .,
-#   data = model_data_reduced,
-#   method = "rf",
-#   trControl = train_control,
-#   metric = "ROC",     
-#   tuneLength = 5         
-# )
-
-print(rf_model)
-
-rf_model <- randomForest(factor(employed_binary) ~ ., data = model_data_reduced,
-                         ntree = 500, mtry = 2, importance = TRUE)
+```{r, fig.height=10}
 
 imp <- importance(rf_model)
 top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:15]
 
+varImpPlot(rf_model)
 
+model_data_selected <- model_data[, c("employed_binary", top_vars)]
+model_data_selected$employed_binary <- as.integer(model_data_selected$employed_binary == "Yes")
 
-model_data_selected <- model_data_reduced[, c("employed_binary", top_vars)]
-model_data_selected$employed_binary <- ifelse(model_data_selected$employed_binary == "Yes", 1, 0)
 logit_model <- glm(employed_binary ~ ., data = model_data_selected, family = binomial)
 summary(logit_model)
+
+pR2(logit_model)
 
 pred_probs <- predict(logit_model, type = "response")
 pred_class <- ifelse(pred_probs > 0.5, 1, 0)
@@ -500,42 +452,238 @@ roc_obj <- roc(model_data_selected$employed_binary, pred_probs)
 plot(roc_obj)
 auc(roc_obj)
 ```
+**Country specific data**
 
 ```{r}
-# Country specific data
-formula_str <- paste("employed_binary ~", paste(top_vars, collapse = " + "))
-formula <- as.formula(formula_str)
 
-models_by_country <- combined_data |>
-  group_by(country) |>
-  group_split() |>
-  map(~ glm(formula, data = ., family = binomial))
+vars_pl <- c(
+    "introduction_resp_age",
+  "demographics_resp_activity",
+  "income_social_protection_host_govt",
+  "income_remmittances",
+  "income_social_protection_ukr_govt",
+  "diff_lack_of_lang",
+  "diff_lack_childcare",
+  "diff_lack_of_skills",
+  "diff_lack_of_education_skills",
+  "diff_none",
+  "income_remmittances", 
+  "diff_lack_childcare",
+  "diff_not_looking_for_work",
+  "diff_lack_of_age_opportunities"
+)
 
-names(models_by_country) <- unique(combined_data$country)
+poland_data <- combined_data |>
+  filter(country == "Poland") |>
+  select(employed_binary, all_of(vars_pl)) |>
+  drop_na()
+poland_data$employed_binary <- as.integer(poland_data$employed_binary == 1)
 
+logit_model_pl <- glm(employed_binary ~ ., data = poland_data, family = binomial)
+summary(logit_model_pl)
 
-summary(models_by_country$Estonia)
-summary(models_by_country$Poland)
-summary(models_by_country$Slovakia)
-summary(models_by_country$Romania)
-summary(models_by_country$Czechia)
-summary(models_by_country$Moldova)
+pR2(logit_model_pl)
+
+pred_probs_pl <- predict(logit_model_pl, type = "response")
+pred_class_pl <- ifelse(pred_probs_pl > 0.5, 1, 0)
+
+# Confusion matrix and accuracy
+table(Predicted = pred_class_pl, Actual = poland_data$employed_binary)
+mean(pred_class_pl == poland_data$employed_binary)
+roc_obj_pl <- roc(poland_data$employed_binary, pred_probs_pl)
+plot(roc_obj_pl)
+auc(roc_obj_pl)
 
 ```
 
-```{r, fig.width=8, fig.height=8}
-dd <- datadist(model_data_selected)
-options(datadist = "dd")
+```{r}
 
-logit_model_rms <- lrm(employed_binary ~ ., data = model_data_selected, x=TRUE, y=TRUE)
-cal <- calibrate(logit_model_rms, method="boot", B=1000)
+vars_ee <- c(
+  "demographics_resp_activity",
+  "diff_lack_of_lang",
+  "diff_lack_of_documentation",
+  "benefits_cash_benefits",
+  "benefits_unemployment_grant",
+  "hostile_comments_social_media",
+  "hostile_verbal_aggression",
+  "hostile_discriminatory_behavior",
+  "diff_loss_benefits",
+  "needs_employment"
+)
 
-plot(cal, xlab="Predicted Probability", ylab="Observed Probability", main="Calibration Plot")
+estonia_data <- combined_data |>
+  filter(country == "Estonia") |>
+  select(employed_binary, all_of(vars_ee)) |>
+  drop_na()
+estonia_data$employed_binary <- as.integer(estonia_data$employed_binary == 1)
 
-summary(logit_model_rms)
-summary(logit_model)
+logit_model_ee <- glm(employed_binary ~ ., data = estonia_data, family = binomial)
+summary(logit_model_ee)
+
+pR2(logit_model_ee)
+
+pred_probs_ee <- predict(logit_model_ee, type = "response")
+pred_class_ee <- ifelse(pred_probs_ee > 0.5, 1, 0)
+
+# Confusion matrix and accuracy
+table(Predicted = pred_class_ee, Actual = estonia_data$employed_binary)
+mean(pred_class_ee == estonia_data$employed_binary)
+roc_obj_ee <- roc(estonia_data$employed_binary, pred_probs_ee)
+plot(roc_obj_ee)
+auc(roc_obj_ee)
+
 ```
 
+```{r}
+
+vars_cz <- c(
+  "demographics_resp_activity",
+  "income_social_protection_host_govt",
+  "diff_lack_of_lang",
+  "diff_none",
+  "hostile_verbal_aggression",
+  "diff_lack_of_decent_employment",
+  "diff_lack_childcare",
+  "diff_not_looking_for_work"
+)
+
+czechia_data <- combined_data |>
+  filter(country == "Czechia") |>
+  select(employed_binary, all_of(vars_cz)) |>
+  drop_na()
+czechia_data$employed_binary <- as.integer(czechia_data$employed_binary == 1)
+
+logit_model_cz <- glm(employed_binary ~ ., data = czechia_data, family = binomial)
+summary(logit_model_cz)
+
+pR2(logit_model_cz)
+
+pred_probs_cz <- predict(logit_model_cz, type = "response")
+pred_class_cz <- ifelse(pred_probs_cz > 0.5, 1, 0)
+
+table(Predicted = pred_class_cz, Actual = czechia_data$employed_binary)
+mean(pred_class_cz == czechia_data$employed_binary)
+
+roc_obj_cz <- roc(czechia_data$employed_binary, pred_probs_cz)
+plot(roc_obj_cz)
+auc(roc_obj_cz)
+
+```
+
+```{r}
+
+
+vars_sk <- c(
+  "introduction_resp_age",
+  "demographics_educ_level_grouped",
+  "demographics_resp_activity",
+  "income_social_protection_host_govt",
+  "diff_lack_of_skills",
+  "diff_not_looking_for_work",
+  "needs_host_govt_assistance",
+  "needs_humanitarian_assistance",
+  "diff_none",
+  "needs_host_govt_assistance",
+  "benefits_cash_benefits"
+)
+
+slovakia_data <- combined_data |>
+  filter(country == "Slovakia") |>
+  select(employed_binary, all_of(vars_sk)) |>
+  drop_na()
+slovakia_data$employed_binary <- as.integer(slovakia_data$employed_binary == 1)
+
+logit_model_sk <- glm(employed_binary ~ ., data = slovakia_data, family = binomial)
+summary(logit_model_sk)
+
+pR2(logit_model_sk)
+
+pred_probs_sk <- predict(logit_model_sk, type = "response")
+pred_class_sk <- ifelse(pred_probs_sk > 0.5, 1, 0)
+
+table(Predicted = pred_class_sk, Actual = slovakia_data$employed_binary)
+mean(pred_class_sk == slovakia_data$employed_binary)
+
+roc_obj_sk <- roc(slovakia_data$employed_binary, pred_probs_sk)
+plot(roc_obj_sk)
+auc(roc_obj_sk)
+
+```
+
+```{r}
+
+
+vars_ml <- c(
+  "demographics_resp_activity",
+  "income_social_protection_host_govt",
+  "diff_lack_of_lang",
+  "diff_lack_of_skills",
+  "diff_lack_of_info",
+  "diff_none",
+  "needs_medical",
+  "diff_need_to_take_care_of_others",
+  "needs_humanitarian_assistance"
+)
+
+moldova_data <- combined_data |>
+  filter(country == "Moldova") |>
+  select(employed_binary, all_of(vars_ml)) |>
+  drop_na()
+moldova_data$employed_binary <- as.integer(moldova_data$employed_binary == 1)
+
+logit_model_md <- glm(employed_binary ~ ., data = moldova_data, family = binomial)
+summary(logit_model_md)
+
+pR2(logit_model_md)
+
+pred_probs_md <- predict(logit_model_md, type = "response")
+pred_class_md <- ifelse(pred_probs_md > 0.5, 1, 0)
+
+table(Predicted = pred_class_md, Actual = moldova_data$employed_binary)
+mean(pred_class_md == moldova_data$employed_binary)
+
+roc_obj_md <- roc(moldova_data$employed_binary, pred_probs_md)
+plot(roc_obj_md)
+auc(roc_obj_md)
+```
+
+```{r}
+
+
+vars_ro <- c(
+  "introduction_resp_age",
+  "demographics_resp_activity",
+  "diff_lack_of_lang",
+  "diff_lack_of_decent_employment",
+  "diff_lack_childcare",
+  "diff_none",
+  "needs_host_govt_assistance","income_other_sources",
+  "diff_lack_of_skills",
+  "diff_need_to_take_care_of_others",
+  "diff_not_looking_for_work"
+)
+
+romania_data <- combined_data |>
+  filter(country == "Romania") |>
+  select(employed_binary, all_of(vars_ro)) |>
+  drop_na()
+romania_data$employed_binary <- as.integer(romania_data$employed_binary == 1)
+
+logit_model_ro <- glm(employed_binary ~ ., data = romania_data, family = binomial)
+summary(logit_model_ro)
+
+pR2(logit_model_ro)
+
+pred_probs_ro <- predict(logit_model_ro, type = "response")
+pred_class_ro <- ifelse(pred_probs_ro > 0.5, 1, 0)
+
+table(Predicted = pred_class_ro, Actual = romania_data$employed_binary)
+mean(pred_class_ro == romania_data$employed_binary)
+
+roc_obj_ro <- roc(romania_data$employed_binary, pred_probs_ro)
+plot(roc_obj_ro)
+auc(roc_obj_ro)
+```
 
 *Discussion*
 
