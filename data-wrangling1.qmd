@@ -337,7 +337,7 @@ combined_data <- combined_data|>
     demographics_educ_level == "specialization" ~ "specialization",
     TRUE ~ as.character(demographics_educ_level)
   )) |>
-  mutate(socbenefits = ifelse(is.na(socbenefits), "none", socbenefits)) |>
+ mutate(socbenefits = ifelse(is.na(as.character(socbenefits)), "none", as.character(socbenefits))) |>
   select(-income_NA, -hostile_NA, -benefits_NA, -needs_NA, -diff_NA)
 
 ```
