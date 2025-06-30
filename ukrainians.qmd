@@ -1,9 +1,14 @@
 ---
-title: "ukrainians"
-format: html
+title: "Employment determinants among Ukrainian refugees: a comparative analysis across European host countries"
+subtitle: "Logistic regression and random forest models for employment prediction"
+format: 
+  pdf:
+    toc: true
+    toc_depth: 2
 editor: 
   markdown: 
     wrap: 72
+sansfont: Times
 ---
 
 ```{r setup, include=FALSE}
@@ -26,18 +31,69 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot, pROC, rms, vcd, pscl)
+              patchwork, cowplot, pROC, rms, vcd, pscl, randomForest)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
 combined_data <- readRDS("Data/combined_data")
+
+# Functions used in the analysis:
+
+# Create proportion table
+make_prop_table <- function(variable, na.rm = FALSE) {
+  if (na.rm) {
+    variable <- variable[!is.na(variable)]
+  }
+  tibble::tibble(
+    Category = names(table(variable)),
+    Count = as.numeric(table(variable)),
+    Percent = round(100 * prop.table(table(variable)), 2)
+  )
+}
+
+# Create grid for binary EDA
+plot_employment_vs_vars <- function(data, vars, country_name) {
+  df <- data |> 
+    filter(country == country_name) |> 
+    select(employed_binary, all_of(vars)) |> 
+    drop_na()
+  df$employed_binary <- factor(df$employed_binary, 
+                              labels = c("Unemployed", "Employed"))
+
+  plots <- list()
+  for (var in vars) {
+    if (!is.numeric(df[[var]])) {
+      df[[var]] <- as.factor(df[[var]])
+    }
+
+    p <- ggplot(df, aes(x = employed_binary, 
+                        fill = as.factor(.data[[var]]))) +
+      geom_bar(position = "fill") +
+      scale_y_continuous(labels = scales::percent_format()) +
+      labs(
+        title = paste("Employment vs", var, "in", country_name),
+        x = "Employment Status",
+        y = "Proportion",
+        fill = var
+      ) +
+      theme_minimal()
+    
+    plots[[var]] <- p
+  }
+  grid.arrange(grobs = plots, ncol = 3)
+}
+
+
 ```
 
-*Introduction*
+\newpage
+# Abstract
+
+# Introduction and context
 
 The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. People fleeing the war in Ukraine are allowed to live and work in the European Union for up tp 3 years under the Temporary Protection Status. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). According to Preut, expanding language courses, childcare services, and accelerating credential recognition can enhance employment likelihood (Preut, 2023).
 
-*Data and methods*
+# Data and Methods
 
 This study employs Multi-Sectoral Needs Assessments (MSNA) of 2023, which provide data on Ukrainian refugees' needs and priorities in Estonia, Slovakia, Poland, Romania, Moldova, and Czechia. The assessment employs both household-level and individual-level data collected through structured surveys in all the countries.
 
@@ -66,77 +122,23 @@ A random forest model was trained to account for potential non-linearities and i
 
 Binary logistic regression analysis was used to estimate the probability of employment (Employed = 1). Independent variables included demographic and socio-economic ones such as age, education level, country of residence, language skills, accommodation, and social services consumption of social services, among others. Odds ratios were estimated to define direction and strength of associations.
 
-*Descriptive Statistics*
+\newpage
+
+# Pooled Analysis Across Six Countries
+
+## Exploratory Data Analysis 
 
 **Demographics**
 
 The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists.
 
 
-```{r}
-# Custom plotting function
-plot_employment_vs_vars <- function(data, vars, country_name) {
-  # Filter for country
-  df <- data |> 
-    filter(country == country_name) |> 
-    select(employed_binary, all_of(vars)) |> 
-    drop_na()
-
-  df$employed_binary <- factor(df$employed_binary, labels = c("Unemployed", "Employed"))
-
-  for (var in vars) {
-    # Convert variable to factor if it's not numeric
-    if (!is.numeric(df[[var]])) {
-      df[[var]] <- as.factor(df[[var]])
-    }
-
-    # Generate plot
-    p <- ggplot(df, aes(x = employed_binary, fill = as.factor(.data[[var]]))) +
-      geom_bar(position = "fill") +
-      scale_y_continuous(labels = scales::percent_format()) +
-      labs(
-        title = paste("Employment vs", var, "in", country_name),
-        x = "Employment Status",
-        y = "Proportion",
-        fill = var
-      ) +
-      theme_minimal()
-
-    print(p)  # You can use ggsave() here to save plots instead of printing
-  }
-}
-```
-
 ```{r, fig.width=6, fig.height=4, warning=FALSE, echo=FALSE}
-# Function to create a clean proportion table
-make_prop_table <- function(variable, na.rm = FALSE) {
-  if (na.rm) {
-    variable <- variable[!is.na(variable)]
-  }
-
-  tab <- table(variable)
-  
-  tibble::tibble(
-    Category = names(tab),
-    Count = as.numeric(tab),
-    Percent = round(100 * prop.table(tab), 2)
-  )
-}
-
-make_prop_table(data_ee$introduction_resp_age)
-
-gg <- theme_minimal() +
-  theme(
-    legend.position = "none",
-    plot.title = element_text(size = 10, face = "bold"),
-    axis.title = element_text(size = 8),
-    axis.text = element_text(size = 7)
-  )
 
 combined_data |>
   filter(!is.na(introduction_resp_age), !is.na(country)) |>
   mutate(introduction_resp_age = factor(introduction_resp_age,
-                                        levels = c("18-34", "35-59", "60+"))) |>
+                             levels = c("18-34", "35-59", "60+"))) |>
   count(country, introduction_resp_age) |>
   group_by(country) |>
   mutate(Percent = n / sum(n) * 100) |>
@@ -164,27 +166,38 @@ While the data on education of Ukrainian refugees is limited, the snapshot of ag
 
 The educational categories range from primary and secondary education to higher levels such as Bachelor's, Master's, and PhD degrees, as well as technical or vocational training and no formal education. "Technical/Vocational" category appears frequently across multiple sections, suggesting a significant portion of the workforce in these regions may have either technical training. This trend could indicate a reliance on skilled labor or informal employment in certain areas. The number of people with Bachelor's degrees is almost the same across all countries and ranges from 10 to 20%. Slovakia and Romania have the highest proportion of people with Master's degrees. There are very few people with no education in all the countries. Slovakia and Czechia appear the most prominent for respondents with PdD degrees. 
 
-```{r, fig.width=7, fig.height=5, warning=FALSE, echo==FALSE}
+```{r, fig.width=7, fig.height=5, warning=FALSE, echo=FALSE}
 
 combined_data |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
   mutate(demographics_educ_level = case_when(
-    grepl("tech", demographics_educ_level, ignore.case = TRUE) ~ "Technical/Vocational",
-    grepl("sec", demographics_educ_level, ignore.case = TRUE) ~ "Secondary",
-    grepl("pri", demographics_educ_level, ignore.case = TRUE) ~ "Primary",
-    grepl("phd", demographics_educ_level, ignore.case = TRUE) ~ "PhD",
-    grepl("master", demographics_educ_level, ignore.case = TRUE) ~ "Master's",
-    grepl("bachelor", demographics_educ_level, ignore.case = TRUE) ~ "Bachelor's",
-    grepl("no_edu", demographics_educ_level, ignore.case = TRUE) ~ "No Education",
-    grepl("prefer", demographics_educ_level, ignore.case = TRUE) ~ "No Answer",
-    grepl("spec", demographics_educ_level, ignore.case = TRUE) ~ "Specialization",
+    grepl("tech", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Technical/Vocational",
+    grepl("sec", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Secondary",
+    grepl("pri", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Primary",
+    grepl("phd", demographics_educ_level, 
+          ignore.case = TRUE) ~ "PhD",
+    grepl("master", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Master's",
+    grepl("bachelor", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Bachelor's",
+    grepl("no_edu", demographics_educ_level, 
+          ignore.case = TRUE) ~ "No Education",
+    grepl("prefer", demographics_educ_level, 
+          ignore.case = TRUE) ~ "No Answer",
+    grepl("spec", demographics_educ_level, 
+          ignore.case = TRUE) ~ "Specialization",
     TRUE ~ demographics_educ_level
   )) |>
-  filter(!is.na(demographics_educ_level) & demographics_educ_level != "No Answer") |>
+  filter(!is.na(demographics_educ_level) & 
+           demographics_educ_level != "No Answer") |>
   count(country, demographics_educ_level) |>
   group_by(country) |>
   mutate(prop = n / sum(n) * 100) |>
-  ggplot(aes(x = fct_infreq(demographics_educ_level), y = prop, fill = demographics_educ_level)) +
+  ggplot(aes(x = fct_infreq(demographics_educ_level), 
+             y = prop, fill = demographics_educ_level)) +
   geom_col() +
   facet_wrap(~country) +
   xlab("Education Level") +
@@ -202,7 +215,7 @@ combined_data |>
 
 The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "no answer", and "no income" are low. 
 
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
+```{r, fig.width=7, fig.height=5, echo=FALSE}
 
 #Aggregated data
 
@@ -230,7 +243,7 @@ combined_df |>
 
 The chart shows that the most commonly reported reason for not experiencing employment problems is "None," particularly in Moldova and Slovakia, where over 40% of respondents indicated no difficulties. In contrast, Estonia stands out with a high incidence of the "Language barrier" (around 37%), suggesting it is a major obstacle there. Across all countries, language barriers and the fact that many are “Not looking for work” are consistently among the top reasons cited, though to varying degrees. "Lack of skills" and "Lack of recognition" are less frequently mentioned, typically below 10%. Moldova, Romania, and Poland also report relatively high percentages for "Not looking for work" and "Insufficient opportunities," indicating structural and motivational challenges.
 
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
+```{r, fig.width=7, fig.height=5, echo=FALSE}
 
 #Aggregated data
 
@@ -247,7 +260,7 @@ combined_df |>
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
-  xlab("Income Source") + ylab("Percent") +
+  xlab("Problem type") + ylab("Percent") +
   ggtitle("Problems with Finding Employment") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -257,7 +270,7 @@ combined_df |>
 
 The graph compares employment activity of Ukrainian refugees prior to displacement with their current activities in host countries. In Ukraine, the vast majority of refugees across all countries were employed, with employment rates ranging from approximately 60% to over 70%. Housekeeping and retirement were the next most common categories, but far less prevalent. In contrast, in host countries, employment drops significantly, while unemployment, studying, and housekeeping rise sharply. For example, in Poland, Romania, and Slovakia, a substantial portion - around one-third - of refugees are now unemployed. Studying categories also grow considerably, particularly in Romania and Moldova. This shift indicates a major transition for many refugees, from stable employment in Ukraine to navigating unemployment or reskilling opportunities in their new environments.
 
-```{r, fig.height = 4, fig.width=8, echo=FALSE}
+```{r, fig.width=8, fig.height=4, echo=FALSE, warning=FALSE}
 
 act_host <- combined_data |>
   filter(
@@ -267,7 +280,8 @@ act_host <- combined_data |>
   count(country, host_country_work_coa) |>
   group_by(country) |>
   mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = fct_infreq(host_country_work_coa))) +
+  ggplot(aes(x = country, y = percent, 
+             fill = fct_infreq(host_country_work_coa))) +
   geom_col() +
   xlab("Country") +
   ggtitle("Host Country Activities") +
@@ -277,18 +291,21 @@ act_host <- combined_data |>
     legend.position = "right"
   ) +
   guides(fill = guide_legend(title = "Activity")) +
-  scale_fill_brewer(palette = "Dark2") + theme(legend.position = "none") + ylab(NULL)
+  scale_fill_brewer(palette = "Dark2") + 
+  theme(legend.position = "none") + ylab(NULL)
 
 act_ukr <- combined_data|>
   filter(
     !is.na(host_country_work_coa),
     !country %in% c("Hungary", "Bulgaria", "construct", NA)
   ) |>
-  filter(!is.na(demographics_resp_activity), demographics_resp_activity != "No Answer") |>
+  filter(!is.na(demographics_resp_activity), 
+         demographics_resp_activity != "No Answer") |>
   count(country, demographics_resp_activity) |>
   group_by(country) |>
   mutate(percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = percent, fill = demographics_resp_activity)) +
+  ggplot(aes(x = country, y = percent, 
+             fill = demographics_resp_activity)) +
   geom_col(position = "stack") +
   xlab("Country") +
   ylab("Percent") +
@@ -299,9 +316,11 @@ act_ukr <- combined_data|>
     legend.position = "right"
   ) +
   guides(fill = guide_legend(title = "Activity Type")) +
-  scale_fill_brewer(palette = "Dark2") + theme(legend.position = "none")
+  scale_fill_brewer(palette = "Dark2") + 
+  theme(legend.position = "none")
 
-shared_legend <- get_legend(act_host + theme(legend.position = "right"))
+shared_legend <- get_legend(act_host + 
+                              theme(legend.position = "right"))
 
 combined_plot <- plot_grid(
   act_ukr, act_host,
@@ -317,7 +336,7 @@ plot_grid(
 ```
 The chart illustrates the types of social protection benefits received by Ukrainian refugees across six host countries. In most countries—especially Czechia, Moldova, Romania, and Slovakia—cash benefits are the dominant form of support, reaching around 80–90% in some cases. Poland stands out as the only country where the majority (over 80%) report receiving family grants instead of cash benefits. Estonia also presents a more balanced distribution, with both cash benefits and unemployment grants being common, and a notable share receiving unemployment grants or reporting “Other Source.” Across all countries, disability and unemployment grants remain minor components. Overall, the data suggest that cash-based support remains the primary mechanism, though the specific type of aid can vary significantly by host country.
 
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
+```{r, fig.width=7.7, fig.height=5, echo=FALSE}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "benefits") |>
@@ -331,7 +350,7 @@ combined_df |>
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
-  xlab("Income Source") + ylab("Percent") +
+  xlab("Social Protection Benefits") + ylab("Percent") +
   ggtitle("Social Protection Benefits from Host Country") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -341,7 +360,7 @@ combined_df |>
 ```
 
 
-```{r, fig.height = 7, fig.width=8, echo=FALSE}
+```{r, fig.width=7, fig.height=5, echo=FALSE}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "needs") |>
@@ -355,7 +374,7 @@ combined_df |>
              y = Percent, fill = Component)) +
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
-  xlab("Income Source") + ylab("Percent") +
+  xlab("Type of need") + ylab("Percent") +
   ggtitle("Socioeconomic needs") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -365,30 +384,50 @@ combined_df |>
 
 
 
-**Safety**
+**Safety and Social Cohesion**
 
-According to data, 35.61% of refugees in Estonia experiences hostile
-attitude, that included aggressive comments in news forums online' or
-social media, verbal aggression, or physical aggression. In particular,
-verbal aggression was one of the main concerns, as 14.6% of people
-reported this from of hostile behavior, followed by aggressive comments
-on social media and discriminatory behavior accounting for 7% and 6% of
-responses respectively.
+According to data, a majority of respondents reported no incidents of aggression or discrimination across all countries. Moldova (~80%) and Slovakia (~75%) report the highest rates of "No Incidents". Verbal aggression and discriminatory behavior are the most common types of hostility experienced after “No Incidents”. Romania, Poland, and Slovakia show moderate levels of verbal aggression and discriminatory behavior, likely reflecting higher public tension. Romania shows physical attack in its top five, and even there, the percentage is minimal, so physical safety, therefore, seems relatively high across the surveyed countries. Moldova stands out positively with the highest share of refugees reporting no hostility.
 
-```{r}
 
-make_prop_table(data_ee$social_cohesion_SC3_SS_EXP_HOSTILE)
+```{r, fig.width=7, fig.height=5, echo=FALSE}
 
 combined_df |>
+  filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
   filter(Source == "cohesion") |>
+  mutate(Component = case_when(
+    Component == "none" ~ "No Incidents",
+    Component == "verbal_aggression" ~ "Verbal Aggression",
+    Component == "discriminatory_behavior" ~ "Discriminatory Behavior",
+    Component == "comments_social_media" ~ "Comments on Social Media",
+    Component == "comments_news_forums" ~ "Comments on News Forums",
+    Component == "physical_attack" ~ "Physical Attack",
+    Component == "other" ~ "Other",
+    TRUE ~ Component  # keep unchanged if not matched
+  )) |>
   mutate(Percent = round(Total_Proportion * 100, 2)) |>
-  select(Component, Percent) |>
-  arrange(desc(Percent))
+  select(Component, Percent, Country) |>
+  group_by(Country) |>
+  arrange(desc(Percent), .by_group = TRUE) |>
+  slice_head(n = 5) |>
+  ungroup() |>
+  ggplot(aes(x = reorder(Component, -Percent), 
+             y = Percent, fill = Component)) +
+  geom_col(show.legend = TRUE) +
+  facet_wrap(~Country, scales = "free_x") +
+  xlab("Type of Hostility") + ylab("Percent") +
+  ggtitle("Experiences Related to Social Cohesion") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(fill = guide_legend(title = "Type")) +
+  scale_fill_brewer(palette = "Dark2")
+
 ```
 
-**Tests**
+## Logistic Regression (Pooled Model)
 
-**Random forest**
+### Random forest
+
+To identify the most important predictors of employment among Ukrainian refugees, a Random Forest (RF) classifier was applied using the randomForest package in R. The analysis included 23 theoretically relevant independent variables related to demographics, barriers to employment, social benefits, and hostile experiences (see variable list below).
 
 ```{r, fig.width=8, fig.height=8}
 
@@ -418,43 +457,90 @@ important_vars <- c(
   "hostile_discriminatory_behavior",
   "hostile_none"
 )
+```
+
+Only respondents with non-missing values across all included variables were selected for the analysis. `employed_binary` was converted into a factor with two levels: "Yes" and "No". A Random Forest model was fit with the following parameters:
+
+- Number of trees (ntree): 500
+- Number of variables randomly sampled at each split (mtry): 2
+- Importance metric: Mean Decrease in Accuracy
+
+```{r}
 
 model_data <- combined_data |>
   select(employed_binary, all_of(important_vars)) |>
-  drop_na()
-
-model_data$employed_binary <- factor(model_data$employed_binary, levels = c(0,1), labels = c("No", "Yes"))
+  drop_na() |>
+  mutate(employed_binary = factor(employed_binary, levels = c(0, 1), 
+                                  labels = c("No", "Yes")))
 
 rf_model <- randomForest(employed_binary ~ ., data = model_data,
                          ntree = 500, mtry = 2, importance = TRUE)
 ```
 
-```{r, fig.height=10}
+The top 15 variables were selected based on their Mean Decrease in Accuracy, which reflects the contribution of each variable to prediction performance. The variable importance plot (varImpPlot) was used to visually assess the relative influence of each predictor.
+
+The selected variables were then retained for subsequent logistic regression modeling, to estimate the direction and significance of their effects.
+
+```{r, fig.height=7, fig.width=8}
 
 imp <- importance(rf_model)
-top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], decreasing = TRUE)][1:15]
-
-varImpPlot(rf_model)
+top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], 
+                                decreasing = TRUE)][1:15]
+par(mar = c(7, 6, 4, 2), las = 2)
+varImpPlot(rf_model, main = "Variable Importance: Random Forest Model")
 
 model_data_selected <- model_data[, c("employed_binary", top_vars)]
-model_data_selected$employed_binary <- as.integer(model_data_selected$employed_binary == "Yes")
+model_data_selected$employed_binary <- 
+  as.integer(model_data_selected$employed_binary == "Yes")
 
-logit_model <- glm(employed_binary ~ ., data = model_data_selected, family = binomial)
+```
+
+### Logistic Regression
+
+A logistic regression model was fit to predict the binary employment outcome `employed_binary`, where 0 = Not Employed/1 = Employed, among Ukrainian refugees using selected explanatory variables identified as important in prior analysis.
+
+The logistic regression results reveal several important predictors of employment status among Ukrainian refugees. For instance, respondents reporting no difficulties (diff_none) have substantially higher odds of employment, over 7 times greater, compared to those facing challenges. Conversely, individuals engaged in housekeeping activities show about 83% lower odds of employment relative to the baseline group, and those with long-term illness or injury exhibit even more pronounced reductions in employment odds. Older respondents (age 60+) also have significantly lower chances of being employed. Interestingly, reporting lack of language skills is associated with more than a threefold increase in the odds of employment (60.7%), suggesting complex underlying factors such as self-selection or varying integration experiences. Other barriers such as lack of childcare or medical needs, 35.8% and 41.9% lower respectively, correspond to decreased employment odds, as do receiving unemployment grants (76.9% lower) or social protection benefits from either host countries (11.5% lower) or Ukraine (34.5% lower).
+
+```{r}
+
+logit_model <- glm(employed_binary ~ ., 
+                   data = model_data_selected, family = binomial)
 summary(logit_model)
+```
+
+### Model Fit and Evaluation
+
+The logistic regression model demonstrates a good overall fit to the data. McFadden’s pseudo-R² is approximately 0.267, indicating the model explains around 27% of the variance in employment outcomes, which reflects a moderate level of explanatory power for this type of social data. In terms of predictive performance, the model achieves a classification accuracy of about 75.1%, correctly predicting employment status for three out of four individuals. The confusion matrix reveals that the model more accurately identifies those who are employed (5,677 correctly classified) compared to those not employed (4,002 correctly classified), though there are some misclassifications in both groups. Additionally, the Area Under the Receiver Operating Characteristic Curve (AUC) is 0.828, signifying strong discriminatory ability to distinguish between employed and unemployed individuals. Together, these metrics suggest the model is both statistically sound and practically useful for understanding employment determinants among Ukrainian refugees.
+
+```{r}
 
 pR2(logit_model)
 
 pred_probs <- predict(logit_model, type = "response")
 pred_class <- ifelse(pred_probs > 0.5, 1, 0)
 table(Predicted = pred_class, Actual = model_data_selected$employed_binary)
+
 mean(pred_class == model_data_selected$employed_binary)
+
 roc_obj <- roc(model_data_selected$employed_binary, pred_probs)
 plot(roc_obj)
 auc(roc_obj)
 ```
-**Country specific data**
 
-```{r}
+\newpage
+# Country-Specific Analysis
+
+A consistent analytical procedure was applied for each country included in the study to identify key factors associated with employment among Ukrainian refugees. Initially, exploratory data analysis was conducted by plotting relevant predictor variables against the binary employment outcome to visually assess differences between employed and unemployed groups. Variables showing notable group differences or supported by sufficient sample sizes were selected for further modeling. Multiple logistic regression models were then fitted for each country, with statistically insignificant predictors being iteratively removed, in order to isolate the most influential variables affecting employment outcomes within each country. The significance alpha level for p-values was generally set at 0.05; however, in some cases, a more lenient threshold of 0.1 was used when exploratory data analysis (EDA) plots indicated meaningful differences. Additionally, the conditions for logistic regression were met, as the predictor variables included in the models were categorical. The following sections present regression results for each country, highlighting both common and unique factors influencing refugee employment.
+
+## Poland
+
+### Logistic regression
+
+In Poland, multiple individual and structural factors were significantly associated with the likelihood of employment among Ukrainian refugees. Compared to respondents aged 18–34, those aged 60 and over had 69.3% lower odds of being employed, while the 35–59 group showed a marginal reduction in odds by 13.2%, though not statistically significant on the alpha 0.01 level (p = 0.059). Employment odds were also considerably lower for respondents engaged in housekeeping (80% lower), those with long-term illness or injury (96% lower), and retirees (80% lower), all highly significant. Studying and trainee statuses were associated with 53% and 42% lower odds of employment, respectively.
+
+Income sources were also relevant: receiving social protection from the host government was associated with 16% lower odds of employment, remittances with 49% lower odds, and Ukrainian government benefits with 39% lower odds. Language barriers were a positive predictor: those citing lack of language skills as a difficulty had 134% higher odds of being employed, possibly indicating higher employment motivation or selection bias. Lack of childcare decreased employment odds by 57%, while difficulties with age-related opportunities reduced them by 26%. In contrast, reporting “no difficulties” was associated with a 373% increase in the odds of being employed. Not actively looking for work had a strong negative effect, reducing odds by 84%. Finally, challenges related to lack of skills and lack of educational qualifications slightly increased employment odds by 29% and 78%, respectively — possibly due to their association with active job-seeking behaviors.
+
+```{r, include=FALSE}
 
 vars_pl <- c(
     "introduction_resp_age",
@@ -471,7 +557,10 @@ vars_pl <- c(
   "diff_lack_childcare",
   "diff_not_looking_for_work",
   "diff_lack_of_age_opportunities"
-)
+) 
+```
+
+```{r, echo=FALSE}
 
 poland_data <- combined_data |>
   filter(country == "Poland") |>
@@ -481,7 +570,13 @@ poland_data$employed_binary <- as.integer(poland_data$employed_binary == 1)
 
 logit_model_pl <- glm(employed_binary ~ ., data = poland_data, family = binomial)
 summary(logit_model_pl)
+```
 
+### Model performance
+
+In terms of model performance, the McFadden pseudo R² was 0.321, indicating a substantial improvement in model fit compared to the null model, and suggesting that the selected predictors explain a meaningful portion of the variation in employment outcomes.In terms of predictive accuracy, the model correctly classified approximately 79.3% of cases. The confusion matrix showed 1886 true negatives and 3593 true positives, with relatively balanced false positives (993) and false negatives (438). The area under the ROC curve (AUC) was 0.848, reflecting strong discriminative ability and indicating that the model effectively distinguishes between employed and unemployed individuals based on the included variables.
+
+```{r, echo=FALSE}
 pR2(logit_model_pl)
 
 pred_probs_pl <- predict(logit_model_pl, type = "response")
@@ -496,7 +591,18 @@ auc(roc_obj_pl)
 
 ```
 
-```{r}
+\newpage
+## Estonia
+
+### Logistic regression
+
+A logistic regression model was fitted to assess the predictors of employment among Ukrainian refugees in Estonia. Compared to the reference group, respondents previously engaged in housekeeping, while living in Ukraine, had a 91.5% lower odds of employment, while those who were retired had a 96.8% lower odds. Individuals who were studying had a 92.0% lower odds, and those who were unemployed had a 66.0% lower odds of being employed. Respondents who identified their main activity as "Other" also had a 75.7% lower odds.
+
+Some barriers and support factors also had strong negative associations with employment. Reporting lack of documentation was associated with a 94.6% decrease in odds of employment, while receiving cash benefits or an unemployment grant was linked to an 88.1% and an 85.3% decrease in employment odds. Those who reported a need for employment support had an 85.2% lower odds of being employed.
+
+Conversely, some variables were positively associated with employment. Surprisingly, those who reported language barriers had a 131.4% higher odds of employment. Experiencing hostile comments on social media was associated with a 533.1% increase in the odds of employment, and perceiving a loss of benefits was linked to a 1,628% increase in odds, though the latter should be interpreted cautiously due to wide error margins.
+
+```{r, include=FALSE}
 
 vars_ee <- c(
   "demographics_resp_activity",
@@ -505,11 +611,12 @@ vars_ee <- c(
   "benefits_cash_benefits",
   "benefits_unemployment_grant",
   "hostile_comments_social_media",
-  "hostile_verbal_aggression",
-  "hostile_discriminatory_behavior",
   "diff_loss_benefits",
   "needs_employment"
 )
+```
+
+```{r, echo=FALSE}
 
 estonia_data <- combined_data |>
   filter(country == "Estonia") |>
@@ -519,6 +626,13 @@ estonia_data$employed_binary <- as.integer(estonia_data$employed_binary == 1)
 
 logit_model_ee <- glm(employed_binary ~ ., data = estonia_data, family = binomial)
 summary(logit_model_ee)
+
+```
+### Model performance
+
+The Estonia model demonstrated strong overall performance. The McFadden pseudo-R² was 0.39, indicating a good model fit relative to the null model. The classification accuracy was 80.0%, correctly predicting 250 out of 296 employed individuals and 195 out of 260 unemployed individuals. The confusion matrix showed a balance between sensitivity and specificity. The Area Under the Receiver Operating Characteristic Curve (AUC) was 0.884, suggesting high discriminative ability between employed and unemployed groups. These results indicate that the model effectively distinguishes between employment statuses based on the selected predictors.
+
+```{r, echo=FALSE}
 
 pR2(logit_model_ee)
 
@@ -534,7 +648,18 @@ auc(roc_obj_ee)
 
 ```
 
-```{r}
+\newpage
+## Czechia
+
+### Logistic regression
+
+In Czechia, respondents who were engaged in housekeeping were 73.6% less likely to be employed than those working. Those reporting a long-term illness or injury were 98.2% less likely to be employed, while retired individuals had 86.9% lower odds of being employed. Respondents who were studying had 70.1% lower odds of employment, and those who were unemployed at the time of the survey had 68.1% lower odds of being employed.
+
+Access to social protection from the host government was negatively associated with employment: recipients were 78.2% less likely to be employed. On the other hand, individuals who reported no major difficulties integrating or accessing work were nearly 6.5 times more likely to be employed. Experiences of verbal aggression were positively associated with employment, with those experiencing it having 85.7% higher odds of being employed.
+
+Difficulties such as lack of decent employment and lack of childcare were also significant: those who faced a lack of decent employment had 53.4% higher odds of being employed, whereas those who reported childcare difficulties had 46.7% lower odds of being employed. Finally, individuals who were not actively looking for work had 87.0% lower odds of being employed, indicating a strong behavioral link to employment outcomes. These findings highlight both structural and personal factors influencing refugee employment in the Czech context.
+
+```{r, include=FALSE}
 
 vars_cz <- c(
   "demographics_resp_activity",
@@ -547,6 +672,10 @@ vars_cz <- c(
   "diff_not_looking_for_work"
 )
 
+```
+
+```{r, echo=FALSE}
+
 czechia_data <- combined_data |>
   filter(country == "Czechia") |>
   select(employed_binary, all_of(vars_cz)) |>
@@ -555,6 +684,16 @@ czechia_data$employed_binary <- as.integer(czechia_data$employed_binary == 1)
 
 logit_model_cz <- glm(employed_binary ~ ., data = czechia_data, family = binomial)
 summary(logit_model_cz)
+
+```
+
+### Model performance
+
+The logistic regression model for Czechia demonstrated strong performance in predicting employment status among Ukrainian refugees. The McFadden pseudo-R² was 0.384, indicating a substantial improvement over the null model and suggesting that the predictors explained a meaningful portion of the variation in employment outcomes. The area under the ROC curve (AUC) was 0.878, which reflects excellent discriminatory ability of the model in distinguishing between employed and unemployed individuals.
+
+In terms of classification accuracy, the model correctly predicted 83.8% of all cases. Among the unemployed, it correctly classified 295 out of 358 individuals (82.4%), while for the employed group, it correctly predicted 951 out of 1,129 cases (84.2%). These results suggest that the model is both accurate and reliable in identifying employment patterns within this population.
+
+```{r, echo=FALSE}
 
 pR2(logit_model_cz)
 
@@ -570,12 +709,19 @@ auc(roc_obj_cz)
 
 ```
 
-```{r}
+\newpage
+## Slovakia
 
+### Logistic regression
+
+The logistic regression analysis for Slovakia identified that being aged 60 or older reduced the odds of employment by approximately 67.2%. Compared to other activity categories, engaging in housekeeping decreased the odds of employment by 79.5%, having a long-term illness or injury by 78.2%, being retired by 81.4%, studying by 70.9%, and being unemployed by 65.1%. Receipt of social protection benefits from the host government was associated with a 50.1% lower likelihood of employment. Not looking for work was linked to a 73.4% decrease in employment odds, while needing host government assistance or humanitarian assistance decreased the odds by 46.5% and 42.3%, respectively. Reporting no barriers to employment increased the odds by 400.5%, and surprisingly, reporting a lack of skills increased the odds by 78.0%. Finally, receiving cash benefits showed a marginal negative association, with odds of employment decreased by 52.8%.
+
+These results highlight that older age, non-working activity statuses back in Ukraine, and reliance on benefits or assistance are strongly linked to lower employment probabilities, while self-reported absence of barriers greatly improves employment odds. The positive association with reported lack of skills can be linked to underlying dynamics in skill recognition.
+
+```{r, include=FALSE}
 
 vars_sk <- c(
   "introduction_resp_age",
-  "demographics_educ_level_grouped",
   "demographics_resp_activity",
   "income_social_protection_host_govt",
   "diff_lack_of_skills",
@@ -587,6 +733,10 @@ vars_sk <- c(
   "benefits_cash_benefits"
 )
 
+```
+
+```{r, echo=FALSE}
+
 slovakia_data <- combined_data |>
   filter(country == "Slovakia") |>
   select(employed_binary, all_of(vars_sk)) |>
@@ -595,6 +745,14 @@ slovakia_data$employed_binary <- as.integer(slovakia_data$employed_binary == 1)
 
 logit_model_sk <- glm(employed_binary ~ ., data = slovakia_data, family = binomial)
 summary(logit_model_sk)
+
+```
+
+### Model performance
+
+The logistic regression model for Slovakia showed a moderate fit, with a McFadden’s pseudo-R² of approximately 0.298, indicating that about 29.8% of the variability in employment status is explained by the predictors. Classification accuracy was 77.2%, with the model correctly predicting employment status for the majority of cases. The area under the ROC curve (AUC) was 0.843, indicating good discrimination ability between employed and unemployed individuals.
+
+```{r, echo=FALSE}
 
 pR2(logit_model_sk)
 
@@ -610,12 +768,18 @@ auc(roc_obj_sk)
 
 ```
 
-```{r}
+\newpage
+## Moldova
 
+### Logistic regression
 
+The logistic regression model for Moldova showed that being engaged in housekeeping in Ukraine was associated with a 86.5% decrease in the odds of employment, while having a long-term illness or injury reduced the odds by 93.1%. Respondents reporting “other” activities had a 65.3% lower chance of being employed, and those studying had their odds reduced by 63.2%. Those identified as trainees showed a 79.1% decrease in odds. 
+
+Conversely, lacking language skills increased the odds of employment by 336%, and lack of skills was also positively associated, increasing the odds by 297%. Lack of information had the strongest positive effect, increasing employment odds by 169% (OR = 17.18). Respondents reporting no particular difficulties had odds more than 10 times higher. Medical needs and caregiving responsibilities negatively impacted employment odds, reducing them by 50.3% and 87% respectively. 
+
+```{r, include=FALSE}
 vars_ml <- c(
   "demographics_resp_activity",
-  "income_social_protection_host_govt",
   "diff_lack_of_lang",
   "diff_lack_of_skills",
   "diff_lack_of_info",
@@ -625,6 +789,10 @@ vars_ml <- c(
   "needs_humanitarian_assistance"
 )
 
+```
+
+```{r, echo=FALSE}
+
 moldova_data <- combined_data |>
   filter(country == "Moldova") |>
   select(employed_binary, all_of(vars_ml)) |>
@@ -633,6 +801,14 @@ moldova_data$employed_binary <- as.integer(moldova_data$employed_binary == 1)
 
 logit_model_md <- glm(employed_binary ~ ., data = moldova_data, family = binomial)
 summary(logit_model_md)
+
+```
+
+### Model performance
+
+The logistic regression model for Moldova demonstrated a reasonable fit, with a McFadden’s pseudo-R² of approximately 0.285, indicating that about 28.5% of the variation in employment status is explained by the model. The classification accuracy was 75.4%. Additionally, the model showed good discrimination ability with an area under the ROC curve (AUC) of 0.84, suggesting a strong capacity to distinguish between employed and unemployed respondents.
+
+```{r, echo=FALSE}
 
 pR2(logit_model_md)
 
@@ -647,13 +823,19 @@ plot(roc_obj_md)
 auc(roc_obj_md)
 ```
 
-```{r}
+\newpage
+## Romania
 
+### Logistic regression
 
+The logistic regression model for Romania reveals several significant predictors of employment status. Being aged 60 or older reduces the odds of being employed by about 60%. Respondents engaged in housekeeping activities have approximately 82% lower odds of employment. Those with long-term illness or injury show a strong negative effect, with odds reduced by about 97%. Other activity categories such as “Other,” “Retired,” and “Studying” also significantly reduce employment odds by roughly 45%, 66%, and 54% respectively. 
+
+Lack of childcare decreases employment odds by about 66%, while lacking skills reduces odds by about 38%. Respondents needing to care for others have about 57% lower odds, and those not looking for work show a large negative association with employment, with 73% lower odds. Conversely, respondents reporting no barriers to employment (“diff_none”) have more than 4 times higher odds of being employed. Interestingly, needing host government assistance is associated with a 49% increase in employment odds, whereas income from other sources reduces employment odds by about 57%. 
+
+```{r, include=FALSE}
 vars_ro <- c(
   "introduction_resp_age",
   "demographics_resp_activity",
-  "diff_lack_of_lang",
   "diff_lack_of_decent_employment",
   "diff_lack_childcare",
   "diff_none",
@@ -663,6 +845,10 @@ vars_ro <- c(
   "diff_not_looking_for_work"
 )
 
+```
+
+```{r, echo=FALSE}
+
 romania_data <- combined_data |>
   filter(country == "Romania") |>
   select(employed_binary, all_of(vars_ro)) |>
@@ -671,6 +857,14 @@ romania_data$employed_binary <- as.integer(romania_data$employed_binary == 1)
 
 logit_model_ro <- glm(employed_binary ~ ., data = romania_data, family = binomial)
 summary(logit_model_ro)
+
+```
+
+### Model performance
+
+The model shows a McFadden’s pseudo-R² of approximately 0.23, indicating a moderate fit. The likelihood ratio test statistic (G²) of 529.08 suggests the model fits significantly better than the null model. Classification accuracy is around 77.2%, with an area under the ROC curve (AUC) of 0.81, indicating good discrimination ability between employed and unemployed respondents. 
+
+```{r, echo=FALSE}
 
 pR2(logit_model_ro)
 
@@ -685,14 +879,18 @@ plot(roc_obj_ro)
 auc(roc_obj_ro)
 ```
 
-*Discussion*
+\newpage
+# Discussion
 
-Based on the output of logistic regression, reporting no difficulties increases the odds of employment by 768%, indicating that individuals who report no barriers are far more likely to be employed. Lack of language skills surprisingly increases employment odds by 223%, likely reflecting that those actively seeking work are both employed and aware of language as a barrier - suggesting this may be a sign for effort or exposure. Lack of skills increases odds by 56%, and lack of education skills by 70%, again potentially reflecting motivated individuals who are aware of their deficits but engaged in the labor market. Receiving unemployment benefits is associated with a 78% decrease in odds of employment, and cash benefits reduce odds by 50%, suggesting potential disincentives or that recipients are in more vulnerable situations. Being unemployed in Ukraine reduces the odds of employment in the European country of residence by 58% compared to the reference activity group, showing the persistence of non-employment status.
-Individuals needing host government assistance, medical, or accommodation support have reduced employment odds by 56%, 39%, and 16% respectively, highlighting structural barriers to integration. Older adults (60+) are 65% less likely to be employed than those under 35. People doing housekeeping, studying, or retired have significantly lower employment odds (around 55–85% lower) compared to the baseline group.
 
-*Conclusion*
+\newpage
+# Limitations
 
-*Citations*
+
+# Conclusion
+
+\newpage
+# Citations
 
 - SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
