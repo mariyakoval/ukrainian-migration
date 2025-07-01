@@ -486,7 +486,6 @@ The selected variables were then retained for subsequent logistic regression mod
 imp <- importance(rf_model)
 top_vars <- rownames(imp)[order(imp[, "MeanDecreaseAccuracy"], 
                                 decreasing = TRUE)][1:15]
-par(mar = c(7, 6, 4, 2), las = 2)
 varImpPlot(rf_model, main = "Variable Importance: Random Forest Model")
 
 model_data_selected <- model_data[, c("employed_binary", top_vars)]
@@ -775,7 +774,7 @@ auc(roc_obj_sk)
 
 The logistic regression model for Moldova showed that being engaged in housekeeping in Ukraine was associated with a 86.5% decrease in the odds of employment, while having a long-term illness or injury reduced the odds by 93.1%. Respondents reporting “other” activities had a 65.3% lower chance of being employed, and those studying had their odds reduced by 63.2%. Those identified as trainees showed a 79.1% decrease in odds. 
 
-Conversely, lacking language skills increased the odds of employment by 336%, and lack of skills was also positively associated, increasing the odds by 297%. Lack of information had the strongest positive effect, increasing employment odds by 169% (OR = 17.18). Respondents reporting no particular difficulties had odds more than 10 times higher. Medical needs and caregiving responsibilities negatively impacted employment odds, reducing them by 50.3% and 87% respectively. 
+Conversely, lacking language skills increased the odds of employment by 336%, and lack of skills was also positively associated, increasing the odds by 297%. Lack of information had the strongest positive effect, increasing employment odds by 169%. Respondents reporting no particular difficulties had odds more than 10 times higher. Medical needs and caregiving responsibilities negatively impacted employment odds, reducing them by 50.3% and 87% respectively. 
 
 ```{r, include=FALSE}
 vars_ml <- c(

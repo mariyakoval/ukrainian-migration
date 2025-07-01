@@ -1,8 +1,6 @@
 ---
-format: html
-  # pdf:
-  #   fontsize: 11pt 
-  #   geometry: top=2cm, bottom=2.5cm, left=2cm, right=2cm
+format: 
+  pdf
 editor: 
   markdown: 
     wrap: 72
@@ -14,12 +12,6 @@ editor:
 {\LARGE \textbf{Path of Resilience: Job-Seeking Behavior of Ukrainian Refugees in Central and Eastern Europe}}\\[0.5cm]
 Mariia
 \end{center}
-
-The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. People fleeing the war in Ukraine are allowed to live and work in the European Union for up tp 3 years under the Temporary Protection Status. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). According to Preut, expanding language courses, childcare services, and accelerating credential recognition can enhance employment likelihood (Preut, 2023).
-
-**Demographics**
-
-Across all countries, the 35–59 age group dominates the refugee population, highlighting a significant presence of individuals in their prime working years. The 18–34 group follows, while the 60+ demographic is least represented. Estonia stands out with a particularly high share of people aged 18-34, while balancing distribution between young and middle-aged adults.
 
 ```{r, include=FALSE, warning=FALSE}
 
@@ -36,39 +28,51 @@ reasons_country_ee <- readRDS("Data/reasons_country_ee")
 combined_data <- readRDS("Data/combined_data")
 ```
 
-```{r, fig.height = 3, fig.width=8, echo=FALSE}
-combined_data |>
-  filter(!is.na(introduction_resp_age), !is.na(country)) |>
-  mutate(introduction_resp_age = factor(introduction_resp_age,
-                                levels = c("18-34", "35-59", "60+"))) |>
-  count(country, introduction_resp_age) |>
-  group_by(country) |>
-  mutate(Percent = n / sum(n) * 100) |>
-  ggplot(aes(x = country, y = Percent, fill = introduction_resp_age)) +
-  geom_bar(stat = "identity") +
-  coord_flip() +
-  labs(
-    x = "Country",
-    y = "Percent of Respondents",
-    fill = "Age Group",
-    title = "Age Distribution of Respondents by Country"
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = "right",
-    axis.text.y = element_text(size = 10),
-    plot.title = element_text(hjust = 0.5)
-  ) +
-  guides(fill = guide_legend(title.position = "top", title.hjust = 0.5)) +
-  scale_fill_brewer(palette = "Dark2")
+\newpage
+# Abstract
 
-```
+# Introduction and context
 
-**Education**
+Since the start of the war in Ukraine, thousands of Ukrainians have been forced to leave the country and seek protection elsewhere. The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. While it is hard to predict the intended length of stay of refugees in countries of European Union, continued attacks made early returns very unpromising. 
 
-Educational attainment varies, but most refugees possess at least secondary education. In Estonia, nearly half of the respondents (49.46%) hold vocational or specialized training, followed by 38% with a Bachelor's or Master's degree. Across all countries, the proportion of individuals with a Bachelor’s degree hovers between 10–20%, while Master's degrees are particularly common in Slovakia and Romania.
+The Temporary Protection Status enacted by European host countries in 2022 allows people fleeing the war in Ukraine to live and work in the European Union for up to 3 years. Finding work that best matches refugees' skills and education status is crucial in becoming financially stable and integrating into foreign society. Mastering their professional skills is also useful in reconstructing Ukraine in the future. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). 
 
-```{r, fig.height = 6, fig.width=8, warning=FALSE, echo=FALSE}
+This study employs Multi-Sectoral Needs Assessments (MSNA) of 2023, which provide data on Ukrainian refugees' needs and priorities in Estonia, Slovakia, Poland, Romania, Moldova, and Czechia. The assessment employs both household-level and individual-level data collected through structured surveys in all the countries. Regression analysis is used to identify significant factors associated with the employment of Ukrainian refugees, both across the European Union as a whole and within each of the six host countries individually. The goal of this study is to identify the ways to successfully and quickly integrate Ukrainian refugees into the labor force.
+
+# Lives in Transition: Mapping the Road to Employment
+
+*Who Are the Refugees?* The majority of Ukrainians coming to the European countries are women with children and retirees. The exploratory data analysis revealed that across all countries, the 35–59 age group dominates the refugee population, highlighting a significant presence of individuals in their prime working years. The 18–34 group follows, while the 60+ demographic is least represented. Estonia stands out with a particularly high share of people aged 18-34, while balancing distribution between young and middle-aged adults. 
+Highest attained education among Ukrainian refugees in the European Union varies, but most refugees possess at least secondary education (Figure ). Across all six countries, the proportion of individuals holding a Bachelor’s degree ranges from 12% to 19%, while Master’s degrees are more prevalent, ranging from 9% to as high as 40%, with particularly high shares observed in Slovakia and Romania. Although few hold PhDs, their presence is most visible in Slovakia. Notably, technical and vocational training is prevalent, suggesting that many refugees were skilled laborers, yet challenges remain in transferring those skills to host-country labor markets.
+
+*From Experience to Exclusion* Before displacement, employment rates among Ukrainian refugees were high (60–70%), regardless of host country. However, after resettling in a new place, the picture changes drastically. Employment drops while unemployment, housekeeping, and studying rise sharply - particularly in Romania, Slovakia, and Poland, where about one-third of refugees are now unemployed.
+Several barriers explain this shift, as reported by people themselves. The most common barrier for Ukrainians to employment and immersion in European society is the language barrier (Figure ). Many respondents indicated that it is the lack of language skills that prevents them from finding a suitable job. Thus, most Ukrainians initially take low-skilled jobs, resulting in skill mismatch. This is especially acute for those who previously worked in the areas of communication with people - teachers, lawyers, doctors. Lack of language knowledge is frequently cited among population of Ukrainians in Estonia and Romania. Meanwhile, Moldova and Slovakia report higher rates of respondents experiencing no employment difficulties. Other commonly cited barriers include "Not looking for work" and insufficient opportunities, suggesting both personal and structural factors at play.
+
+*Safety Nets and Struggles* Employment in the host country is the leading source of income, especially in Estonia, Poland, Czechia, and Slovakia - where it exceeds 40–50% (Figure ). Romania is an outlier, showing an even distribution among host-country jobs and alternative sources. Poland reveals higher-than-average reliance on remittances. Still, income insecurity remains a concern. Romania reports the highest number of refugees with no income, and in all countries, "No income" and "No answer" responses, though generally low, suggest hidden economic vulnerability. 
+Based on the conducted surveys, cash benefits are the most widespread form of aid, reaching nearly 90% of respondents in countries like Czechia, Moldova, and Romania (Figure ). Poland differs drastically: over 80% of respondents there receive family grants instead. Estonia presents a more diverse profile, with both cash and unemployment grants being common . Despite variations, the data underscores the central role of direct financial assistance in refugee support systems. 
+
+*Who Finds Work?*
+
+To identify the key factors influencing employment among Ukrainian refugees, a combination of advanced statistical methods was used. First, a Random Forest analysis highlighted the 15 most important variables related to demographics, barriers, social benefits, and experiences. These variables were then examined more closely using logistic regression to understand how each one affected the likelihood of being employed.
+
+The findings reveal several notable trends. Refugees reporting no difficulties had more than seven times higher odds of being employed compared to those facing challenges. In contrast, individuals primarily engaged in housekeeping activities in Ukraine were about 83% less likely to be employed, while those with long-term illness or injury faced even greater obstacles. Age also played a role, with refugees aged 60 and above significantly less likely to be employed.
+
+An unexpected result showed that reporting a lack of language skills was associated with a 60% increase in employment odds, suggesting complex underlying factors such as self-selection or possible skill mismatch. Other barriers negatively affecting employment included lack of childcare and medical needs, which lowered employment chances by roughly 36% and 42%, respectively. Additionally, receiving unemployment grants or social protection benefits from host countries or Ukraine corresponded with lower employment odds, possibly reflecting ongoing job searches or temporary reliance on support.
+
+The logistic regression model explained about 27% of the variation in employment outcomes - a moderate but meaningful level for social data - and correctly classified employment status for approximately 75% of individuals. It performed particularly well in identifying employed refugees, though there were some misclassifications among the unemployed. The model’s strong discriminatory ability, indicated by an AUC of 0.828, adds confidence to these insights.
+
+# Six Countries, Six Realities: A Comparative View
+
+A consistent approach was used to analyze employment factors for Ukrainian refugees in each country studied. The process began with exploratory data analysis, where key predictor variables were visually compared against employment status to identify noticeable differences between those employed and unemployed. Variables that showed clear distinctions or had adequate sample sizes were then selected for more detailed modeling.
+
+Subsequently, multiple logistic regression models were developed separately for each country. Statistically insignificant predictors were gradually removed to focus on the most important factors affecting employment outcomes. In most cases, a significance level of 0.05 was applied to determine which predictors were meaningful, though a slightly higher threshold of 0.1 was occasionally used when exploratory analyses suggested relevant differences. 
+
+
+
+
+
+# Figures
+
+```{r, fig.height = 6, fig.width=8, warning=FALSE, echo=FALSE, fig.cap = "The distribution of the highest completed level of education among Ukrainian refugees in six Central and Eastern European countries."}
 
 combined_data |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
@@ -114,13 +118,7 @@ combined_data |>
 
 ```
 
-Although few hold PhDs, their presence is most visible in Slovakia. Notably, technical and vocational training is prevalent, suggesting that many refugees were skilled laborers—yet challenges remain in transferring those skills to host-country labor markets.
-
-**Employment and Economic Participation**
-
-Before displacement, employment rates among Ukrainian refugees were high (60–70%), regardless of host country. However, after resettlement, the picture changes dramatically. Employment drops while unemployment, housekeeping, and studying rise sharply - particularly in Romania, Slovakia, and Poland, where about one-third of refugees are now unemployed.
-
-```{r, fig.height = 3.5, fig.width=8, echo=FALSE, warning=FALSE}
+```{r, fig.height = 3.5, fig.width=8, echo=FALSE, warning=FALSE, fig.cap="Employment status of Ukrainian refugees before displacement and after arrival in the EU."}
 
 act_host <- combined_data |>
   filter(
@@ -183,9 +181,7 @@ plot_grid(
 )
 ```
 
-Several barriers explain this shift. Language emerges as a prominent obstacle, especially in Estonia (cited by ~37% of respondents). Meanwhile, Moldova and Slovakia report higher rates of respondents experiencing no employment difficulties. Other commonly cited barriers include "Not looking for work" and insufficient opportunities, suggesting both personal and structural factors at play.
-
-```{r, fig.height = 6, fig.width=8, echo=FALSE}
+```{r, fig.height = 6, fig.width=8, echo=FALSE, fig.cap="Reported barriers to employment among Ukrainian refugees"}
 
 #Aggregated data
 
@@ -210,11 +206,7 @@ combined_df |>
   scale_fill_brewer(palette = "Dark2")
 ```
 
-**Income Sources**
-
-Employment in the host country is the leading source of income across the board, especially in Estonia, Czechia, and Slovakia - where it exceeds 40–50%. Romania is an outlier, showing an even distribution among host-country jobs and alternative sources. Poland sees higher-than-average reliance on remittances.
-
-```{r, fig.height = 6, fig.width=8, echo=FALSE}
+```{r, fig.height = 6, fig.width=8, echo=FALSE, fig.cap="The distribution of reported income sources by country"}
 
 #Aggregated data
 
@@ -239,13 +231,7 @@ combined_df |>
 
 ```
 
-Still, income insecurity remains a concern. Romania reports the highest number of refugees with no income, and in all countries, "No income" and "No answer" responses, though generally low, suggest hidden economic vulnerability.
-
-**Aid and Social Protection** 
-
-Cash benefits are the most widespread form of aid, reaching nearly 90% of respondents in countries like Czechia, Moldova, and Romania. Poland differs drastically: over 80% of respondents there receive family grants instead. Estonia presents a more diverse profile, with both cash and unemployment grants being common.
-
-```{r, fig.height = 5, fig.width=8, echo=FALSE}
+```{r, fig.height = 5, fig.width=8, echo=FALSE, fig.cap="Distribution of social protection benefits by country"}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "benefits") |>
@@ -266,8 +252,6 @@ combined_df |>
   guides(fill = guide_legend(title = "Type")) +
   scale_fill_brewer(palette = "Dark2")
 ```
-
-Despite variations, the data underscores the central role of direct financial assistance in refugee support systems. However, the limited role of unemployment or disability benefits raises concerns about longer-term inclusion in formal welfare systems.
 
 **Estonia graphs for popular article**
 
@@ -428,7 +412,7 @@ plot_grid(
 
 ```
 
-```{r, fig.width=7, fig.height=5, warning=FALSE, echo==FALSE}
+```{r, fig.width=7, fig.height=5, warning=FALSE, echo=FALSE}
 
 combined_data |>
   filter(
@@ -464,8 +448,6 @@ combined_data |>
   scale_fill_brewer(palette = "Dark2") +
   ggtitle("Уровень образования по возрастным группам украинцев в Эстонии (2023)")
 
-
-make_prop_table(data_ee$demographics_educ_level)
 
 ```
 
@@ -631,7 +613,7 @@ ggplot(data_ee, aes(x = host_country_healthcare_access,
   geom_bar(stat = "count") +
   xlab("Problems accessing Healthcare Services") +
   ylab("Count") +
-  scale_fill_brewer(palette = "Paired") + gg
+  scale_fill_brewer(palette = "Paired") 
 
 combined_df |>
   filter(Source == "med_issues") |>
