@@ -542,7 +542,7 @@ Income sources were also relevant: receiving social protection from the host gov
 ```{r, include=FALSE}
 
 vars_pl <- c(
-    "introduction_resp_age",
+  "introduction_resp_age",
   "demographics_resp_activity",
   "income_social_protection_host_govt",
   "income_remmittances",
