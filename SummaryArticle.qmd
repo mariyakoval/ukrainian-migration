@@ -79,7 +79,17 @@ Subsequently, multiple logistic regression models were developed separately for 
 
 # Discussion: Policy Lessons from Diverging Outcomes
 
+Based on the statistical modeling of factors related to job-seeking behavior of Ukrainian refugees, it appears that there are common challenges, such as lack of decent age opportunities, language barriers, insufficient medical and childcare support, and skill mismatches, are present across six countries. However, the magnitude and relevance of these indicators varies on a country to country basis, requiring both context-sensitive and evidence-based responses. 
+
+A number of countries where employment rates are grow steadily use digital job-matching tools. For instance, Praca w Polsce (“Work in Poland”) is an online platform, where refugees provide information on their education, experience, and skills to find employment. Estonian Unemployment Insurance Fund manages an online page, where Ukrainians can contact employers, or receive additional employment support. To reduce the risk of potential violations of employment law, the Czech Republic, for instance, enhanced the capacity of its labor inspection system (ELA, 2022). However, even though many Ukrainian refugees have high levels of education, they struggle with transferring their skills due to lack of opportunities in their field, inability to get recognition of their skills, or low level of local language knowledge. According to OECD report, Ukrainian refugees can obtain recognized credentials like the European or UNESCO Qualifications Passport, which assess education, professional experience, and language skills through documentation review and interview (2023).
+
+While one might expect language barriers to hinder labor market integration, the regression results reveal a counterintuitive association: reporting a lack of language skills is associated with higher employment odds. This suggests the presence of underlying factors, such as self-selection into certain jobs that do not require host-country language proficiency or more urgent financial necessity among those facing linguistic barriers. A particularly illustrative case is Moldova, where relatively few respondents report language difficulties. Yet, this group also has the highest proportion of individuals with a technical education. Technical qualifications don't necessarily require language proficiency, so it may help explain better labor market integration despite limited language skills. Refugees in Slavic-language countries such as Poland and Slovakia reported fewer language-related difficulties, possibly due to linguistic proximity. Yet, paradoxically, in some cases, those reporting a lack of language skills were more likely to be employed, suggesting the interplay of compensatory factors such as lower-skilled job availability or informal support systems. Lack of professional skills follows a similar trend: those identifying it as a barrier to employment are more likely to find a job. It further supports the argument that while vacancies are present, only low-skill and entrey-level positions are accessible to the majority of refugees. This complexity underscores the importance of looking beyond conventional assumptions in integration policy design.
+
+Notably, receiving unemployment benefits or humanitarian assistance from either host or origin countries lowered employment odds. While such support provides an immediate safety valve for those still looking for stable employment, it may also inadvertently discourage labor market entry in the absence of complementary measures. In many instances, the need to take care of others was a significant factor impeding the possibility of employment. It suggests that broader support systems or family grants can be useful in helping those previously engaged in houskeeping. Therefore, the goal should be to apply a balanced approach combining initial financial support with training, mentorship, and childcare support, allowing for smooth adjustment and professional transition.
+
 # Conclusion: Toward Durable Solutions
+
+The country-level models further illustrate that no single factor determines employment outcomes. In some settings, hostile social attitudes or administrative barriers (e.g., documentation issues) were significant; in others, employment-related needs such as access to medical care or housing played a greater role. As such, policy design must reflect the multidimensional nature of integration, adapting to the specific socioeconomic and institutional landscapes of each host country.
 
 # References
 
@@ -92,6 +102,8 @@ Subsequently, multiple logistic regression models were developed separately for 
 - SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
 - UNHCR (2023). Estonia: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
+
+- ELA (2022), Support for people fleeing Ukraine, https://www.ela.europa.eu/en/support-people-fleeing-ukraine
 
 
 # Figures
