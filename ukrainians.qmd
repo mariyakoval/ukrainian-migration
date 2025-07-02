@@ -498,7 +498,7 @@ model_data_selected$employed_binary <-
 
 A logistic regression model was fit to predict the binary employment outcome `employed_binary`, where 0 = Not Employed/1 = Employed, among Ukrainian refugees using selected explanatory variables identified as important in prior analysis.
 
-The logistic regression results reveal several important predictors of employment status among Ukrainian refugees. For instance, respondents reporting no difficulties (diff_none) have substantially higher odds of employment, over 7 times greater, compared to those facing challenges. Conversely, individuals engaged in housekeeping activities show about 83% lower odds of employment relative to the baseline group, and those with long-term illness or injury exhibit even more pronounced reductions in employment odds. Older respondents (age 60+) also have significantly lower chances of being employed. Interestingly, reporting lack of language skills is associated with more than a threefold increase in the odds of employment (60.7%), suggesting complex underlying factors such as self-selection or varying integration experiences. Other barriers such as lack of childcare or medical needs, 35.8% and 41.9% lower respectively, correspond to decreased employment odds, as do receiving unemployment grants (76.9% lower) or social protection benefits from either host countries (11.5% lower) or Ukraine (34.5% lower).
+Logistic regression analysis highlights several key factors shaping employment outcomes among Ukrainian refugees. Those reporting no difficulties are over eight times more likely to be employed than those facing challenges. In contrast, individuals previously engaged in housekeeping are 83% less likely to find work, and those with long-term illness or injury face an even steeper decline, with employment odds reduced by 95.7%. Older adults (60+) also struggle, with only a 16% likelihood of employment compared to younger groups. Additional barriers further limit employment prospects: lack of childcare reduces chances by 36%, and medical needs by 42%. Receiving unemployment grants is associated with a 77% drop in employment odds, while beneficiaries of Ukrainian social protection or general cash support face 34% and 46% lower chances of being employed, respectively.
 
 ```{r}
 
@@ -537,7 +537,7 @@ A consistent analytical procedure was applied for each country included in the s
 
 In Poland, multiple individual and structural factors were significantly associated with the likelihood of employment among Ukrainian refugees. Compared to respondents aged 18–34, those aged 60 and over had 69.3% lower odds of being employed, while the 35–59 group showed a marginal reduction in odds by 13.2%, though not statistically significant on the alpha 0.01 level (p = 0.059). Employment odds were also considerably lower for respondents engaged in housekeeping (80% lower), those with long-term illness or injury (96% lower), and retirees (80% lower), all highly significant. Studying and trainee statuses were associated with 53% and 42% lower odds of employment, respectively.
 
-Income sources were also relevant: receiving social protection from the host government was associated with 16% lower odds of employment, remittances with 49% lower odds, and Ukrainian government benefits with 39% lower odds. Language barriers were a positive predictor: those citing lack of language skills as a difficulty had 134% higher odds of being employed, possibly indicating higher employment motivation or selection bias. Lack of childcare decreased employment odds by 57%, while difficulties with age-related opportunities reduced them by 26%. In contrast, reporting “no difficulties” was associated with a 373% increase in the odds of being employed. Not actively looking for work had a strong negative effect, reducing odds by 84%. Finally, challenges related to lack of skills and lack of educational qualifications slightly increased employment odds by 29% and 78%, respectively — possibly due to their association with active job-seeking behaviors.
+Income sources were also relevant: receiving social protection from the host government was associated with 16% lower odds of employment, remittances with 49% lower odds, and Ukrainian government benefits with 39% lower odds. Language barriers were a positive predictor: those citing lack of language skills as a difficulty had 134% higher odds of being employed. Lack of childcare decreased employment odds by 58%, while difficulties with age-related opportunities reduced them by 26%. In contrast, reporting “no difficulties” was associated with a 377% increase in the odds of being employed. Not actively looking for work had a strong negative effect, reducing odds by 84%. Finally, challenges related to lack of skills and lack of educational qualifications slightly increased employment odds by 29% and 78%, respectively — possibly due to their association with active job-seeking behaviors.
 
 ```{r, include=FALSE}
 
@@ -595,11 +595,11 @@ auc(roc_obj_pl)
 
 ### Logistic regression
 
-A logistic regression model was fitted to assess the predictors of employment among Ukrainian refugees in Estonia. Compared to the reference group, respondents previously engaged in housekeeping, while living in Ukraine, had a 91.5% lower odds of employment, while those who were retired had a 96.8% lower odds. Individuals who were studying had a 92.0% lower odds, and those who were unemployed had a 66.0% lower odds of being employed. Respondents who identified their main activity as "Other" also had a 75.7% lower odds.
+A logistic regression model was fitted to assess the predictors of employment among Ukrainian refugees in Estonia. Compared to the reference group, respondents previously engaged in housekeeping, while living in Ukraine, had a 91% lower odds of employment, while those who were retired had a 97% lower odds. Individuals who were studying had a 92% lower odds, and those who were unemployed had a 66% lower odds of being employed.
 
-Some barriers and support factors also had strong negative associations with employment. Reporting lack of documentation was associated with a 94.6% decrease in odds of employment, while receiving cash benefits or an unemployment grant was linked to an 88.1% and an 85.3% decrease in employment odds. Those who reported a need for employment support had an 85.2% lower odds of being employed.
+Some barriers and support factors also had strong negative associations with employment. Reporting lack of documentation was associated with a 95% decrease in odds of employment, while receiving cash benefits or an unemployment grant was linked to an 88% and an 85% decrease in employment odds. Those who reported a need for employment support had an 85% lower odds of being employed.
 
-Conversely, some variables were positively associated with employment. Surprisingly, those who reported language barriers had a 131.4% higher odds of employment. Experiencing hostile comments on social media was associated with a 533.1% increase in the odds of employment, and perceiving a loss of benefits was linked to a 1,628% increase in odds, though the latter should be interpreted cautiously due to wide error margins.
+Conversely, some variables were positively associated with employment. Surprisingly, those who reported language barriers had a 131% higher odds of employment. Experiencing hostile comments on social media was associated with a 540% increase in the odds of employment, and perceiving a loss of benefits was linked to a 1,668% increase in odds, though the latter should be interpreted cautiously due to wide error margins.
 
 ```{r, include=FALSE}
 
@@ -652,11 +652,11 @@ auc(roc_obj_ee)
 
 ### Logistic regression
 
-In Czechia, respondents who were engaged in housekeeping were 73.6% less likely to be employed than those working. Those reporting a long-term illness or injury were 98.2% less likely to be employed, while retired individuals had 86.9% lower odds of being employed. Respondents who were studying had 70.1% lower odds of employment, and those who were unemployed at the time of the survey had 68.1% lower odds of being employed.
+In Czechia, respondents who were engaged in housekeeping were 73% less likely to be employed than those working. Those reporting a long-term illness or injury were 98% less likely to be employed, while retired individuals had 87% lower odds of being employed. Respondents who were studying had 70% lower odds of employment, and those who were unemployed at the time of the survey had 68% lower odds of being employed.
 
-Access to social protection from the host government was negatively associated with employment: recipients were 78.2% less likely to be employed. On the other hand, individuals who reported no major difficulties integrating or accessing work were nearly 6.5 times more likely to be employed. Experiences of verbal aggression were positively associated with employment, with those experiencing it having 85.7% higher odds of being employed.
+Access to social protection from the host government was negatively associated with employment: recipients were 78% less likely to be employed. On the other hand, individuals who reported no major difficulties integrating or accessing work were nearly 6.5 times more likely to be employed. Experiences of verbal aggression were positively associated with employment, with those experiencing it having 86% higher odds of being employed.
 
-Difficulties such as lack of decent employment and lack of childcare were also significant: those who faced a lack of decent employment had 53.4% higher odds of being employed, whereas those who reported childcare difficulties had 46.7% lower odds of being employed. Finally, individuals who were not actively looking for work had 87.0% lower odds of being employed, indicating a strong behavioral link to employment outcomes. These findings highlight both structural and personal factors influencing refugee employment in the Czech context.
+Difficulties such as lack of decent employment and lack of childcare were also significant: those who faced a lack of decent employment had 53% higher odds of being employed, whereas those who reported childcare difficulties had 47% lower odds of being employed. Finally, individuals who were not actively looking for work had 87% lower odds of being employed, indicating a strong behavioral link to employment outcomes.
 
 ```{r, include=FALSE}
 
@@ -713,9 +713,7 @@ auc(roc_obj_cz)
 
 ### Logistic regression
 
-The logistic regression analysis for Slovakia identified that being aged 60 or older reduced the odds of employment by approximately 67.2%. Compared to other activity categories, engaging in housekeeping decreased the odds of employment by 79.5%, having a long-term illness or injury by 78.2%, being retired by 81.4%, studying by 70.9%, and being unemployed by 65.1%. Receipt of social protection benefits from the host government was associated with a 50.1% lower likelihood of employment. Not looking for work was linked to a 73.4% decrease in employment odds, while needing host government assistance or humanitarian assistance decreased the odds by 46.5% and 42.3%, respectively. Reporting no barriers to employment increased the odds by 400.5%, and surprisingly, reporting a lack of skills increased the odds by 78.0%. Finally, receiving cash benefits showed a marginal negative association, with odds of employment decreased by 52.8%.
-
-These results highlight that older age, non-working activity statuses back in Ukraine, and reliance on benefits or assistance are strongly linked to lower employment probabilities, while self-reported absence of barriers greatly improves employment odds. The positive association with reported lack of skills can be linked to underlying dynamics in skill recognition.
+The logistic regression analysis for Slovakia identified that being aged 60 or older reduced the odds of employment by approximately 66%. Compared to other activity categories, engaging in housekeeping decreased the odds of employment by 80%, having a long-term illness or injury by 78%, being retired by 81%, studying by 70%, and being unemployed by 66%. Receipt of social protection benefits from the host government was associated with a 51% lower likelihood of employment. Not looking for work was linked to a 73% decrease in employment odds, while needing host government assistance or humanitarian assistance decreased the odds by 47% and 42%, respectively. Reporting no barriers to employment increased the odds by 401%, and surprisingly, reporting a lack of skills increased the odds by 78%. Finally, receiving cash benefits showed a marginal negative association, with odds of employment decreased by 52%.
 
 ```{r, include=FALSE}
 
@@ -772,16 +770,15 @@ auc(roc_obj_sk)
 
 ### Logistic regression
 
-The logistic regression model for Moldova showed that being engaged in housekeeping in Ukraine was associated with a 86.5% decrease in the odds of employment, while having a long-term illness or injury reduced the odds by 93.1%. Respondents reporting “other” activities had a 65.3% lower chance of being employed, and those studying had their odds reduced by 63.2%. Those identified as trainees showed a 79.1% decrease in odds. 
+The logistic regression model for Moldova revealed several significant factors influencing employment odds. Engaging in housekeeping was associated with an 87% reduction in the odds of employment, while having a long-term illness or injury corresponded to a 93% decrease. Respondents who were studying had 63% lower odds, and those identified as trainees experienced a 79% reduction in employment likelihood.
 
-Conversely, lacking language skills increased the odds of employment by 336%, and lack of skills was also positively associated, increasing the odds by 297%. Lack of information had the strongest positive effect, increasing employment odds by 169%. Respondents reporting no particular difficulties had odds more than 10 times higher. Medical needs and caregiving responsibilities negatively impacted employment odds, reducing them by 50.3% and 87% respectively. 
+In contrast, lacking language skills was linked to a 337% increase in employment odds, with a similar positive effect observed for those reporting a lack of skills, which raised the odds by 299%. Additionally, respondents reporting no difficulties had odds more than 9 times greater than those facing challenges. Medical needs and caregiving responsibilities negatively affected employment chances, reducing the odds by 50% and 83%, respectively.
 
 ```{r, include=FALSE}
 vars_ml <- c(
   "demographics_resp_activity",
   "diff_lack_of_lang",
   "diff_lack_of_skills",
-  "diff_lack_of_info",
   "diff_none",
   "needs_medical",
   "diff_need_to_take_care_of_others",
@@ -805,7 +802,7 @@ summary(logit_model_md)
 
 ### Model performance
 
-The logistic regression model for Moldova demonstrated a reasonable fit, with a McFadden’s pseudo-R² of approximately 0.285, indicating that about 28.5% of the variation in employment status is explained by the model. The classification accuracy was 75.4%. Additionally, the model showed good discrimination ability with an area under the ROC curve (AUC) of 0.84, suggesting a strong capacity to distinguish between employed and unemployed respondents.
+The logistic regression model for Moldova demonstrated a reasonable fit, with a McFadden’s pseudo-R² of approximately 0.275, indicating that about 28.5% of the variation in employment status is explained by the model. The classification accuracy was 74.8%. Additionally, the model showed good discrimination ability with an area under the ROC curve (AUC) of 0.83, suggesting a strong capacity to distinguish between employed and unemployed respondents.
 
 ```{r, echo=FALSE}
 
@@ -827,9 +824,9 @@ auc(roc_obj_md)
 
 ### Logistic regression
 
-The logistic regression model for Romania reveals several significant predictors of employment status. Being aged 60 or older reduces the odds of being employed by about 60%. Respondents engaged in housekeeping activities have approximately 82% lower odds of employment. Those with long-term illness or injury show a strong negative effect, with odds reduced by about 97%. Other activity categories such as “Other,” “Retired,” and “Studying” also significantly reduce employment odds by roughly 45%, 66%, and 54% respectively. 
+The logistic regression model for Romania reveals several significant predictors of employment status. Being aged 60 or older reduces the odds of being employed by about 60%. Respondents engaged in housekeeping activities have approximately 82% lower odds of employment. Those with long-term illness or injury show a strong negative effect, with odds reduced by about 97%. Other activity categories such as “Other,” “Retired,” and “Studying” also significantly reduce employment odds by roughly 46%, 66%, and 54% respectively. 
 
-Lack of childcare decreases employment odds by about 66%, while lacking skills reduces odds by about 38%. Respondents needing to care for others have about 57% lower odds, and those not looking for work show a large negative association with employment, with 73% lower odds. Conversely, respondents reporting no barriers to employment (“diff_none”) have more than 4 times higher odds of being employed. Interestingly, needing host government assistance is associated with a 49% increase in employment odds, whereas income from other sources reduces employment odds by about 57%. 
+Lack of childcare decreases employment odds by about 66%, while lacking skills reduces odds by about 38%. Respondents needing to care for others have about 57% lower odds, and those not looking for work show a large negative association with employment, with 74% lower odds. Conversely, respondents reporting no barriers to employment have more than 4 times higher odds of being employed. Interestingly, needing host government assistance is associated with a 49% increase in employment odds, whereas income from other sources reduces employment odds by about 58%. 
 
 ```{r, include=FALSE}
 vars_ro <- c(
