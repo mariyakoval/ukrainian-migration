@@ -462,7 +462,7 @@ job_df <- combined_df |>
   filter(Source == "job") |>
   mutate(Component = case_when(
     grepl("lang", Component, ignore.case = TRUE) ~ "Language barrier",
-    grepl("decent|opp", Component, ignore.case = TRUE) ~ "Insuffisient opportunities",
+    grepl("decent|opp", Component, ignore.case = TRUE) ~ "Lack of opportunities",
     grepl("skills", Component, ignore.case = TRUE) ~ "Lack of skills",
     grepl("care", Component, ignore.case = TRUE) ~ "Care for others",
     grepl("none", Component, ignore.case = TRUE) ~ "None",
