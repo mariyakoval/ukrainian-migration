@@ -80,7 +80,7 @@ data_eu_ind <- data_eu_ind |>
 #--------------------------------------------------------------------
  
 # 'SE8_SS_ACTIVITY': if respondent worked (SE2_SS_WORK == "yes"), label "employed"
-# SE8_SS_ACTIVITY contains data on actviity if unemployed
+# SE8_SS_ACTIVITY contains data on activity if unemployed
 # So 2 columns' data is merged
 data_eu_ind <- data_eu_ind |>
   mutate(SE8_SS_ACTIVITY = case_when(
@@ -199,8 +199,14 @@ combined_data <- combined_data |>
 
 ```{r}
 
+# Use one-hot encoding to split variables that allowed for multiple responses
+# and merge them by ID.
+# Combine cases with similar meaning but different encoding
+
 combined_data <- combined_data|>
   mutate(row_id = row_number())
+
+# Income category
 
 income_dummies <- combined_data |>
   select(row_id, income_source) |>
@@ -226,6 +232,8 @@ combined_data <- combined_data |>
   left_join(income_dummies, by = "row_id")
 
 #-------------------------------------------------------
+
+# Barriers to employment category
   
 diff_dummies <- combined_data |>
   select(row_id, host_country_diff_work) |>
@@ -263,6 +271,8 @@ combined_data <- combined_data |>
 
 #-------------------------------------------------------
 
+# Needs category
+
 needs_dummies <- combined_data |>
   select(row_id, socioecon_needs)|>
   separate_rows(socioecon_needs, sep = " ") |>
@@ -293,6 +303,8 @@ combined_data <- combined_data |>
 
 #-------------------------------------------------------
 
+# Social protection benefits category
+
 benefits_dummies <- combined_data |>
   select(row_id, socbenefits) |>
   separate_rows(socbenefits, sep = " ") |>
@@ -307,6 +319,8 @@ combined_data <- combined_data|>
   left_join(benefits_dummies, by = "row_id")
 
 #-------------------------------------------------------
+
+# Hostile behavior category
 
 hostile_dummies <- combined_data |>
   select(row_id, hostile_behavior_type) |>
@@ -345,6 +359,11 @@ combined_data <- combined_data|>
 **Aggregated data**
 
 ```{r}
+
+# The following section calculated weight of each individual component for
+# variables where multiple responses were possible.
+# The data is used for visualization in the EDA section
+
 split_category_proportions_by_country <- function(data, category_col, country_col) {
   data[[category_col]] <- as.character(data[[category_col]])
   data[[country_col]] <- as.character(data[[country_col]])
@@ -492,7 +511,10 @@ cohesion_df <- combined_df |>
 
 combined_df <- bind_rows(needs_df, benefits_df, job_df, income_df, cohesion_df)
 
-levels(combined_df$coh)
+```
+
+```{r}
+# Save aggregated and wrangled datasets
 
 saveRDS(combined_df, "Data/combined_df")
 saveRDS(combined_data, "Data/combined_data")
