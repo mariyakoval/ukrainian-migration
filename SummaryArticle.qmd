@@ -29,7 +29,7 @@ combined_data <- readRDS("Data/combined_data")
 
 # Abstract
 
-This paper analyzes the employment outcomes of Ukrainian refugees across six Central and Eastern European countries through a comparative, data-driven analysis. Using Multi-Sectoral Needs Assessments (MSNA) data, it explores how demographic characteristics, previous work experience, access to social benefits, and perceived barriers, such as limited command of the language, lack of documentation, childcare, or health, influence job-seeking behavior. The study applies exploratory techniques with logistic regression modeling and machine learning methods to identify key predictors of employment status. Results reveal that previous employment and absence of barriers, consistently increase employment chances, while receiving certain social benefits or having caregiving responsibilities are associated with lower employment likelihood. While language proficiency is seen as an advantage, the analysis reveals that those reporting language barriers are more likely to be employed. Findings point to the importance of support policies that target specific employment barriers, enhance credential recognition, and offer accessible childcare and training opportunities to improve refugee labor market integration.
+This paper analyzes the employment outcomes of Ukrainian refugees across six Central and Eastern European countries through a comparative, data-driven analysis. Using the 2023 Multi-Sectoral Needs Assessment (MSNA) data collected by UNHCR, it explores how demographic characteristics, previous work experience, access to social benefits, and perceived barriers, such as limited command of the language, lack of documentation, childcare, or health, influence job-seeking behavior. The study applies exploratory techniques with logistic regression modeling and machine learning methods to identify key predictors of employment status. Results reveal that previous employment and absence of barriers, consistently increase employment chances, while receiving certain social benefits or having caregiving responsibilities are associated with lower employment likelihood. While language proficiency is seen as an advantage, the analysis reveals that those reporting language barriers are more likely to be employed, likely because they tend to take up entry-level positions. Findings point to the importance of support policies that target specific employment barriers, enhance credential recognition, and offer accessible childcare and training opportunities to improve refugee labor market integration.
 
 # Introduction and context
 
@@ -42,17 +42,17 @@ As the displacement persists, it is urgent to facilitate access to employment am
 # Lives in Transition: Mapping the Road to Employment
 
 The majority of Ukrainians coming to the European countries are women with children and retirees. The survey data analysis revealed that across all countries, the 35–59 age group dominates the refugee population, highlighting a significant presence of individuals with enough professional skills to contribute to labor market in the country of residence. The second largest group constitutes of people within the 18–34 year range, possibly represented by young professionals, interns, and trainees, while the 60+ demographic is the least numerous. Estonia stands out with a particularly high share of people aged 18-34, while balancing distribution between young and middle-aged adults. 
-The variety educational backgrounds of Ukrainians underscore the wide range of fields they are able to contribute to. Based on the data used in the analysis, most refugees possess at least secondary education (Figure 1). Across all six countries, the proportion of individuals holding a Bachelor’s degree ranges from 12% to 19% and Master’s degrees from 9% to as high as 40%, with particularly high shares observed in Slovakia and Romania. Although few hold PhDs, their presence is most visible in Slovakia. Notably, technical and vocational training is the most frequent, suggesting that many displaced people were skilled laborers, yet challenges remain in transferring those skills to host-country labor markets.
+The variety of educational backgrounds of Ukrainians underscore the wide range of fields they are able to contribute to. Based on the data used in the analysis, most refugees possess at least secondary education (Figure 1). Across all six countries, the proportion of individuals holding a Bachelor’s degree ranges from 12% to 19% and Master’s degrees from 9% to as high as 40%, with particularly high shares observed in Slovakia and Romania. Although few hold PhDs, their presence is most visible in Slovakia and Czechia. Notably, technical and vocational training is the most frequent, suggesting that many displaced people were skilled laborers, yet challenges remain in transferring those skills to host-country labor markets.
 
 # Safety Nets and Struggles 
 
-Before displacement, employment rates among Ukrainians, who currently seek protection in Europe, were high (60–70%), regardless of host country. However, after resettling in a new place, the picture changes drastically. Employment drops while unemployment, housekeeping, and studying rise sharply - particularly in Romania, Slovakia, and Poland, where about one-third of refugees are now unemployed (Figure 2). 
+Before displacement, employment rates among Ukrainians, who currently seek protection in Europe, were high (60–70%), regardless of host country. However, after resettling in a new place, the results change. Employment drops while unemployment, housekeeping, and studying rise sharply - particularly in Romania, Slovakia, and Poland, where about one-third of refugees are now unemployed (Figure 2). 
 
 Numerous difficulties contribute to this shift, as reported by people themselves. The most common barrier to employment and immersion in European society is lack of local language knowledge (Figure 3). Despite education or professional background, Ukrainian asylum seekers with weak language proficiency frequently get low-skilled or precarious jobs. This mismatch hinders their career growth and economic stability (Jirka et al., 2023). This is especially acute for those who previously worked in the areas of communication with people - teachers, lawyers, doctors. Lack of language knowledge is frequently cited among population of Ukrainians in Estonia and Romania. Conversely, proficiency in the host country’s language appears to be more common among those residing in neighboring Slavic-speaking countries (OECD, 2023). Meanwhile, Moldova and Slovakia report higher rates of respondents experiencing no employment difficulties. Other commonly cited barriers include "Not looking for work" and insufficient opportunities, suggesting both personal and structural factors at play.
 
 Ukrainian refugees are often motivated to work to reduce dependence on social benefits provided by the government or other forms of humanitarian aid (OECD, 2023). Based on survey data, employment in the host country is the leading source of income, especially in Estonia, Poland, Czechia, and Slovakia - where it exceeds 40–50% (Figure 4). Romania shows an even distribution among host-country jobs and alternative sources. Poland reveals higher-than-average reliance on remittances. While these numbers show promising trends, income insecurity remains a concern. Romania reports the highest number of refugees with no income, and in all countries, "No income" and "No answer" responses, though generally low, suggest hidden economic vulnerability. 
 
-Even though Ukrainians have immediate right to work under Temporary Protection Status, some people rely on social benefits, housing, and other support services, especially if unable to find suitable employment. Based on the conducted surveys, cash benefits are the most widespread form of aid, reaching nearly 90% of respondents in countries like Czechia, Moldova, and Romania (Figure 5). Poland differs drastically: over 80% of respondents there receive family grants instead. In Estonia, both cash and unemployment grants are the most common forms of aid. 
+Even though Ukrainians have immediate right to work under Temporary Protection Status, some people rely on social benefits, housing, and other support services, especially if unable to find suitable employment. Based on the conducted surveys, cash benefits are the most widespread form of aid, reaching nearly 90% of respondents in countries like Czechia, Moldova, and Romania (Figure 5). Poland differs greatly: over 80% of respondents there receive family grants instead. In Estonia, both cash and unemployment grants are the most common forms of aid. 
 
 # Analyzing Key Factors Behind Refugees’ Labor Market Outcomes 
 
@@ -66,21 +66,21 @@ The logistic regression model explained about 27% of the variation in employment
 
 # Six Countries, Six Realities: A Comparative View
 
-To allow for cross-regional comparison of employment likelihood, a similar approach was used to analyze employment indicators Ukrainians in each country separately. The process began with exploratory data analysis, where key predictor variables were visually compared against employment status to identify noticeable differences between those employed and unemployed. Variables that showed clear distinctions or had adequate sample sizes were then selected for more detailed modeling.
+To allow for cross-regional comparison of employment likelihood, a similar approach was used to analyze employment indicators in each country separately. The process began with exploratory data analysis, where key predictor variables were visually compared against employment status to identify noticeable differences between those employed and unemployed. Variables that showed clear distinctions or had adequate sample sizes were then selected for more detailed modeling.
 
 Subsequently, multiple logistic regression models were developed separately for each country. Statistically insignificant predictors were repetitively removed to select the most important factors. In most cases, a significance level of 0.05 was applied to determine meaningful predictors, though a slightly higher threshold of 0.1 was occasionally used when exploratory analyses suggested relevant differences. While some common patterns emerge, each country’s unique context shapes distinct environments that define who finds work and under what conditions, as reflected by Table 1 that shows significant predictors selected for each country.
 
-**Age, Health, and Caregiving:** Similar to the pooled model, individual country models reveal that older refugees, particularly those aged 60 and above, face significantly lower odds of employment, with reductions ranging from around 60% in Romania to nearly 70% in Poland and Slovakia. In Estonia, Moldova, and Czechia, however, age did not appear as a significant predictor of the outcome. In Poland, Czechia, Romania and Moldova the need to take care of others has negative association with employment, as it reduces employment chances by more than half. These countries also have the highest people in engaged housekeeping.
+**Age, Health, and Caregiving:** Similar to the pooled model, individual country models reveal that older refugees, particularly those aged 60 and above, face significantly lower odds of employment, with reductions ranging from around 60% in Romania to nearly 70% in Poland and Slovakia. In Estonia, Moldova, and Czechia, however, age did not appear as a significant predictor of the outcome. In Poland, Czechia, Romania and Moldova the need to take care of others has negative association with employment, as it reduces employment chances by more than half. These countries also have the highest number of people in engaged housekeeping.
 
-**Pre-Migration Activity and Behavioral Factors:** Prior activity in Ukraine was a powerful indicator of employment across all countries. For instance, those engaged in housekeeping have roughly 80% lower odds of employment with values fluctuating between 73% in Czechia to as high as 91% in Estonia, indicating the difficulty of translating domestic or informal roles into paid work abroad. Other factors, such as long-term illness or injury, emerge as one of the most significant barriers to employment, with odds reduced by over 90% in all countries except Slovakia, where they are 78% lower. Students are approximately 50% less likely to get a job in Romania and Poland, 60-70% in Moldova, Czechia, and Slovakia, and 90% in Estonia. Similarly, being retired, unemployed, or involved in “other” activities generally predicts lower employment odds across countries, underscoring how non-active labor market status prior to migration can limit integration opportunities. Motivation plays an important role in getting employed. In fact, individuals not looking for work are consistently much less likely to be employed, with odds reduced by over 70% in Poland, Czechia, Romania, and Slovakia. Additionally, some countries, like Estonia and Czechia, reveal a paradoxical association where experiencing hostility or verbal aggression correlates with higher employment. It can possibly be attributed to greater public exposure or social interaction among employed refugees.
+**Pre-Migration Activity and Behavioral Factors:** Prior activity in Ukraine was a powerful indicator of employment across all countries. For instance, those engaged in housekeeping have roughly 80% lower odds of employment with values fluctuating between 73% in Czechia to as high as 91% in Estonia, indicating the difficulty of translating domestic or informal roles into paid work abroad. Other factors, such as long-term illness or injury, emerge as significant barriers to employment, with odds reduced by over 90% in all countries except Slovakia, where they are 78% lower. Students are approximately 50% less likely to get a job in Romania and Poland, 60-70% in Moldova, Czechia, and Slovakia, and 90% in Estonia. Similarly, being retired, unemployed, or involved in “other” activities generally predicts lower employment odds across countries, underscoring how non-active labor market status prior to migration can limit integration opportunities. Motivation plays an important role in getting employed. In fact, individuals not looking for work are consistently much less likely to be employed, with odds reduced by over 70% in Poland, Czechia, Romania, and Slovakia. Additionally, some countries, like Estonia and Czechia, reveal a paradoxical association where experiencing hostility or verbal aggression correlates with higher employment. It can possibly be attributed to greater public exposure or social interaction among employed refugees.
 
-**Social Benefits and Support:** Receiving social protection or unemployment benefits tends to lower employment odds. For example, receiving social protection benefits from the host government in Poland was associated with 16% lower odds of employment and Ukrainian government benefits with 39% lower odds. In Estonia, receiving cash benefits or an unemployment grant was linked to an 88% and an 85% decrease in employment odds. Czech residents were 78% less likely to be employed if having access to host government social protection. Receipt of social protection benefits from the Slovak government was associated with a 51% lower likelihood of employment, signaling potential gaps in support effectiveness. This likely reflects the temporary reliance on such supports during job searches rather than disincentives to work per se. Notably, in Romania, needing host government assistance surprisingly associates with increased employment odds, perhaps indicating effective linkage between aid and job placement in that context. Poland draws a picture where income sources like remittances are linked to lower employment odds, suggesting dependency effects. 
+**Social Benefits and Support:** Receiving social protection or unemployment benefits tends to lower employment odds. For example, receiving social protection benefits from the host government in Poland was associated with 16% lower odds of employment and Ukrainian government benefits with 39% lower odds. In Estonia, receiving cash benefits or an unemployment grant was linked to an 88% and an 85% decrease in employment odds. Czech residents were 78% less likely to be employed if having access to host government social protection. Receipt of social protection benefits from the Slovak government was associated with a 51% lower likelihood of employment, signaling potential gaps in support effectiveness. This likely reflects the temporary reliance on such support during job searches rather than disincentives to work per se. Notably, in Romania, needing host government assistance surprisingly associates with increased employment odds, perhaps indicating effective linkage between aid and job placement in that context. Poland draws a picture where income sources like remittances are linked to lower employment odds, suggesting dependency effects. 
 
-**Barriers and No Difficulties:** Refugees reporting no difficulties related to employment show higher chances of working—ranging from a 3-time increase in Romania to over a 8-time increase in Moldova. Reporting language barriers often correlates with higher odds of employment, notably in Poland (134% increase) and Moldova (337% increase). This counterintuitive pattern may reflect motivated individuals actively seeking employment despite language difficulties or varying degrees of integration support. Similarly, lacking formal skills or educational qualifications sometimes corresponds with higher employment odds, which may be linked to greater awareness of skill gaps among these individuals or employment in low-qualification entry-level fields. Estonia stands out for the large negative impact of lacking documentation (95% decrease) and the strong association between perceived loss of benefits and increased employment odds (1668% increase).
+**Barriers and No Difficulties:** Refugees reporting no difficulties related to employment show higher chances of working, ranging from a 3-time increase in Romania to over an 8-time increase in Moldova. Reporting language barriers often correlates with higher odds of employment, notably in Poland (134% increase) and Moldova (337% increase). Similarly, lacking formal skills or educational qualifications sometimes corresponds with higher employment odds, which may be linked to greater awareness of skill gaps among these individuals or employment in low-qualification entry-level fields. Estonia stands out for the large negative impact of lacking documentation (95% decrease) and the strong association between perceived loss of benefits and increased employment odds (1668% increase).
 
 # Discussion: Policy Lessons from Diverging Outcomes
 
-Based on the statistical modeling of factors related to job-seeking behavior of Ukrainian refugees, it appears that there are common challenges, such as lack of decent age opportunities, language barriers, insufficient medical and childcare support, and skill mismatches, are present across six countries. However, the magnitude and relevance of these indicators varies on a country to country basis, requiring both context-sensitive and evidence-based responses. 
+Based on the statistical modeling of factors related to job-seeking behavior of Ukrainian refugees, it appears that there are common challenges, such as lack of decent age opportunities, language barriers, insufficient medical and childcare support, and skill mismatches, across six countries. However, the magnitude and relevance of these indicators varies on a country to country basis, requiring both context-sensitive and evidence-based responses. 
 
 In a number of countries, where employment rates grow steadily, digital job-matching tools are available to streamline the hiring process, connect refugees with suitable employers, and help overcome language or credential recognition barriers. For instance, Praca w Polsce (“Work in Poland”) is an online platform, where refugees provide information on their education, experience, and skills to find employment. Estonian Unemployment Insurance Fund manages an online page, where Ukrainians can contact employers, or receive additional employment support. While benefits are numerous, there are also risks associated with precarious employment, as Ukrainian refugees may be pushed into informal or illegal work due to limited opportunities, language barriers, or lack of recognized qualifications. To reduce the risk of potential violations of employment law, the Czech Republic, for instance, enhanced the capacity of its labor inspection system (ELA, 2022). However, even though many Ukrainian refugees have high levels of education, they struggle with transferring their skills due to lack of opportunities in their field, inability to get formal recognition, or low level of local language knowledge. According to OECD report, recognized credentials like the European or UNESCO Qualifications Passport, which assesses education, professional experience, and language skills through documentation review and interview can streamline the process of integrating refugees into host country labor markets by providing credible proof of qualifications in a timely manner (2023). Therefore, the focus on eliminating the most common challenges people face when looking for jobs have the potential to align refugee skills with the needs of local labor markets, facilitating smoother integration and improved employment outcomes.
 
@@ -92,24 +92,25 @@ Notably, receiving unemployment benefits or humanitarian assistance from either 
 
 Individual motivation, prior experiences, and contextual factors are important considerations that shape professional trajectories of Ukrainian refugees in Central and Eastern Europe. European countries acted swiftly by providing work permits, integration language instruction and simplified recognition of qualifications. Despite multifaceted and timely support of those in need, some constraints such as childcare needs, health limitations, and reliance on social assistance still persist. Some outcomes also reveal the urgency of skill mismatch that needs to be addressed to support both the economic integration of Ukrainian refugees and the vitality of local labor markets. Country-specific upskilling programs and bridging courses remain essential and represent valuable investments in human capital development.
 
+\newpage
 # References
+
+- ELA (2022), Support for people fleeing Ukraine, https://www.ela.europa.eu/en/support-people-fleeing-ukraine
 
 - Jirka, Luděk, et al. “High-Skilled Precarity: The Situation of Ukrainian Refugees in the Czech Republic and Poland.” Sociological Studios, no. 2(23), Lesya Ukrainka Volyn National University, Dec. 2023, pp. 41–48. Crossref, doi:10.29038/2306-3971-2023-02-24-24.
 
-- OECD (2023), “What we know about the skills and early labour market outcomes of refugees from Ukraine”, OECD Policy Responses on the Impacts of the War in Ukraine, OECD Publishing, Paris, https://doi.org/10.1787/c7e694aa-en.
-
 - Londar, S., et al. “Challenges for Ukrainian Refugees in the EU Labour Market: The Case of Poland and Germany.” Educational Analytics of Ukraine, no. 5, State Scientific Institution - Institute of Educational Analytics, 2024, pp. 5–16. Crossref, doi:10.32987/2617-8532-2024-5-5-16.
+
+- OECD (2023), “What we know about the skills and early labour market outcomes of refugees from Ukraine”, OECD Policy Responses on the Impacts of the War in Ukraine, OECD Publishing, Paris, https://doi.org/10.1787/c7e694aa-en.
 
 - SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
 - UNHCR (2023). Estonia: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
-- ELA (2022), Support for people fleeing Ukraine, https://www.ela.europa.eu/en/support-people-fleeing-ukraine
+\newpage
+# Graphs and Figures
 
-
-# Figures
-
-```{r, fig.height = 6, fig.width=8, warning=FALSE, echo=FALSE, fig.cap = "The distribution of the highest completed level of education among Ukrainian refugees in six Central and Eastern European countries."}
+```{r, fig.height = 4.5, fig.width=8, warning=FALSE, echo=FALSE, fig.cap = "The distribution of the highest completed level of education among Ukrainian refugees in six Central and Eastern European countries."}
 
 combined_data |>
   filter(!country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
@@ -155,7 +156,7 @@ combined_data |>
 
 ```
 
-```{r, fig.height = 3.5, fig.width=8, echo=FALSE, warning=FALSE, fig.cap="Employment status of Ukrainian refugees before displacement and after arrival in the EU."}
+```{r, fig.height = 3, fig.width=8, echo=FALSE, warning=FALSE, fig.cap="Employment status of Ukrainian refugees before displacement and after arrival in the EU."}
 
 act_host <- combined_data |>
   filter(
@@ -218,7 +219,7 @@ plot_grid(
 )
 ```
 
-```{r, fig.height = 6, fig.width=8, echo=FALSE, fig.cap="Reported barriers to employment among Ukrainian refugees"}
+```{r, fig.height = 4.5, fig.width=8, echo=FALSE, fig.cap="Reported barriers to employment among Ukrainian refugees"}
 
 #Aggregated data
 
@@ -236,14 +237,14 @@ combined_df |>
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
   xlab("Income Source") + ylab("Percent") +
-  ggtitle("Problems with Finding Employment") +
+  ggtitle("Problems Type") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45,  hjust = 1, size = 6)) +
   guides(fill = guide_legend(title = "Reasons")) +
   scale_fill_brewer(palette = "Dark2")
 ```
 
-```{r, fig.height = 6, fig.width=8, echo=FALSE, fig.cap="The distribution of reported income sources by country"}
+```{r, fig.height = 4.5, fig.width=8, echo=FALSE, fig.cap="The distribution of reported income sources by country"}
 
 #Aggregated data
 
@@ -268,7 +269,7 @@ combined_df |>
 
 ```
 
-```{r, fig.height = 5, fig.width=8, echo=FALSE, fig.cap="Distribution of social protection benefits by country"}
+```{r, fig.height = 4.5, fig.width=8, echo=FALSE, fig.cap="Distribution of social protection benefits by country"}
 combined_df |>
   filter(!Country %in% c("Hungary", "Bulgaria", "construct", NA)) |>
     filter(Source == "benefits") |>
@@ -283,14 +284,14 @@ combined_df |>
   geom_col(show.legend = TRUE) +
   facet_wrap(~Country, scales = "free_x") +
   xlab("Income Source") + ylab("Percent") +
-  ggtitle("Social Protection Benefits from Host Country") +
+  ggtitle("Social Protection Benefits Type") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45,  hjust = 0.8, size = 6)) +
   guides(fill = guide_legend(title = "Type")) +
   scale_fill_brewer(palette = "Dark2")
 ```
 
-```{r}
+```{r, echo=FALSE}
 
 vars_pl <- c(
   "introduction_resp_age",
@@ -364,23 +365,74 @@ vars_sk <- c(
 
 all_vars <- sort(unique(c(vars_pl, vars_ee, vars_cz, vars_ml, vars_ro, vars_sk)))
 df <- data.frame(
-  Predictor = all_vars,
-  Poland = ifelse(all_vars %in% vars_pl, "✔", ""),
-  Estonia = ifelse(all_vars %in% vars_ee, "✔", ""),
-  Czechia = ifelse(all_vars %in% vars_cz, "✔", ""),
-  Moldova = ifelse(all_vars %in% vars_ml, "✔", ""),
-  Romania = ifelse(all_vars %in% vars_ro, "✔", ""),
-  Slovakia = ifelse(all_vars %in% vars_sk, "✔", ""),
+ Predictor = all_vars,
+  Poland = ifelse(all_vars %in% vars_pl, "X", ""),
+  Estonia = ifelse(all_vars %in% vars_ee, "X", ""),
+  Czechia = ifelse(all_vars %in% vars_cz, "X", ""),
+  Moldova = ifelse(all_vars %in% vars_ml, "X", ""),
+  Romania = ifelse(all_vars %in% vars_ro, "X", ""),
+  Slovakia = ifelse(all_vars %in% vars_sk, "X", ""),
   stringsAsFactors = FALSE
 )
-df |>
-  kable(booktabs = TRUE, align = "c",
-        col.names = c("Predictor", "Poland", "Estonia", "Czechia", "Moldova", "Romania", "Slovakia")) |>
-  kable_styling(latex_options = c("striped"), font_size = 12) |>
-  column_spec(1, bold = TRUE, width = "10cm") |>
-  row_spec(0, bold = TRUE, color = "white", background = "gray") |>
-  add_header_above(c(" " = 1, "Selected Predictors by Country" = 6))
 
+var_labels <- c(
+  benefits_cash_benefits = "Cash Benefits",
+  benefits_unemployment_grant = "Unemployment Grants",
+  demographics_resp_activity = "Activity in Ukraine",
+  diff_lack_childcare = "Lack of Childcare",
+  diff_lack_of_age_opportunities = "Age-Related Employment Barriers",
+  diff_lack_of_decent_employment = "No Decent Job Opportunities",
+  diff_lack_of_documentation = "Lack of Documentation",
+  diff_lack_of_education_skills = "Lack of Educational Skills",
+  diff_lack_of_lang = "Language Barrier",
+  diff_lack_of_skills = "Lack of Job Skills",
+  diff_loss_benefits = "Loss of Benefits",
+  diff_need_to_take_care_of_others = "Caregiving Responsibilities",
+  diff_none = "No Employment Barriers",
+  diff_not_looking_for_work = "Not Actively Seeking Employment",
+  hostile_comments_social_media = "Hostile Comments on Social Media",
+  hostile_verbal_aggression = "Verbal Aggression",
+  income_other_sources = "Income from Other Sources",
+  income_remmittances = "Remittances",
+  income_social_protection_host_govt = "Soc. Protection Benefits (Host Country)",
+  income_social_protection_ukr_govt = "Soc. Protection Benefits (Ukraine)",
+  introduction_resp_age = "Respondent Age",
+  needs_employment = "Employment Assistance Needs",
+  needs_host_govt_assistance = "Host Government Assistance Needs",
+  needs_humanitarian_assistance = "Humanitarian Assistance Needs",
+  needs_medical = "Medical Needs"
+)
+
+df$Predictor <- ifelse(
+  df$Predictor %in% names(var_labels),
+  var_labels[df$Predictor],
+  df$Predictor
+)
+
+kbl <- df |>
+  kable(
+    format = "latex",
+    align = c("l", rep("c", 6)),
+    col.names = c("Predictor", "Poland", "Estonia", "Czechia", "Moldova", "Romania", "Slovakia"),
+    caption = "Selected Predictors by Country",
+    booktabs = FALSE,
+    linesep = ""
+  ) |>
+  kable_styling(
+    latex_options = c("hold_position"),
+    font_size = 8,
+    position = "center"
+  ) |>
+  column_spec(1, bold = TRUE, width = "5cm") %>%   # narrow predictor column to 7cm
+  column_spec(2:7, width = "1.3cm") %>%           # small equal widths for country columns
+  row_spec(0, bold = TRUE, background = "#EFEFEF") %>%
+  footnote(
+    general = "X indicates the variable was selected for the country's analysis.",
+    general_title = "Note:"
+  )
+
+for (i in 1:nrow(df)) { kbl <- row_spec(kbl, i, extra_latex_after = "\\hline")}
+kbl
 
 ```
 

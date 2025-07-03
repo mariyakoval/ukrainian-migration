@@ -89,9 +89,13 @@ plot_employment_vs_vars <- function(data, vars, country_name) {
 \newpage
 # Abstract
 
+This paper analyzes the employment outcomes of Ukrainian refugees across six Central and Eastern European countries through a comparative, data-driven analysis. Using the 2023 Multi-Sectoral Needs Assessment (MSNA) data collected by UNHCR, it explores how demographic characteristics, previous work experience, access to social benefits, and perceived barriers, such as limited command of the language, lack of documentation, childcare, or health, influence job-seeking behavior. The study applies exploratory techniques with logistic regression modeling and machine learning methods to identify key predictors of employment status. Results reveal that previous employment and absence of barriers, consistently increase employment chances, while receiving certain social benefits or having caregiving responsibilities are associated with lower employment likelihood. While language proficiency is seen as an advantage, the analysis reveals that those reporting language barriers are more likely to be employed, likely because they tend to take up entry-level positions. Findings point to the importance of support policies that target specific employment barriers, enhance credential recognition, and offer accessible childcare and training opportunities to improve refugee labor market integration.
+
 # Introduction and context
 
-The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. People fleeing the war in Ukraine are allowed to live and work in the European Union for up tp 3 years under the Temporary Protection Status. Although the education and qualification levels of Ukrainian refugees are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges faced by Ukrainian refugees (Londar et al., 2024). According to Preut, expanding language courses, childcare services, and accelerating credential recognition can enhance employment likelihood (Preut, 2023).
+Since the start of the war in Ukraine, thousands of Ukrainians have been forced to leave the country and seek protection elsewhere. The inflow of more than 8 million Ukrainian refugees into Europe has introduced both challenges and opportunities for labour market outcomes. While it is hard to predict the intended length of stay of refugees in countries of the European Union, continued attacks made early returns very unpromising. 
+
+The Temporary Protection Status enacted by European host countries in 2022 allows people fleeing the war in Ukraine to live and work in the European Union for up to 3 years. Finding work that best matches refugees' skills and education status is crucial in becoming financially stable and integrating into foreign society. Mastering their professional skills is also useful in reconstructing Ukraine in the future. Although the education and qualification levels of incoming Ukrainians are generally high, difficulties such as lack of language skills, childcare services and credential recognition processes pose significant barriers to employment. Instances of ethnic discrimination in the labor market have been reported, highlighting additional challenges in social and professional aspects (Londar et al., 2024). As the displacement persists, it is urgent to facilitate access to employment among refugees for long-term integration. The analysis is aimed at identifying key factors associated with successful job market outcomes to inform policy making and raise awareness on common obstacles, needs, and experiences faced by Ukrainians in European host countries.
 
 # Data and Methods
 
@@ -99,7 +103,7 @@ This study employs Multi-Sectoral Needs Assessments (MSNA) of 2023, which provid
 
 **Data Wrangling and Preparation**
 
-To enable cross-regional comparisons, variables that were consistently present across all six national datasets were selected and merged into a single dataset. Questions allowing multiple responses (e.g., types of support received, reasons for unemployment, barriers to accessing services) were transformed using one-hot encoding into a series of binary indicator variables (1 = selected, 0 = not selected) to show each of the possible response categories in disaggregated form. Where categorical responses varied slightly across countries (e.g., differences in wording or coding), the values were recoded into a uniform format for comparison. 
+To enable cross-regional comparisons, variables that were consistently present across all six national datasets were selected and merged into a single dataset. Questions allowing multiple responses, such as types of support received, reasons for unemployment, barriers to accessing services, were transformed using one-hot encoding into a series of binary indicator variables (1 = selected, 0 = not selected) to show each of the possible response categories in disaggregated form. Where categorical responses varied slightly across countries due to differences in wording or coding, the values were recoded into a uniform format for comparison. 
 
 For the convenience of exploratory data analysis (EDA) and model building, the outcome variable (employment status) was defined as follows:
 
@@ -116,11 +120,11 @@ Logistic regression and random forest classification were applied in an attempt 
 
 - Random Forest Classifier
 
-A random forest model was trained to account for potential non-linearities and interactions between variables. The model was trained using predictors selected based on feature importance scores. Its performance was evaluated using classification measures such as accuracy, precision, recall, and area under the ROC curve (AUC). Random forest allowed for selection of the most significant predictors of job-finding based on mean decrease in impurity (Gini importance) and permutation importance.
+A random forest model was trained to account for potential non-linearities and interactions between variables. The model was trained using predictors selected based on feature importance scores. Its performance was evaluated using classification measures such as accuracy, precision, recall, and area under the ROC curve (AUC). Random forest allowed for selection of the most significant predictors of job-finding based on mean decrease in impurity and permutation importance.
 
 - Logistic Regression
 
-Binary logistic regression analysis was used to estimate the probability of employment (Employed = 1). Independent variables included demographic and socio-economic ones such as age, education level, country of residence, language skills, accommodation, and social services consumption of social services, among others. Odds ratios were estimated to define direction and strength of associations.
+Binary logistic regression analysis was used to estimate the probability of employment (Employed = 1). Independent variables included demographic and socio-economic ones such as age, education level, country of residence, language skills, consumption of social services, icnome sources, among others. Odds ratios were estimated to define direction and strength of associations.
 
 \newpage
 
@@ -130,7 +134,7 @@ Binary logistic regression analysis was used to estimate the probability of empl
 
 **Demographics**
 
-The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Romania stands out with a particularly high concentration of respondents in the 35–59 group compared to the other age categories. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists.
+The bar chart displays the distribution of survey respondents by age group (18–34, 35–59, 60+) across six Central and Eastern European countries. Across all countries, the 35–59 age group consistently has the highest number of respondents, followed by the 18–34 group, with the 60+ group being the least represented. Estonia shows a more balanced distribution between the younger and middle-aged groups, though the same pattern persists.
 
 
 ```{r, fig.width=6, fig.height=4, warning=FALSE, echo=FALSE}
@@ -162,9 +166,7 @@ combined_data |>
 
 ```
 
-While the data on education of Ukrainian refugees is limited, the snapshot of age distribution reveals that the majority of arrivals are part of labor force. Notably, in Estonia, 49.46% of arrivals hold a vocational and specialization education, followed by around 38% of refugees with Master or Bachelor degrees. People with secondary education are moderately represented, but there are very few people with PhD education. The largest group is employed, indicating that many refugees were active in the workforce before displacement. Other categories include students, self-employed, and those in housekeeping.
-
-The educational categories range from primary and secondary education to higher levels such as Bachelor's, Master's, and PhD degrees, as well as technical or vocational training and no formal education. "Technical/Vocational" category appears frequently across multiple sections, suggesting a significant portion of the workforce in these regions may have either technical training. This trend could indicate a reliance on skilled labor or informal employment in certain areas. The number of people with Bachelor's degrees is almost the same across all countries and ranges from 10 to 20%. Slovakia and Romania have the highest proportion of people with Master's degrees. There are very few people with no education in all the countries. Slovakia and Czechia appear the most prominent for respondents with PdD degrees. 
+The variety of educational backgrounds of Ukrainians underscore the wide range of fields they are able to contribute to. Based on the data used in the analysis, most refugees possess at least secondary education (Figure 1). Across all six countries, the proportion of individuals holding a Bachelor’s degree ranges from 12% to 19% and Master’s degrees from 9% to as high as 40%, with particularly high shares observed in Slovakia and Romania. Although few hold PhDs, their presence is most visible in Slovakia and Czechia. Notably, technical and vocational training is the most frequent, suggesting that many displaced people were skilled laborers. This trend could indicate a reliance on skilled labor or informal employment in certain areas. 
 
 ```{r, fig.width=7, fig.height=5, warning=FALSE, echo=FALSE}
 
@@ -213,7 +215,7 @@ combined_data |>
 
 **Economic capacity and Aid**
 
-The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "no answer", and "no income" are low. 
+The faceted bar chart indicates the sources of declared income. The most apparent trend is the dominant role of "employment in the host country" as the principal source of income in most countries, especially in Czechia, Estonia, and Slovakia, where it accounts for over 40–50%. Romania has a more balanced split, with employment percentages, other sources, and maintained employment from Ukraine all being similar, however, it also has the highest number of people with no income. Remote work and remittances in Romania and Poland respectively also arise more than anywhere else. Across all countries, rates like "no answer", and "no income" are low but present. 
 
 ```{r, fig.width=7, fig.height=5, echo=FALSE}
 
@@ -241,7 +243,7 @@ combined_df |>
 ```
 
 
-The chart shows that the most commonly reported reason for not experiencing employment problems is "None," particularly in Moldova and Slovakia, where over 40% of respondents indicated no difficulties. In contrast, Estonia stands out with a high incidence of the "Language barrier" (around 37%), suggesting it is a major obstacle there. Across all countries, language barriers and the fact that many are “Not looking for work” are consistently among the top reasons cited, though to varying degrees. "Lack of skills" and "Lack of recognition" are less frequently mentioned, typically below 10%. Moldova, Romania, and Poland also report relatively high percentages for "Not looking for work" and "Insufficient opportunities," indicating structural and motivational challenges.
+There is also some barriers people faced when looking for employment. For instance, Estonia stands out with a high incidence of the "Language barrier" (around 37%). Across all countries, language barriers and the fact that many are “Not looking for work” are consistently among the top reasons cited, though to varying degrees. "Lack of skills" and "Lack of recognition" are less frequently mentioned, typically below 10%. Moldova, Romania, and Poland also report relatively high percentages for "Not looking for work" and "Insufficient opportunities," indicating structural and motivational challenges. In contrast, in Moldova and Slovakia, over 40% of respondents indicated no difficulties. 
 
 ```{r, fig.width=7, fig.height=5, echo=FALSE}
 
@@ -268,7 +270,7 @@ combined_df |>
   scale_fill_brewer(palette = "Dark2")
 ```
 
-The graph compares employment activity of Ukrainian refugees prior to displacement with their current activities in host countries. In Ukraine, the vast majority of refugees across all countries were employed, with employment rates ranging from approximately 60% to over 70%. Housekeeping and retirement were the next most common categories, but far less prevalent. In contrast, in host countries, employment drops significantly, while unemployment, studying, and housekeeping rise sharply. For example, in Poland, Romania, and Slovakia, a substantial portion - around one-third - of refugees are now unemployed. Studying categories also grow considerably, particularly in Romania and Moldova. This shift indicates a major transition for many refugees, from stable employment in Ukraine to navigating unemployment or reskilling opportunities in their new environments.
+In Ukraine, the vast majority of refugees across all countries were employed, with employment rates ranging from approximately 60% to over 70%. Housekeeping and retirement were the next most common categories, but far less prevalent. In contrast, in host countries, employment drops significantly, while unemployment, studying, and housekeeping rise sharply. For example, in Moldova, Romania, and Slovakia, more than half of refugees are now unemployed. Studying categories also grow considerably, particularly in Romania, Czechia and Moldova. This shift indicates a major transition for many refugees, from stable employment in Ukraine to navigating unemployment or reskilling opportunities in their new environments.
 
 ```{r, fig.width=8, fig.height=4, echo=FALSE, warning=FALSE}
 
@@ -334,7 +336,7 @@ plot_grid(
   rel_widths = c(0.5, 0.2)
 )
 ```
-The chart illustrates the types of social protection benefits received by Ukrainian refugees across six host countries. In most countries—especially Czechia, Moldova, Romania, and Slovakia—cash benefits are the dominant form of support, reaching around 80–90% in some cases. Poland stands out as the only country where the majority (over 80%) report receiving family grants instead of cash benefits. Estonia also presents a more balanced distribution, with both cash benefits and unemployment grants being common, and a notable share receiving unemployment grants or reporting “Other Source.” Across all countries, disability and unemployment grants remain minor components. Overall, the data suggest that cash-based support remains the primary mechanism, though the specific type of aid can vary significantly by host country.
+In most countries, especially Czechia, Moldova, Romania, and Slovakia, cash benefits are the dominant form of support, reaching around 80–90% in some cases. Poland stands out as the only country where the majority (over 80%) report receiving family grants instead of cash benefits. Estonia also presents a more balanced distribution, with both cash benefits and family grants being common, and a notable share receiving unemployment grants or reporting “Other Source.” Across all countries, disability and unemployment grants remain minor components. Overall, the data suggest that cash-based support remains the primary mechanism, though the specific type of aid can vary by host country.
 
 ```{r, fig.width=7.7, fig.height=5, echo=FALSE}
 combined_df |>
@@ -358,7 +360,7 @@ combined_df |>
   scale_fill_brewer(palette = "Dark2")
 
 ```
-
+The data on socioeconomic needs of refugees is reported for four countries only: Estonia, Moldova, Romania, and Slovakia. In Estonia, Ukrainians select employment, accommodation, and education as the most important type of need. In Moldova, Romania, and Slovakia, a number of people consider humanitarian assistance, government assistance, and healthcare as their primary needs.
 
 ```{r, fig.width=7, fig.height=5, echo=FALSE}
 combined_df |>
@@ -382,12 +384,9 @@ combined_df |>
   scale_fill_brewer(palette = "Dark2")
 ```
 
-
-
 **Safety and Social Cohesion**
 
-According to data, a majority of respondents reported no incidents of aggression or discrimination across all countries. Moldova (~80%) and Slovakia (~75%) report the highest rates of "No Incidents". Verbal aggression and discriminatory behavior are the most common types of hostility experienced after “No Incidents”. Romania, Poland, and Slovakia show moderate levels of verbal aggression and discriminatory behavior, likely reflecting higher public tension. Romania shows physical attack in its top five, and even there, the percentage is minimal, so physical safety, therefore, seems relatively high across the surveyed countries. Moldova stands out positively with the highest share of refugees reporting no hostility.
-
+According to data, a majority of respondents reported no incidents of aggression or discrimination across all countries. Moldova (~80%) and Slovakia (~75%) report the highest rates of "No Incidents". Verbal aggression and discriminatory behavior are the most common types of hostility experienced after “No Incidents”. Romania, Poland, and Slovakia show moderate levels of verbal aggression and discriminatory behavior, likely reflecting higher public tension. Romania shows physical attack in its top five, and even there, the percentage is minimal, so physical safety, therefore, seems relatively high across the surveyed countries.
 
 ```{r, fig.width=7, fig.height=5, echo=FALSE}
 
@@ -498,7 +497,7 @@ model_data_selected$employed_binary <-
 
 A logistic regression model was fit to predict the binary employment outcome `employed_binary`, where 0 = Not Employed/1 = Employed, among Ukrainian refugees using selected explanatory variables identified as important in prior analysis.
 
-Logistic regression analysis highlights several key factors shaping employment outcomes among Ukrainian refugees. Those reporting no difficulties are over seven times more likely to be employed than those facing challenges. In contrast, individuals previously engaged in housekeeping are 83% less likely to find work, and those with long-term illness or injury face an even steeper decline, with employment odds reduced by 95.7%. Older adults (60+) also struggle, with only a 16% likelihood of employment compared to younger groups. Additional barriers further limit employment prospects: lack of childcare reduces chances by 36%, and medical needs by 42%. Receiving unemployment grants is associated with a 77% drop in employment odds, while beneficiaries of Ukrainian social protection or general cash support face 34% and 46% lower chances of being employed, respectively. An unexpected result showed that reporting a lack of language skills was associated with a 218% increase in employment odds, suggesting underlying factors such as self-selection, possible skill mismatch, or employment in position with no language requirement.
+Logistic regression analysis highlights several key factors shaping employment outcomes among Ukrainian refugees. Those reporting no difficulties are over seven times more likely to be employed than those facing challenges. In contrast, individuals previously engaged in housekeeping are 83% less likely to find work, and those with long-term illness or injury face an even steeper decline, with employment odds reduced by 96%. Older adults (60+) also struggle, with only a 16% likelihood of employment compared to younger groups. Additional barriers further limit employment prospects: lack of childcare reduces chances by 36%, and medical needs by 42%. Receiving unemployment grants is associated with a 77% drop in employment odds, while beneficiaries of Ukrainian social protection or general cash support face 34% and 46% lower chances of being employed, respectively. An unexpected result showed that reporting a lack of language skills was associated with a 218% increase in employment odds, suggesting underlying factors such as self-selection, possible skill mismatch, or employment in position with no language requirement.
 
 ```{r}
 
@@ -529,15 +528,15 @@ auc(roc_obj)
 \newpage
 # Country-Specific Analysis
 
-A consistent analytical procedure was applied for each country included in the study to identify key factors associated with employment among Ukrainian refugees. Initially, exploratory data analysis was conducted by plotting relevant predictor variables against the binary employment outcome to visually assess differences between employed and unemployed groups. Variables showing notable group differences or supported by sufficient sample sizes were selected for further modeling. Multiple logistic regression models were then fitted for each country, with statistically insignificant predictors being iteratively removed, in order to isolate the most influential variables affecting employment outcomes within each country. The significance alpha level for p-values was generally set at 0.05; however, in some cases, a more lenient threshold of 0.1 was used when exploratory data analysis (EDA) plots indicated meaningful differences. Additionally, the conditions for logistic regression were met, as the predictor variables included in the models were categorical. The following sections present regression results for each country, highlighting both common and unique factors influencing refugee employment.
+A consistent analytical procedure was applied for each country included in the study to identify key factors associated with employment among Ukrainian refugees. Initially, exploratory data analysis was conducted by plotting relevant predictor variables against the binary employment outcome to visually assess differences between employed and unemployed groups. Variables showing notable group differences or supported by sufficient sample sizes were selected for further modeling. Multiple logistic regression models were then fit for each country, with statistically insignificant predictors being iteratively removed, in order to isolate the most influential variables affecting employment outcomes within each country. The significance alpha level for p-values was generally set at 0.05; however, in some cases, a more lenient threshold of 0.1 was used when exploratory data analysis (EDA) plots indicated meaningful differences. Additionally, the conditions for logistic regression were met, as the predictor variables included in the models were categorical. The following sections present regression results for each country, highlighting both common and unique factors influencing refugee employment.
 
 ## Poland
 
 ### Logistic regression
 
-In Poland, multiple individual and structural factors were significantly associated with the likelihood of employment among Ukrainian refugees. Compared to respondents aged 18–34, those aged 60 and over had 69% lower odds of being employed, while the 35–59 group showed a marginal reduction in odds by 13%, though not statistically significant on the alpha 0.01 level (p = 0.059). Employment odds were also considerably lower for respondents engaged in housekeeping (80% lower), those with long-term illness or injury (96% lower), and retirees (80% lower), all highly significant. Studying and trainee statuses were associated with 53% and 42% lower odds of employment, respectively.
+In Poland, multiple individual and structural factors were significantly associated with the likelihood of employment among Ukrainian refugees. Compared to respondents aged 18–34, those aged 60 and over had 69% lower odds of being employed, while the 35–59 group showed a marginal reduction in odds by 13%. Employment odds were also considerably lower for respondents engaged in housekeeping (80% lower), those with long-term illness or injury (96% lower), and retirees (80% lower), all highly significant. Studying and trainee statuses were associated with 53% and 42% lower odds of employment, respectively.
 
-Income sources were also relevant: receiving social protection from the host government was associated with 16% lower odds of employment, remittances with 49% lower odds, and Ukrainian government benefits with 39% lower odds. Language barriers were a positive predictor: those citing lack of language skills as a difficulty had 134% higher odds of being employed. Lack of childcare decreased employment odds by 58%, while difficulties with age-related opportunities reduced them by 26%. In contrast, reporting “no difficulties” was associated with a 377% increase in the odds of being employed. Not actively looking for work had a strong negative effect, reducing odds by 84%. Finally, challenges related to lack of skills and lack of educational qualifications slightly increased employment odds by 29% and 78%, respectively — possibly due to their association with active job-seeking behaviors.
+Income sources were also relevant: receiving social protection from the host government was associated with 16% lower odds of employment, remittances with 49% lower odds, and Ukrainian government benefits with 39% lower odds. Language barriers were a positive predictor: those citing lack of language skills as a difficulty had 134% higher odds of being employed. Lack of childcare decreased employment odds by 58%, while difficulties with age-related opportunities reduced them by 26%. In contrast, reporting “no difficulties” was associated with a 377% increase in the odds of being employed. Not actively looking for work had a strong negative effect, reducing odds by 84%. Finally, challenges related to lack of skills and lack of educational qualifications slightly increased employment odds by 29% and 78%, respectively, possibly due to their association with active job-seeking behaviors.
 
 ```{r, include=FALSE}
 
@@ -595,7 +594,7 @@ auc(roc_obj_pl)
 
 ### Logistic regression
 
-A logistic regression model was fitted to assess the predictors of employment among Ukrainian refugees in Estonia. Compared to the reference group, respondents previously engaged in housekeeping, while living in Ukraine, had a 91% lower odds of employment, while those who were retired had a 97% lower odds. Individuals who were studying had a 92% lower odds, and those who were unemployed had a 66% lower odds of being employed.
+A logistic regression model was fit to assess the predictors of employment among Ukrainian refugees in Estonia. Compared to the reference group, respondents previously engaged in housekeeping, while living in Ukraine, had a 91% lower odds of employment, while those who were retired had a 97% lower odds. Individuals who were studying had a 92% lower odds, and those who were unemployed had a 66% lower odds of being employed.
 
 Some barriers and support factors also had strong negative associations with employment. Reporting lack of documentation was associated with a 95% decrease in odds of employment, while receiving cash benefits or an unemployment grant was linked to an 88% and an 85% decrease in employment odds. Those who reported a need for employment support had an 85% lower odds of being employed.
 
@@ -629,7 +628,7 @@ summary(logit_model_ee)
 ```
 ### Model performance
 
-The Estonia model demonstrated strong overall performance. The McFadden pseudo-R² was 0.39, indicating a good model fit relative to the null model. The classification accuracy was 80.0%, correctly predicting 250 out of 296 employed individuals and 195 out of 260 unemployed individuals. The confusion matrix showed a balance between sensitivity and specificity. The Area Under the Receiver Operating Characteristic Curve (AUC) was 0.884, suggesting high discriminative ability between employed and unemployed groups. These results indicate that the model effectively distinguishes between employment statuses based on the selected predictors.
+The model predicting outcomes in Estonia demonstrated strong overall performance. The McFadden pseudo-R² was 0.39, indicating a good model fit relative to the null model. The classification accuracy was 80.0%, correctly predicting 250 out of 296 employed individuals and 195 out of 260 unemployed individuals. The confusion matrix showed a balance between sensitivity and specificity. The Area Under the Receiver Operating Characteristic Curve (AUC) was 0.884, suggesting high ability to distinguish between employed and unemployed groups.
 
 ```{r, echo=FALSE}
 
@@ -688,9 +687,7 @@ summary(logit_model_cz)
 
 ### Model performance
 
-The logistic regression model for Czechia demonstrated strong performance in predicting employment status among Ukrainian refugees. The McFadden pseudo-R² was 0.384, indicating a substantial improvement over the null model and suggesting that the predictors explained a meaningful portion of the variation in employment outcomes. The area under the ROC curve (AUC) was 0.878, which reflects excellent discriminatory ability of the model in distinguishing between employed and unemployed individuals.
-
-In terms of classification accuracy, the model correctly predicted 83.8% of all cases. Among the unemployed, it correctly classified 295 out of 358 individuals (82.4%), while for the employed group, it correctly predicted 951 out of 1,129 cases (84.2%). These results suggest that the model is both accurate and reliable in identifying employment patterns within this population.
+The logistic regression model for Czechia demonstrated strong performance in predicting employment status among Ukrainian refugees. The McFadden pseudo-R² was 0.384, indicating a substantial improvement over the null model and suggesting that the predictors explained a meaningful portion of the variation in employment outcomes. The area under the ROC curve (AUC) was 0.878, which reflects excellent discriminatory ability of the model in distinguishing between employed and unemployed individuals. In terms of classification accuracy, the model correctly predicted 83.8% of all cases. Among the unemployed, it correctly classified 295 out of 358 individuals (82.4%), while for the employed group, it correctly predicted 951 out of 1,129 cases (84.2%). 
 
 ```{r, echo=FALSE}
 
@@ -770,7 +767,7 @@ auc(roc_obj_sk)
 
 ### Logistic regression
 
-The logistic regression model for Moldova revealed several significant factors influencing employment odds. Engaging in housekeeping was associated with an 87% reduction in the odds of employment, while having a long-term illness or injury corresponded to a 93% decrease. Respondents who were studying had 63% lower odds, and those identified as trainees experienced a 79% reduction in employment likelihood.
+The logistic regression model for Moldova revealed that engaging in housekeeping was associated with an 87% reduction in the odds of employment, while having a long-term illness or injury corresponded to a 93% decrease. Respondents who were studying had 63% lower odds, and those identified as trainees experienced a 79% reduction in employment likelihood.
 
 In contrast, lacking language skills was linked to a 337% increase in employment odds, with a similar positive effect observed for those reporting a lack of skills, which raised the odds by 299%. Additionally, respondents reporting no difficulties had odds more than 9 times greater than those facing challenges. Medical needs and caregiving responsibilities negatively affected employment chances, reducing the odds by 50% and 83%, respectively.
 
@@ -824,7 +821,7 @@ auc(roc_obj_md)
 
 ### Logistic regression
 
-The logistic regression model for Romania reveals several significant predictors of employment status. Being aged 60 or older reduces the odds of being employed by about 60%. Respondents engaged in housekeeping activities have approximately 82% lower odds of employment. Those with long-term illness or injury show a strong negative effect, with odds reduced by about 97%. Other activity categories such as “Other,” “Retired,” and “Studying” also significantly reduce employment odds by roughly 46%, 66%, and 54% respectively. 
+The logistic regression model for Romania reveals that being aged 60 or older reduces the odds of being employed by about 60%. Respondents engaged in housekeeping activities have approximately 82% lower odds of employment. Those with long-term illness or injury show a strong negative effect, with odds reduced by about 97%. Other activity categories such as “Other,” “Retired,” and “Studying” also significantly reduce employment odds by roughly 46%, 66%, and 54% respectively. 
 
 Lack of childcare decreases employment odds by about 66%, while lacking skills reduces odds by about 38%. Respondents needing to care for others have about 57% lower odds, and those not looking for work show a large negative association with employment, with 74% lower odds. Conversely, respondents reporting no barriers to employment have more than 4 times higher odds of being employed. Interestingly, needing host government assistance is associated with a 49% increase in employment odds, whereas income from other sources reduces employment odds by about 58%. 
 
@@ -876,22 +873,32 @@ auc(roc_obj_ro)
 ```
 
 \newpage
-# Discussion
+# Discussion: Policy Lessons from Diverging Outcomes
 
+Based on the statistical modeling of factors related to job-seeking behavior of Ukrainian refugees, it appears that there are common challenges, such as lack of decent age opportunities, language barriers, insufficient medical and childcare support, and skill mismatches, across six countries. However, the magnitude and relevance of these indicators varies on a country to country basis, requiring both context-sensitive and evidence-based responses. 
+
+In a number of countries, where employment rates grow steadily, digital job-matching tools are available to streamline the hiring process, connect refugees with suitable employers, and help overcome language or credential recognition barriers. For instance, Praca w Polsce (“Work in Poland”) is an online platform, where refugees provide information on their education, experience, and skills to find employment. Estonian Unemployment Insurance Fund manages an online page, where Ukrainians can contact employers, or receive additional employment support. While benefits are numerous, there are also risks associated with precarious employment, as Ukrainian refugees may be pushed into informal or illegal work due to limited opportunities, language barriers, or lack of recognized qualifications. To reduce the risk of potential violations of employment law, the Czech Republic, for instance, enhanced the capacity of its labor inspection system (ELA, 2022). However, even though many Ukrainian refugees have high levels of education, they struggle with transferring their skills due to lack of opportunities in their field, inability to get formal recognition, or low level of local language knowledge. According to OECD report, recognized credentials like the European or UNESCO Qualifications Passport, which assesses education, professional experience, and language skills through documentation review and interview can streamline the process of integrating refugees into host country labor markets by providing credible proof of qualifications in a timely manner (2023). Therefore, the focus on eliminating the most common challenges people face when looking for jobs have the potential to align refugee skills with the needs of local labor markets, facilitating smoother integration and improved employment outcomes.
+
+While one might expect language barriers to hinder labor market integration, the regression results reveal a counterintuitive association: reporting a lack of language skills is associated with higher employment odds. This suggests the presence of underlying factors, such as self-selection into certain jobs that do not require host-country language proficiency or more urgent financial necessity among those facing linguistic barriers. A particularly illustrative case is Moldova, where relatively few respondents report language difficulties. Yet, this group also has the highest proportion of individuals with a technical education. Technical qualifications don't necessarily require language proficiency, so it may help explain better labor market integration. Refugees in Slavic-language countries such as Poland and Slovakia reported fewer language-related difficulties, possibly due to linguistic proximity. Lack of professional skills follows a similar trend: those identifying it as a barrier to employment are more likely to find a job. It again implies the interplay of compensatory factors such as lower-skilled job availability or informal support systems. Consequently, although vacancies are present, only low-skill and entry-level positions are accessible to the majority of refugees. This complexity underscores the importance of looking beyond conventional assumptions in integration policy design.
+
+Notably, receiving unemployment benefits or humanitarian assistance from either host or origin countries lowered employment odds. While such support provides an immediate safety valve for those still looking for stable employment, it may also inadvertently discourage labor market entry in the absence of complementary measures. In many instances, the need to take care of others was a significant factor impeding the possibility of employment. It indicates that broader support systems or family grants can be useful in helping those previously engaged in housekeeping. Therefore, the goal should be to apply a balanced approach combining initial financial support with training, mentorship, and childcare support, allowing for smooth adjustment and professional transition.
+
+# Conclusion: Toward Durable Solutions
+
+Individual motivation, prior experiences, and contextual factors are important considerations that shape professional trajectories of Ukrainian refugees in Central and Eastern Europe. European countries acted swiftly by providing work permits, integration language instruction and simplified recognition of qualifications. Despite multifaceted and timely support of those in need, some constraints such as childcare needs, health limitations, and reliance on social assistance still persist. Some outcomes also reveal the urgency of skill mismatch that needs to be addressed to support both the economic integration of Ukrainian refugees and the vitality of local labor markets. Country-specific upskilling programs and bridging courses remain essential and represent valuable investments in human capital development.
 
 \newpage
-# Limitations
+# References
 
+- ELA (2022), Support for people fleeing Ukraine, https://www.ela.europa.eu/en/support-people-fleeing-ukraine
 
-# Conclusion
+- Jirka, Luděk, et al. “High-Skilled Precarity: The Situation of Ukrainian Refugees in the Czech Republic and Poland.” Sociological Studios, no. 2(23), Lesya Ukrainka Volyn National University, Dec. 2023, pp. 41–48. Crossref, doi:10.29038/2306-3971-2023-02-24-24.
 
-\newpage
-# Citations
+- Londar, S., et al. “Challenges for Ukrainian Refugees in the EU Labour Market: The Case of Poland and Germany.” Educational Analytics of Ukraine, no. 5, State Scientific Institution - Institute of Educational Analytics, 2024, pp. 5–16. Crossref, doi:10.32987/2617-8532-2024-5-5-16.
+
+- OECD (2023), “What we know about the skills and early labour market outcomes of refugees from Ukraine”, OECD Policy Responses on the Impacts of the War in Ukraine, OECD Publishing, Paris, https://doi.org/10.1787/c7e694aa-en.
 
 - SocioFactor, IOM, Impact-REACH, SHC, Sociofactor, TARKI Social Research Institute, Ipsos, UNHCR (2023). Poland, Slovak Republic, Hungary, Czech Republic, Moldova, Romania, Bulgaria: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
 - UNHCR (2023). Estonia: Multi-Sector Needs Assessment (MSNA) - 2023. Accessed from: https://microdata.unhcr.org
 
-- Preut, Holger. “고용을위한길:독일노동시장의우크라이나난민들을위한통합적도전과전망.” Zeitschrift Der Koreanisch-Deutschen Gesellschaft Für Sozialwissenschaften, vol. 33, no. 3, Koreanisch-Deutsche Gesellschaft fuer Sozlaiwssenschaften, Sept. 2023, pp. 3–33. Crossref, doi:10.19032/zkdgs.2023.09.33.3.3.
-
-- Londar, S., et al. “Challenges for Ukrainian Refugees in the EU Labour Market: The Case of Poland and Germany.” Educational Analytics of Ukraine, no. 5, State Scientific Institution - Institute of Educational Analytics, 2024, pp. 5–16. Crossref, doi:10.32987/2617-8532-2024-5-5-16.
