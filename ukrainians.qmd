@@ -1,8 +1,7 @@
 ---
 title: "Employment determinants among Ukrainian refugees: a comparative analysis across European host countries"
-subtitle: "Logistic regression and random forest models for employment prediction"
 format: 
-  pdf:
+  docx:
     toc: true
     toc_depth: 2
 editor: 
@@ -31,7 +30,9 @@ if (!require('pacman')) install.packages('pacman'); library('pacman')
 pacman::p_load(viridis, tidyverse, ggplot2, lubridate, knitr, dplyr, ggpubr, 
               janitor, tidyr, kableExtra, ggcorrplot, ggthemes, zoo, forcats,
               gridExtra, grid, Hmisc, FSA, dunn.test, readxl, RColorBrewer,
-              patchwork, cowplot, pROC, rms, vcd, pscl, randomForest)
+              patchwork, cowplot, pROC, rms, vcd, pscl, randomForest,
+              ggmosaic, plotly, factoextra, FactoMineR, missMDA, effects,
+              broom)
 # Load data
 data_ee <- readRDS("Data/data_ee")
 combined_df <- readRDS("Data/combined_df")
@@ -83,13 +84,53 @@ plot_employment_vs_vars <- function(data, vars, country_name) {
   grid.arrange(grobs = plots, ncol = 3)
 }
 
+```
+
+```{r, fig.width=5, fig.height=5}
+
+# combined_data$employed_binary <- factor(combined_data$employed_binary,
+#                                         levels = c(1, 0),
+#                                         labels = c("Employed", "Not Employed"))
+# 
+# ggplot(data = combined_data) +
+#   geom_mosaic(aes(x = product(introduction_resp_age), fill = employed_binary), na.rm = TRUE) +
+#   labs(x="Responders' age", y = "Empoyment status", title = "Age Group vs. Employment ",
+#        fill = "Employment status")+
+#   scale_fill_brewer(palette = "Dark2") +
+#   theme(axis.text.y=element_text(angle=90), legend.position = "top", plot.title = element_text(hjust = 0.5))
+# 
+# ggplot(data = combined_data) +
+#   geom_mosaic(aes(x = product(demographics_resp_activity), fill = employed_binary), na.rm = TRUE) +
+#   labs(x="Activity status in Ukraine", y = "Empoyment status", title = "Activity status in Ukraine vs. Employment ",
+#        fill = "Employment status")+
+#   scale_fill_brewer(palette = "Dark2") +
+#   theme(axis.text.y=element_text(angle=90), axis.text.x=element_text(angle=90, vjust = 0.7),
+#         legend.position = "top", plot.title = element_text(hjust = 0.5))
+# 
+# combined_data$diff_none <- factor(combined_data$diff_none,
+#                                         levels = c(0, 1),
+#                                         labels = c("Had difficulties", "Had no difficulties"))
+# 
+# ggplot(data = combined_data) +
+#   geom_mosaic(aes(x = product(diff_none), fill = employed_binary), na.rm = TRUE) +
+#   labs(x="Presence of difficulties", y = "Empoyment status", title = "Difficulties vs. Employment ",
+#        fill = "Employment status")+
+#   scale_fill_brewer(palette = "Dark2") +
+#   theme(axis.text.y=element_text(angle=90), axis.text.x=element_text(vjust = 0.7),
+#         legend.position = "top", plot.title = element_text(hjust = 0.5))
+
+```
+
+```{r}
+
+
 
 ```
 
 \newpage
 # Abstract
 
-This paper analyzes the employment outcomes of Ukrainian refugees across six Central and Eastern European countries through a comparative, data-driven analysis. Using the 2023 Multi-Sectoral Needs Assessment (MSNA) data collected by UNHCR, it explores how demographic characteristics, previous work experience, access to social benefits, and perceived barriers, such as limited command of the language, lack of documentation, childcare, or health, influence job-seeking behavior. The study applies exploratory techniques with logistic regression modeling and machine learning methods to identify key predictors of employment status. Results reveal that previous employment and absence of barriers, consistently increase employment chances, while receiving certain social benefits or having caregiving responsibilities are associated with lower employment likelihood. While language proficiency is seen as an advantage, the analysis reveals that those reporting language barriers are more likely to be employed, likely because they tend to take up entry-level positions. Findings point to the importance of support policies that target specific employment barriers, enhance credential recognition, and offer accessible childcare and training opportunities to improve refugee labor market integration.
+This paper analyzes the employment outcomes of Ukrainian refugees across six Central and Eastern European countries through a comparative, data-driven analysis. Using the 2023 Multi-Sectoral Needs Assessment (MSNA) data collected by UNHCR\footnote{UNHCR does not warrant in any way the accuracy of the data or information reproduced from the Microdata Library and may not be held liable for any loss caused by reliance on the accuracy or reliability thereof.}, it explores how demographic characteristics, previous work experience, access to social benefits, and perceived barriers, such as limited command of the language, lack of documentation, childcare, or health, influence job-seeking behavior. The study applies exploratory techniques with logistic regression modeling and machine learning methods to identify key predictors of employment status. Results reveal that previous employment and absence of barriers, consistently increase employment chances, while receiving certain social benefits or having caregiving responsibilities are associated with lower employment likelihood. While language proficiency is seen as an advantage, the analysis reveals that those reporting language barriers are more likely to be employed, likely because they tend to take up entry-level positions. Findings point to the importance of support policies that target specific employment barriers, enhance credential recognition, and offer accessible childcare and training opportunities to improve refugee labor market integration.
 
 # Introduction and context
 
@@ -501,9 +542,111 @@ Logistic regression analysis highlights several key factors shaping employment o
 
 ```{r}
 
+colnames(model_data_selected)
+
 logit_model <- glm(employed_binary ~ ., 
                    data = model_data_selected, family = binomial)
 summary(logit_model)
+```
+
+```{r}
+
+# model_data_selected$pred_prob <- predict(logit_model, type = "response")
+# 
+# ggplot(model_data_selected, aes(x = demographics_resp_activity, 
+#                                 y = needs_host_govt_assistance, 
+#                                 fill = pred_prob)) +
+#   geom_tile(color = "white") +
+#   scale_fill_gradient(low = "yellow", high = "blue") +
+#   labs(fill = "P(Employed)") +
+#   theme_minimal()
+
+```
+
+```{r}
+# df <- model_data_selected
+# 
+# predictors <- df %>% select(-employed_binary) %>%
+#   mutate(across(everything(), ~ as.factor(.)))
+# 
+# predictors <- na.omit(predictors)
+# 
+# # MCA
+# mca_res <- MCA(predictors, graph = FALSE)
+# 
+# # Extract first two dimensions
+# mca_coords <- as.data.frame(mca_res$ind$coord[, 1:2])
+# names(mca_coords) <- c("Dim1", "Dim2")
+# 
+# # Add response variable
+# mca_coords$employed_binary <- df$employed_binary
+# 
+# logit_mca <- glm(employed_binary ~ Dim1 + Dim2,
+#                  data = mca_coords,
+#                  family = binomial)
+# 
+# grid <- expand.grid(
+#   Dim1 = seq(min(mca_coords$Dim1), max(mca_coords$Dim1), length.out = 100),
+#   Dim2 = seq(min(mca_coords$Dim2), max(mca_coords$Dim2), length.out = 100)
+# )
+# 
+# grid$prob <- predict(logit_mca, newdata = grid, type = "response")
+
+```
+
+```{r, fig.width=6, fig.height=5}
+
+# ggplot() +
+#   geom_tile(data = grid, aes(x = Dim1, y = Dim2, fill = prob), alpha = 0.5) +
+#   geom_point(data = mca_coords, aes(x = Dim1, y = Dim2, color = factor(employed_binary)), size = 2) +
+#   scale_fill_gradient2(low = "yellow", mid = "green", high = "blue", midpoint = 0.5) +
+#   labs(fill = "P(Employed)", color = "Employed") +
+#   theme_minimal()
+# 
+# 
+# plot_ly(
+#   x = grid$Dim1,
+#   y = grid$Dim2,
+#   z = grid$prob,
+#   type = "surface",
+#   colors = c("yellow", "blue")
+# ) %>%
+#   add_markers(
+#     data = mca_coords,
+#     x = ~Dim1,
+#     y = ~Dim2,
+#     z = ~employed_binary,
+#     color = ~factor(employed_binary)
+#   )
+```
+
+```{r, fig.width=8, fig.height=4 }
+tidy(logit_model, exponentiate = TRUE, conf.int = TRUE) %>%
+  ggplot(aes(x = estimate, y = term)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high)) +
+  geom_vline(xintercept = 1, linetype = 2) +
+  scale_x_log10()
+# 
+# pred <- predict(logit_model, type = "response")
+# 
+# ggplot(data.frame(prob = pred, actual = df$employed_binary), 
+#        aes(x = prob, fill = factor(actual))) +
+#   geom_histogram(binwidth = 0.05, position = "identity", alpha = 0.5) +
+#   scale_fill_brewer(palette = "Dark2", name = "Employment Status",
+#                     labels = c("Not Employed", "Employed")) +
+#   labs(
+#     title = "Predicted Probabilities by Employment Status",
+#     subtitle = "Logistic regression model predictions",
+#     x = "Predicted Probability of Being Employed",
+#     y = "Count of Observations"
+#   ) +
+#   theme_minimal() +
+#   theme(
+#     plot.title = element_text(face = "bold"),
+#     legend.position = "top"
+#   )
+
 ```
 
 ### Model Fit and Evaluation

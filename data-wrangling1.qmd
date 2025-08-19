@@ -1,6 +1,6 @@
 ---
 title: "data-wrangling"
-format: html
+format: htmbl
 ---
 
 ```{r, include=FALSE, warning=FALSE}
